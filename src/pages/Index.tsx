@@ -191,10 +191,7 @@ const Index = () => {
                 <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
                   Have questions?
                 </h2>
-                <p className="text-lg text-gray-600 mb-6">
-                  Our team is ready to help you get started with TravelFlux. 
-                  Contact us for a personalized demo or to learn more about our platform.
-                </p>
+                <p className="text-lg text-gray-600 mb-6">Our team is ready to help you get started with Tripscape. Contact us for a personalized demo or to learn more about our platform.</p>
                 <div className="space-y-4">
                   <div className="flex items-center">
                     <div className="bg-primary/10 p-2 rounded-full mr-4">
@@ -202,7 +199,7 @@ const Index = () => {
                     </div>
                     <div>
                       <h4 className="font-medium">Email Us</h4>
-                      <p className="text-gray-600">info@travelflux.com</p>
+                      <p className="text-gray-600">info@manticpoint.com.com</p>
                     </div>
                   </div>
                   <div className="flex items-center">
