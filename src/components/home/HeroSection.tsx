@@ -1,11 +1,17 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
 
 const HeroSection = () => {
+  const scrollToPricing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-4">
       <div className="max-w-7xl mx-auto text-center">
@@ -17,11 +23,11 @@ const HeroSection = () => {
             Beautiful travel itineraries, documents, and mobile apps for your clients. All in one platform.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Button asChild size="lg" className="animated-border-button">
-              <Link to="/signup">Start free trial</Link>
+            <Button size="lg" className="animated-border-button" onClick={scrollToPricing}>
+              Start free trial
             </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link to="/#features">Learn more</Link>
+            <Button variant="outline" size="lg" asChild>
+              <a href="#features">Learn more</a>
             </Button>
           </div>
         </div>
