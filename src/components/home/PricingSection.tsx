@@ -49,7 +49,8 @@ const PricingSection = () => {
               className={`
                 glass-card rounded-xl p-6 transition-all duration-300 hover:shadow-md cursor-pointer
                 ${plan.popular ? 'border-2 border-primary relative' : 
-                  plan.name === 'Starter' && selectedPlan === 'Starter' ? 'border-2 border-primary relative' : 
+                  (plan.name === 'Starter' && selectedPlan === 'Starter') || 
+                  (plan.name === 'Enterprise' && selectedPlan === 'Enterprise') ? 'border-2 border-primary relative' : 
                   'border border-gray-100'} 
               `}
               onClick={() => setSelectedPlan(plan.name)}
@@ -79,10 +80,13 @@ const PricingSection = () => {
                 asChild 
                 className={`w-full ${
                   plan.popular ? 'animated-border-button' : 
-                  plan.name === 'Starter' && selectedPlan === 'Starter' ? 'bg-primary text-white hover:bg-primary/90' : ''
+                  (plan.name === 'Starter' && selectedPlan === 'Starter') || 
+                  (plan.name === 'Enterprise' && selectedPlan === 'Enterprise') ? 'bg-primary text-white hover:bg-primary/90' : ''
                 }`} 
                 variant={
-                  (plan.popular || (plan.name === 'Starter' && selectedPlan === 'Starter')) 
+                  (plan.popular || 
+                   (plan.name === 'Starter' && selectedPlan === 'Starter') ||
+                   (plan.name === 'Enterprise' && selectedPlan === 'Enterprise')) 
                     ? 'default' 
                     : 'outline'
                 }
