@@ -1,12 +1,8 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
-
 const Footer = () => {
   const currentYear = new Date().getFullYear();
-  
-  return (
-    <footer className="bg-white border-t border-gray-100">
+  return <footer className="bg-white border-t border-gray-100">
       <div className="max-w-7xl mx-auto py-12 px-4 overflow-hidden sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div>
@@ -89,7 +85,7 @@ const Footer = () => {
           
           <div>
             <Link to="/" className="flex items-center">
-              <span className="text-primary font-display font-bold text-xl">TravelFlux</span>
+              <span className="text-primary font-display font-bold text-xl">Tripscape</span>
             </Link>
             <p className="mt-4 text-sm text-gray-600 max-w-xs">
               Simplifying travel management for small agencies with modern tools for itineraries, 
@@ -118,8 +114,6 @@ const Footer = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
+    </footer>;
 };
-
 export default Footer;
