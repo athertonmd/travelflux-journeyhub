@@ -22,7 +22,7 @@ const ContactSection = () => {
                   </div>
                   <div>
                     <h4 className="font-medium">Email Us</h4>
-                    <p className="text-gray-600">info@manticpoint.com.com</p>
+                    <p className="text-gray-600">info@tripscape.travel</p>
                   </div>
                 </div>
                 <div className="flex items-center">
