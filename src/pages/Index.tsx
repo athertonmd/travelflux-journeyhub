@@ -5,10 +5,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Calendar, GlobeLock, FileSearch, Smartphone, Users, LineChart, UtilityPole, ArrowRight, CheckCircle2 } from 'lucide-react';
+
 const Index = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
   const features = [{
     title: 'Itinerary Management',
     description: 'Create and manage detailed travel itineraries with drag-and-drop simplicity.',
@@ -34,6 +36,7 @@ const Index = () => {
     description: 'Visualize your business performance with comprehensive analytics.',
     icon: <LineChart className="h-10 w-10" />
   }];
+
   const pricingPlans = [{
     name: 'Starter',
     price: 29,
@@ -56,6 +59,7 @@ const Index = () => {
     cta: 'Contact sales',
     popular: false
   }];
+
   return <div className="min-h-screen flex flex-col">
       <Navbar />
       
@@ -160,7 +164,9 @@ const Index = () => {
                 {plan.popular && <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">
                     Most Popular
                   </div>}
-                <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
+                <h3 className="text-xl font-semibold mb-2">
+                  {plan.name === "Professional" ? "GDS Connectivity" : plan.name}
+                </h3>
                 <div className="flex items-baseline mb-4">
                   <span className="text-3xl font-bold">${plan.price}</span>
                   <span className="text-gray-500 ml-1">/month</span>
@@ -226,4 +232,5 @@ const Index = () => {
       <Footer />
     </div>;
 };
+
 export default Index;
