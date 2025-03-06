@@ -2,8 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, HomeIcon, Package, Component, ScrollText, Mail } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Dock, DockIcon, DockItem, DockLabel } from '@/components/ui/dock';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -46,36 +47,44 @@ const Navbar = () => {
 
   const navLinks = isAuthenticated ? [{
     name: 'Dashboard',
-    path: '/dashboard'
+    path: '/dashboard',
+    icon: <HomeIcon className="h-full w-full text-neutral-600 dark:text-neutral-300" />
   }, {
     name: 'Itineraries',
-    path: '/itineraries'
+    path: '/itineraries',
+    icon: <ScrollText className="h-full w-full text-neutral-600 dark:text-neutral-300" />
   }, {
     name: 'Customers',
-    path: '/customers'
+    path: '/customers',
+    icon: <User className="h-full w-full text-neutral-600 dark:text-neutral-300" />
   }, {
     name: 'Documents',
-    path: '/documents'
+    path: '/documents',
+    icon: <Package className="h-full w-full text-neutral-600 dark:text-neutral-300" />
   }] : [{
     name: 'Home',
-    path: '/'
+    path: '/',
+    icon: <HomeIcon className="h-full w-full text-neutral-600 dark:text-neutral-300" />
   }, {
     name: 'Features',
     path: '/#features',
-    section: 'features'
+    section: 'features',
+    icon: <Component className="h-full w-full text-neutral-600 dark:text-neutral-300" />
   }, {
     name: 'Pricing',
     path: '/#pricing',
-    section: 'pricing'
+    section: 'pricing',
+    icon: <Package className="h-full w-full text-neutral-600 dark:text-neutral-300" />
   }, {
     name: 'Contact',
     path: '/#contact',
-    section: 'contact'
+    section: 'contact',
+    icon: <Mail className="h-full w-full text-neutral-600 dark:text-neutral-300" />
   }];
 
   return <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
+        <div className="flex justify-between h-16 items-center">
           <div className="flex items-center">
             <Link to="/" className="flex-shrink-0 flex items-center">
               <span className="text-primary font-display font-bold text-xl">Tripscape</span>
@@ -83,15 +92,21 @@ const Navbar = () => {
           </div>
           
           <div className="hidden md:flex items-center space-x-4">
-            <div className="flex space-x-8">
-              {navLinks.map(link => <Link 
-                  key={link.name} 
-                  to={link.path} 
-                  onClick={(e) => link.section && handleNavClick(e, link.section)}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${location.pathname === link.path ? 'text-primary' : 'text-gray-600'}`}
-                >
-                  {link.name}
-                </Link>)}
+            <div className="flex space-x-2">
+              <Dock className="bg-transparent items-center px-2" panelHeight={48} magnification={60}>
+                {navLinks.map((link, idx) => (
+                  <Link
+                    key={idx}
+                    to={link.path}
+                    onClick={(e) => link.section && handleNavClick(e, link.section)}
+                  >
+                    <DockItem className="rounded-full bg-transparent">
+                      <DockLabel>{link.name}</DockLabel>
+                      <DockIcon>{link.icon}</DockIcon>
+                    </DockItem>
+                  </Link>
+                ))}
+              </Dock>
             </div>
             
             <div className="flex items-center space-x-2">
@@ -142,8 +157,9 @@ const Navbar = () => {
               key={link.name} 
               to={link.path} 
               onClick={(e) => link.section && handleNavClick(e, link.section)}
-              className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === link.path ? 'text-primary bg-primary/10' : 'text-gray-700 hover:bg-gray-50'}`}
+              className={`flex items-center gap-2 px-3 py-2 rounded-md text-base font-medium ${location.pathname === link.path ? 'text-primary bg-primary/10' : 'text-gray-700 hover:bg-gray-50'}`}
             >
+              <div className="w-5 h-5">{link.icon}</div>
               {link.name}
             </Link>)}
           
