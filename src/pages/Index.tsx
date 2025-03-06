@@ -1,112 +1,62 @@
-
 import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { 
-  Calendar, 
-  GlobeLock, 
-  FileSearch, 
-  Smartphone, 
-  Users, 
-  LineChart, 
-  UtilityPole, 
-  ArrowRight,
-  CheckCircle2
-} from 'lucide-react';
-
+import { Calendar, GlobeLock, FileSearch, Smartphone, Users, LineChart, UtilityPole, ArrowRight, CheckCircle2 } from 'lucide-react';
 const Index = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
-  const features = [
-    {
-      title: 'Itinerary Management',
-      description: 'Create and manage detailed travel itineraries with drag-and-drop simplicity.',
-      icon: <Calendar className="h-10 w-10" />,
-    },
-    {
-      title: 'Document Generation',
-      description: 'Automatically generate and deliver travel documents to your clients.',
-      icon: <FileSearch className="h-10 w-10" />,
-    },
-    {
-      title: 'Mobile Travel App',
-      description: 'White-labeled mobile app for your clients to access their travel information.',
-      icon: <Smartphone className="h-10 w-10" />,
-    },
-    {
-      title: 'Client Portal',
-      description: 'Secure client portal for accessing all travel information and documents.',
-      icon: <GlobeLock className="h-10 w-10" />,
-    },
-    {
-      title: 'Customer Management',
-      description: 'Organize and manage your customer database with ease.',
-      icon: <Users className="h-10 w-10" />,
-    },
-    {
-      title: 'Analytics Dashboard',
-      description: 'Visualize your business performance with comprehensive analytics.',
-      icon: <LineChart className="h-10 w-10" />,
-    },
-  ];
-
-  const pricingPlans = [
-    {
-      name: 'Starter',
-      price: 29,
-      description: 'Perfect for small agencies just getting started.',
-      features: [
-        'Up to 50 customers',
-        'Basic itinerary management',
-        'PDF document generation',
-        'Client web portal',
-        'Email support',
-      ],
-      cta: 'Start free trial',
-      popular: false,
-    },
-    {
-      name: 'Professional',
-      price: 79,
-      description: 'Everything you need for a growing travel agency.',
-      features: [
-        'Up to 500 customers',
-        'Advanced itinerary management',
-        'Custom document templates',
-        'White-labeled mobile app',
-        'Customer management',
-        'Analytics dashboard',
-        'Priority support',
-      ],
-      cta: 'Start free trial',
-      popular: true,
-    },
-    {
-      name: 'Enterprise',
-      price: 199,
-      description: 'Comprehensive solution for established agencies.',
-      features: [
-        'Unlimited customers',
-        'Advanced itinerary management',
-        'Custom document templates',
-        'White-labeled mobile app',
-        'Advanced customer management',
-        'Comprehensive analytics',
-        'API access',
-        'Dedicated account manager',
-      ],
-      cta: 'Contact sales',
-      popular: false,
-    },
-  ];
-
-  return (
-    <div className="min-h-screen flex flex-col">
+  const features = [{
+    title: 'Itinerary Management',
+    description: 'Create and manage detailed travel itineraries with drag-and-drop simplicity.',
+    icon: <Calendar className="h-10 w-10" />
+  }, {
+    title: 'Document Generation',
+    description: 'Automatically generate and deliver travel documents to your clients.',
+    icon: <FileSearch className="h-10 w-10" />
+  }, {
+    title: 'Mobile Travel App',
+    description: 'White-labeled mobile app for your clients to access their travel information.',
+    icon: <Smartphone className="h-10 w-10" />
+  }, {
+    title: 'Client Portal',
+    description: 'Secure client portal for accessing all travel information and documents.',
+    icon: <GlobeLock className="h-10 w-10" />
+  }, {
+    title: 'Customer Management',
+    description: 'Organize and manage your customer database with ease.',
+    icon: <Users className="h-10 w-10" />
+  }, {
+    title: 'Analytics Dashboard',
+    description: 'Visualize your business performance with comprehensive analytics.',
+    icon: <LineChart className="h-10 w-10" />
+  }];
+  const pricingPlans = [{
+    name: 'Starter',
+    price: 29,
+    description: 'Perfect for small agencies just getting started.',
+    features: ['Up to 50 customers', 'Basic itinerary management', 'PDF document generation', 'Client web portal', 'Email support'],
+    cta: 'Start free trial',
+    popular: false
+  }, {
+    name: 'Professional',
+    price: 79,
+    description: 'Everything you need for a growing travel agency.',
+    features: ['Up to 500 customers', 'Advanced itinerary management', 'Custom document templates', 'White-labeled mobile app', 'Customer management', 'Analytics dashboard', 'Priority support'],
+    cta: 'Start free trial',
+    popular: true
+  }, {
+    name: 'Enterprise',
+    price: 199,
+    description: 'Comprehensive solution for established agencies.',
+    features: ['Unlimited customers', 'Advanced itinerary management', 'Custom document templates', 'White-labeled mobile app', 'Advanced customer management', 'Comprehensive analytics', 'API access', 'Dedicated account manager'],
+    cta: 'Contact sales',
+    popular: false
+  }];
+  return <div className="min-h-screen flex flex-col">
       <Navbar />
       
       {/* Hero Section */}
@@ -133,11 +83,7 @@ const Index = () => {
             <div className="absolute inset-0 bg-primary/5 rounded-xl transform rotate-1"></div>
             <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
               <CardContent className="p-0">
-                <img 
-                  src="https://placehold.co/1200x600/f5f9ff/4287f5?text=Dashboard+Preview" 
-                  alt="TravelFlux Dashboard Preview" 
-                  className="w-full h-auto object-cover"
-                />
+                <img src="https://placehold.co/1200x600/f5f9ff/4287f5?text=Dashboard+Preview" alt="TravelFlux Dashboard Preview" className="w-full h-auto object-cover" />
               </CardContent>
             </Card>
           </div>
@@ -157,18 +103,13 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div 
-                key={index} 
-                className="glass-card rounded-xl p-6 transition-all duration-300 hover:shadow-md border border-gray-100"
-              >
+            {features.map((feature, index) => <div key={index} className="glass-card rounded-xl p-6 transition-all duration-300 hover:shadow-md border border-gray-100">
                 <div className="text-primary mb-4">
                   {feature.icon}
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
                 <p className="text-gray-600">{feature.description}</p>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -183,10 +124,7 @@ const Index = () => {
                 <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
                   Transform the way you serve your clients
                 </h2>
-                <p className="text-lg text-gray-600 mb-6">
-                  Join hundreds of travel agencies already using TravelFlux to streamline 
-                  their operations and enhance client satisfaction.
-                </p>
+                <p className="text-lg text-gray-600 mb-6">Join hundreds of travel agencies already using Tripscape to streamline their operations and enhance client satisfaction.</p>
                 <Button asChild size="lg" className="animated-border-button">
                   <Link to="/signup">
                     Get started today
@@ -195,11 +133,7 @@ const Index = () => {
                 </Button>
               </div>
               <div className="flex justify-center">
-                <img 
-                  src="https://placehold.co/600x400/f5f9ff/4287f5?text=App+Preview" 
-                  alt="TravelFlux Mobile App" 
-                  className="rounded-lg shadow-lg max-w-full h-auto"
-                />
+                <img src="https://placehold.co/600x400/f5f9ff/4287f5?text=App+Preview" alt="TravelFlux Mobile App" className="rounded-lg shadow-lg max-w-full h-auto" />
               </div>
             </div>
           </div>
@@ -219,19 +153,13 @@ const Index = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {pricingPlans.map((plan, index) => (
-              <div 
-                key={index} 
-                className={`
+            {pricingPlans.map((plan, index) => <div key={index} className={`
                   glass-card rounded-xl p-6 transition-all duration-300 hover:shadow-md 
                   ${plan.popular ? 'border-2 border-primary relative' : 'border border-gray-100'} 
-                `}
-              >
-                {plan.popular && (
-                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">
+                `}>
+                {plan.popular && <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">
                     Most Popular
-                  </div>
-                )}
+                  </div>}
                 <h3 className="text-xl font-semibold mb-2">{plan.name}</h3>
                 <div className="flex items-baseline mb-4">
                   <span className="text-3xl font-bold">${plan.price}</span>
@@ -239,24 +167,17 @@ const Index = () => {
                 </div>
                 <p className="text-gray-600 mb-6">{plan.description}</p>
                 <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start">
+                  {plan.features.map((feature, featureIndex) => <li key={featureIndex} className="flex items-start">
                       <CheckCircle2 className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
                       <span className="text-sm">{feature}</span>
-                    </li>
-                  ))}
+                    </li>)}
                 </ul>
-                <Button 
-                  asChild 
-                  className={`w-full ${plan.popular ? 'animated-border-button' : ''}`}
-                  variant={plan.popular ? 'default' : 'outline'}
-                >
+                <Button asChild className={`w-full ${plan.popular ? 'animated-border-button' : ''}`} variant={plan.popular ? 'default' : 'outline'}>
                   <Link to={plan.cta === 'Contact sales' ? '/contact' : '/signup'}>
                     {plan.cta}
                   </Link>
                 </Button>
-              </div>
-            ))}
+              </div>)}
           </div>
         </div>
       </section>
@@ -306,8 +227,6 @@ const Index = () => {
       </section>
       
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
