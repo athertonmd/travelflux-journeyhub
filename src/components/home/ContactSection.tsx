@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 import { UtilityPole, Smartphone } from 'lucide-react';
 
 const ContactSection = () => {
@@ -9,7 +7,7 @@ const ContactSection = () => {
     <section id="contact" className="py-16 md:py-24 px-4">
       <div className="max-w-7xl mx-auto">
         <div className="glass-card rounded-xl p-8 md:p-12 shadow-lg border border-gray-100">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8">
             <div>
               <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
                 Have questions?
@@ -35,11 +33,6 @@ const ContactSection = () => {
                   </div>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-center items-center">
-              <Button asChild size="lg" className="animated-border-button">
-                <Link to="/contact">Schedule a demo</Link>
-              </Button>
             </div>
           </div>
         </div>
