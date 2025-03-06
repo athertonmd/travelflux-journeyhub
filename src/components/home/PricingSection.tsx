@@ -1,10 +1,12 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
 
 const PricingSection = () => {
+  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+
   const pricingPlans = [{
     name: 'Starter',
     price: 29,
@@ -45,9 +47,12 @@ const PricingSection = () => {
             <div 
               key={index} 
               className={`
-                glass-card rounded-xl p-6 transition-all duration-300 hover:shadow-md 
-                ${plan.popular ? 'border-2 border-primary relative' : 'border border-gray-100'} 
+                glass-card rounded-xl p-6 transition-all duration-300 hover:shadow-md cursor-pointer
+                ${plan.popular ? 'border-2 border-primary relative' : 
+                  plan.name === 'Starter' && selectedPlan === 'Starter' ? 'border-2 border-primary relative' : 
+                  'border border-gray-100'} 
               `}
+              onClick={() => setSelectedPlan(plan.name)}
             >
               {plan.popular && (
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-xs px-3 py-1 rounded-full">
@@ -72,8 +77,15 @@ const PricingSection = () => {
               </ul>
               <Button 
                 asChild 
-                className={`w-full ${plan.popular ? 'animated-border-button' : ''}`} 
-                variant={plan.popular ? 'default' : 'outline'}
+                className={`w-full ${
+                  plan.popular ? 'animated-border-button' : 
+                  plan.name === 'Starter' && selectedPlan === 'Starter' ? 'bg-primary text-white hover:bg-primary/90' : ''
+                }`} 
+                variant={
+                  (plan.popular || (plan.name === 'Starter' && selectedPlan === 'Starter')) 
+                    ? 'default' 
+                    : 'outline'
+                }
               >
                 <Link to={plan.cta === 'Contact sales' ? '/contact' : '/signup'}>
                   {plan.cta}
