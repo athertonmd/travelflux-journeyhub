@@ -37,9 +37,14 @@ const Navbar = () => {
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
     if (location.pathname === '/') {
       e.preventDefault();
-      const element = document.getElementById(sectionId);
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
+      if (sectionId === 'home') {
+        // Scroll to top of the page smoothly
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
       }
     }
   };
@@ -58,7 +63,8 @@ const Navbar = () => {
     path: '/documents'
   }] : [{
     name: 'Home',
-    path: '/'
+    path: '/#home',
+    section: 'home'
   }, {
     name: 'Features',
     path: '/#features',
