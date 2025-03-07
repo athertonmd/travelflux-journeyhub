@@ -18,14 +18,14 @@ const PricingSection = () => {
     name: 'Professional',
     price: 79,
     description: 'Everything you need for a growing travel agency.',
-    features: ['Up to 500 customers', 'Advanced itinerary management', 'Custom document templates', 'White-labeled mobile app', 'Customer management', 'Analytics dashboard', 'Priority support'],
+    features: ['Up to 500 customers', 'Advanced itinerary management', 'Custom document templates', 'Tripscape Mobile integration', 'Customer management', 'Analytics dashboard', 'Priority support'],
     cta: 'Sign Up',
     popular: true
   }, {
     name: 'Enterprise',
     price: 199,
     description: 'Comprehensive solution for established agencies.',
-    features: ['Unlimited customers', 'Advanced itinerary management', 'Custom document templates', 'White-labeled mobile app', 'Advanced customer management', 'Comprehensive analytics', 'API access', 'Dedicated account manager'],
+    features: ['Unlimited customers', 'Advanced itinerary management', 'Custom document templates', 'Tripscape Mobile integration', 'Advanced customer management', 'Comprehensive analytics', 'API access', 'Dedicated account manager'],
     cta: 'Contact sales',
     popular: false
   }];
