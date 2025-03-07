@@ -16,7 +16,7 @@ const FeatureSection = () => {
     description: 'White-labeled mobile app for your clients to access their travel information.',
     icon: <Smartphone className="h-10 w-10" />
   }, {
-    title: 'Client Portal',
+    title: 'Hybrid Itineraries',
     description: 'Secure client portal for accessing all travel information and documents.',
     icon: <GlobeLock className="h-10 w-10" />
   }, {
