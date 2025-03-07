@@ -12,14 +12,14 @@ const PricingSection = () => {
     price: 29,
     description: 'Perfect for small agencies just getting started.',
     features: ['Up to 50 customers', 'Basic itinerary management', 'PDF document generation', 'Client web portal', 'Email support'],
-    cta: 'Start free trial',
+    cta: 'Sign Up',
     popular: false
   }, {
     name: 'Professional',
     price: 79,
     description: 'Everything you need for a growing travel agency.',
     features: ['Up to 500 customers', 'Advanced itinerary management', 'Custom document templates', 'White-labeled mobile app', 'Customer management', 'Analytics dashboard', 'Priority support'],
-    cta: 'Start free trial',
+    cta: 'Sign Up',
     popular: true
   }, {
     name: 'Enterprise',
