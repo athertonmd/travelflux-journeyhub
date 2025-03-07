@@ -12,7 +12,7 @@ const PricingSection = () => {
     price: 29,
     description: 'Perfect for small agencies just getting started.',
     features: ['Up to 50 customers', 'Basic itinerary management', 'PDF document generation', 'Client web portal', 'Email support'],
-    cta: 'Sign Up',
+    cta: 'Start Free Trial',
     popular: false
   }, {
     name: 'Professional',
