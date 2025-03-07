@@ -63,7 +63,7 @@ const PricingSection = () => {
               )}
               <div className="flex-grow">
                 <h3 className="text-xl font-semibold mb-2">
-                  {plan.name === "Professional" ? "GDS Connectivity" : plan.name}
+                  {plan.name === "Professional" ? "Scale" : plan.name}
                 </h3>
                 <div className="flex items-baseline mb-4">
                   <span className="text-3xl font-bold">${plan.price}</span>
