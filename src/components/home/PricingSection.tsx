@@ -11,7 +11,7 @@ const PricingSection = () => {
     name: 'Starter',
     price: 29,
     description: 'Perfect for small agencies just getting started.',
-    features: ['Up to 50 customers', 'Basic itinerary management', 'PDF document generation', 'Client web portal', 'Email support'],
+    features: ['Up to 50 customers', 'Tripscape Mobile integration', 'PDF document generation', 'Client web portal', 'Email support'],
     cta: 'Start Free Trial',
     popular: false
   }, {
