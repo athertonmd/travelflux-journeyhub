@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Calendar, GlobeLock, FileSearch, Smartphone, Users, LineChart } from 'lucide-react';
+import { Calendar, GlobeLock, FileSearch, Smartphone, Users, FileText } from 'lucide-react';
 
 const FeatureSection = () => {
   const features = [{
@@ -24,9 +24,9 @@ const FeatureSection = () => {
     description: 'Organize and manage your customer database with ease.',
     icon: <Users className="h-10 w-10" />
   }, {
-    title: 'Analytics Dashboard',
+    title: 'PDF Itineraries',
     description: 'Visualize your business performance with comprehensive analytics.',
-    icon: <LineChart className="h-10 w-10" />
+    icon: <FileText className="h-10 w-10" />
   }];
 
   return (
