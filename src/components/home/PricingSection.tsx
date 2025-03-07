@@ -48,6 +48,7 @@ const PricingSection = () => {
               key={index} 
               className={`
                 glass-card rounded-xl p-6 transition-all duration-300 hover:shadow-md cursor-pointer
+                flex flex-col h-full
                 ${plan.popular ? 'border-2 border-primary relative' : 
                   (plan.name === 'Starter' && selectedPlan === 'Starter') || 
                   (plan.name === 'Enterprise' && selectedPlan === 'Enterprise') ? 'border-2 border-primary relative' : 
@@ -60,25 +61,27 @@ const PricingSection = () => {
                   Most Popular
                 </div>
               )}
-              <h3 className="text-xl font-semibold mb-2">
-                {plan.name === "Professional" ? "GDS Connectivity" : plan.name}
-              </h3>
-              <div className="flex items-baseline mb-4">
-                <span className="text-3xl font-bold">${plan.price}</span>
-                <span className="text-gray-500 ml-1">/month</span>
+              <div className="flex-grow">
+                <h3 className="text-xl font-semibold mb-2">
+                  {plan.name === "Professional" ? "GDS Connectivity" : plan.name}
+                </h3>
+                <div className="flex items-baseline mb-4">
+                  <span className="text-3xl font-bold">${plan.price}</span>
+                  <span className="text-gray-500 ml-1">/month</span>
+                </div>
+                <p className="text-gray-600 mb-6">{plan.description}</p>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feature, featureIndex) => (
+                    <li key={featureIndex} className="flex items-start">
+                      <CheckCircle2 className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
+                      <span className="text-sm">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <p className="text-gray-600 mb-6">{plan.description}</p>
-              <ul className="space-y-3 mb-8">
-                {plan.features.map((feature, featureIndex) => (
-                  <li key={featureIndex} className="flex items-start">
-                    <CheckCircle2 className="h-5 w-5 text-primary mr-2 flex-shrink-0" />
-                    <span className="text-sm">{feature}</span>
-                  </li>
-                ))}
-              </ul>
               <Button 
                 asChild 
-                className={`w-full ${
+                className={`w-full mt-auto ${
                   plan.popular ? 'animated-border-button' : 
                   (plan.name === 'Starter' && selectedPlan === 'Starter') || 
                   (plan.name === 'Enterprise' && selectedPlan === 'Enterprise') ? 'bg-primary text-white hover:bg-primary/90' : ''
