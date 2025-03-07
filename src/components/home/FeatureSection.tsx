@@ -20,7 +20,7 @@ const FeatureSection = () => {
     description: 'Secure client portal for accessing all travel information and documents.',
     icon: <GlobeLock className="h-10 w-10" />
   }, {
-    title: 'Customer Management',
+    title: 'GDS Connectivity',
     description: 'Organize and manage your customer database with ease.',
     icon: <Users className="h-10 w-10" />
   }, {
