@@ -19,24 +19,40 @@ const SignUp = () => {
   const navigate = useNavigate();
   const { signup, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
     if (user) {
-      console.log('User already authenticated:', user);
-      if (!user.setupCompleted) {
-        navigate('/welcome');
-      } else {
-        navigate('/');
-      }
+      console.log('User authenticated, redirecting:', user);
+      setIsRedirecting(true);
+      
+      const redirectTimer = setTimeout(() => {
+        if (!user.setupCompleted) {
+          navigate('/welcome');
+        } else {
+          navigate('/');
+        }
+      }, 500);
+      
+      return () => clearTimeout(redirectTimer);
     }
   }, [user, navigate]);
 
   const handleSignUp = async (name: string, email: string, password: string, agencyName: string) => {
+    if (isLoading || authLoading || isRedirecting) {
+      console.log('Skipping signup attempt: already processing');
+      return;
+    }
+    
     setIsLoading(true);
     try {
       console.log('Attempting signup with:', { name, email, agencyName });
-      await signup(name, email, password, agencyName);
-      console.log('Signup process completed, user will be redirected by useEffect if authenticated');
+      const success = await signup(name, email, password, agencyName);
+      
+      // No need to navigate here, the useEffect will handle it when user is set
+      if (!success) {
+        setIsLoading(false);
+      }
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
@@ -44,12 +60,11 @@ const SignUp = () => {
         description: error?.message || "Failed to create account. Please try again.",
         variant: "destructive"
       });
-    } finally {
       setIsLoading(false);
     }
   };
 
-  if (authLoading) {
+  if (authLoading || isRedirecting) {
     return <LoadingSpinner />;
   }
 

@@ -7,7 +7,7 @@ export const useSignup = (
   setUser: React.Dispatch<React.SetStateAction<User | null>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const signup = async (name: string, email: string, password: string, agencyName?: string) => {
+  const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<boolean> => {
     setIsLoading(true);
     try {
       console.log('Creating user with:', { name, email, agencyName });
@@ -42,7 +42,11 @@ export const useSignup = (
           title: "Account created",
           description: "Welcome to Tripscape!",
         });
+        
+        return true;
       }
+      
+      return false;
     } catch (error: any) {
       console.error('Signup error:', error);
       
@@ -60,7 +64,7 @@ export const useSignup = (
           variant: "destructive",
         });
       }
-      throw error;
+      return false;
     } finally {
       setIsLoading(false);
     }

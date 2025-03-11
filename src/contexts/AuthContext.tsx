@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user, setUser, isLoading, setIsLoading } = useAuthState();
   const { login, signup, logout, checkSetupStatus, updateSetupStatus } = useAuthActions(setUser, setIsLoading);
 
-  const value = {
+  const value: AuthContextType = {
     user,
     isLoading,
     login,
