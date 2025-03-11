@@ -14,7 +14,7 @@ export const useLogin = (
       // First check if we already have an active session
       const { data: sessionData } = await supabase.auth.getSession();
       if (sessionData.session) {
-        console.log('Active session found, using existing session instead of login');
+        console.log('Active session found, using existing session');
         
         // Get user data from the session
         const { data: userData } = await supabase.auth.getUser();

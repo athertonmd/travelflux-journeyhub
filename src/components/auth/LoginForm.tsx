@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import SubmitButton from '@/components/auth/SubmitButton';
 
 interface LoginFormProps {
   isLoading: boolean;
-  onLogin: (email: string, password: string, remember: boolean) => Promise<void>;
+  onLogin: (email: string, password: string, remember: boolean) => Promise<boolean>;
 }
 
 const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
@@ -20,14 +20,6 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     password: '',
     remember: false,
   });
-  const [formSubmitted, setFormSubmitted] = useState(false);
-  
-  // Reset form submitted state when loading state changes to false
-  useEffect(() => {
-    if (!isLoading && formSubmitted) {
-      setFormSubmitted(false);
-    }
-  }, [isLoading, formSubmitted]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -40,23 +32,25 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent multiple submissions
-    if (formSubmitted || isLoading) {
-      console.log('Form already submitted or loading, ignoring click');
+    // Prevent submission if already loading
+    if (isLoading) {
+      return;
+    }
+    
+    // Validate form
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
       return;
     }
     
     try {
-      setFormSubmitted(true);
       await onLogin(formData.email, formData.password, formData.remember);
     } catch (error: any) {
       console.error('Form submission error:', error);
-      toast({
-        title: "Login Failed",
-        description: error?.message || "Invalid email or password. Please try again.",
-        variant: "destructive"
-      });
-      setFormSubmitted(false);
     }
   };
   
@@ -74,8 +68,9 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               value={formData.email}
               onChange={handleChange}
               required
-              disabled={isLoading || formSubmitted}
+              disabled={isLoading}
               className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
+              autoComplete="email"
             />
           </div>
           
@@ -97,8 +92,9 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               value={formData.password}
               onChange={handleChange}
               required
-              disabled={isLoading || formSubmitted}
+              disabled={isLoading}
               className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
+              autoComplete="current-password"
             />
           </div>
           
@@ -110,13 +106,13 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               onCheckedChange={(checked) => 
                 setFormData(prev => ({ ...prev, remember: checked === true }))
               }
-              disabled={isLoading || formSubmitted}
+              disabled={isLoading}
             />
             <Label htmlFor="remember" className="text-sm">Remember me</Label>
           </div>
           
           <SubmitButton 
-            isLoading={isLoading || formSubmitted}
+            isLoading={isLoading}
             text="Sign in"
             loadingText="Signing in..."
           />
