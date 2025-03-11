@@ -7,7 +7,6 @@ import {
   CreditCard, 
   Users, 
   BookOpen,
-  BarChart as BarChartIcon, 
   Map,
   Clock,
   AlertTriangle,
@@ -19,27 +18,30 @@ import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
 import CreditStatusCard from '@/components/CreditStatusCard';
 import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
+import LoadingSpinner from '@/components/auth/LoadingSpinner';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
-  const { creditInfo, isLoading, purchaseCredits } = useCredits();
+  const { creditInfo, isLoading: isCreditsLoading, purchaseCredits } = useCredits();
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   useEffect(() => {
-    if (!user) {
+    if (!isAuthLoading && !user) {
       navigate('/login');
-    } else if (!user.setupCompleted) {
+    } else if (!isAuthLoading && user && !user.setupCompleted) {
       navigate('/welcome');
     }
-  }, [user, navigate]);
+  }, [user, isAuthLoading, navigate]);
 
+  // Show loading state while auth is being checked
+  if (isAuthLoading) {
+    return <LoadingSpinner />;
+  }
+
+  // If we're past authentication loading and there's no user, redirect will happen
   if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   return (
@@ -68,7 +70,7 @@ const Dashboard = () => {
 
       <main className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {creditInfo && (
+          {creditInfo ? (
             <DashboardCard 
               title="Credit Balance" 
               value={`${creditInfo.remainingCredits} / ${creditInfo.totalCredits}`} 
@@ -76,6 +78,20 @@ const Dashboard = () => {
               trend={{
                 value: creditInfo.usagePercentage,
                 isPositive: creditInfo.usagePercentage < 80
+              }}
+            />
+          ) : isCreditsLoading ? (
+            <div className="bg-card rounded-lg border border-border p-6 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <DashboardCard 
+              title="Credit Balance" 
+              value="Unavailable" 
+              icon={<Wallet className="h-8 w-8 text-primary" />}
+              trend={{
+                value: 0,
+                isPositive: true
               }}
             />
           )}
@@ -106,12 +122,21 @@ const Dashboard = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {creditInfo && (
+          {creditInfo ? (
             <CreditStatusCard 
               creditInfo={creditInfo}
               onPurchaseClick={() => setIsPurchaseModalOpen(true)}
-              isLoading={isLoading}
+              isLoading={isCreditsLoading}
             />
+          ) : isCreditsLoading ? (
+            <div className="bg-card rounded-lg border border-border p-6 flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="bg-card rounded-lg border border-border p-6">
+              <h3 className="text-lg font-medium mb-2">Credit Status</h3>
+              <p>Unable to load credit information. Please try again later.</p>
+            </div>
           )}
 
           <div className="lg:col-span-2 bg-card rounded-lg border border-border p-6">
@@ -157,7 +182,7 @@ const Dashboard = () => {
             onClose={() => setIsPurchaseModalOpen(false)}
             onPurchase={purchaseCredits}
             creditInfo={creditInfo}
-            isLoading={isLoading}
+            isLoading={isCreditsLoading}
           />
         )}
       </main>

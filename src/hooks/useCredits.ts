@@ -19,21 +19,31 @@ export const useCredits = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCreditInfo = async () => {
-    if (!user) return;
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
     
     setIsLoading(true);
     try {
+      console.log('Fetching credit info for user:', user.id);
       const { data, error } = await supabase
         .from('credits')
         .select('*')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching credit info:', error);
+        throw error;
+      }
       
       if (data) {
-        const remaining = data.total_credits - data.used_credits;
-        const percentage = Math.min(Math.round((data.used_credits / data.total_credits) * 100), 100);
+        console.log('Credit data received:', data);
+        const remaining = Math.max(0, data.total_credits - data.used_credits);
+        const percentage = data.total_credits > 0 
+          ? Math.min(Math.round((data.used_credits / data.total_credits) * 100), 100)
+          : 0;
         
         setCreditInfo({
           id: data.id,
@@ -43,26 +53,64 @@ export const useCredits = () => {
           remainingCredits: remaining,
           usagePercentage: percentage
         });
+      } else {
+        console.log('No credit data found, initializing credits for user:', user.id);
+        // If no credit record exists (which shouldn't happen with our triggers, but just in case)
+        const { data: newCreditData, error: insertError } = await supabase
+          .from('credits')
+          .insert({
+            user_id: user.id,
+            total_credits: 30,
+            used_credits: 0,
+            is_free_tier: true
+          })
+          .select()
+          .single();
+        
+        if (insertError) {
+          console.error('Error creating credit record:', insertError);
+          throw insertError;
+        }
+
+        if (newCreditData) {
+          setCreditInfo({
+            id: newCreditData.id,
+            totalCredits: newCreditData.total_credits,
+            usedCredits: newCreditData.used_credits,
+            isFreeTier: newCreditData.is_free_tier,
+            remainingCredits: newCreditData.total_credits,
+            usagePercentage: 0
+          });
+        }
       }
     } catch (error) {
-      console.error('Error fetching credit info:', error);
+      console.error('Error in fetchCreditInfo:', error);
       toast({
         title: "Error fetching credit info",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+      setCreditInfo(null);
     } finally {
       setIsLoading(false);
     }
   };
 
   const purchaseCredits = async (amount: number) => {
-    if (!user || !creditInfo) return;
+    if (!user || !creditInfo) {
+      toast({
+        title: "Error",
+        description: "User not authenticated or credit information not available",
+        variant: "destructive",
+      });
+      return;
+    }
     
     // In a real app, this would involve a payment process
     // For now, we'll just simulate purchasing credits
     setIsLoading(true);
     try {
+      console.log(`Purchasing ${amount} credits for user: ${user.id}`);
       const { error } = await supabase
         .from('credits')
         .update({ 
@@ -72,7 +120,10 @@ export const useCredits = () => {
         })
         .eq('id', creditInfo.id);
       
-      if (error) throw error;
+      if (error) {
+        console.error('Error purchasing credits:', error);
+        throw error;
+      }
       
       toast({
         title: "Credits purchased",
@@ -81,7 +132,7 @@ export const useCredits = () => {
       
       await fetchCreditInfo();
     } catch (error) {
-      console.error('Error purchasing credits:', error);
+      console.error('Error in purchaseCredits:', error);
       toast({
         title: "Error purchasing credits",
         description: error instanceof Error ? error.message : "An unknown error occurred",
@@ -93,7 +144,12 @@ export const useCredits = () => {
   };
 
   useEffect(() => {
-    fetchCreditInfo();
+    if (user) {
+      fetchCreditInfo();
+    } else {
+      setIsLoading(false);
+      setCreditInfo(null);
+    }
   }, [user]);
 
   return {
