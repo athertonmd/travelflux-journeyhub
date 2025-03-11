@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
@@ -35,13 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check for existing session on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const { data } = await supabase.auth.getSession();
         if (data.session?.user) {
-          // Get user profile data
           const userData = {
             id: data.session.user.id,
             email: data.session.user.email || '',
@@ -49,7 +46,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             agencyName: data.session.user.user_metadata?.agencyName
           };
           
-          // Check setup status
           const { data: configData, error: configError } = await supabase
             .from('agency_configurations')
             .select('setup_completed')
@@ -60,7 +56,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error('Error fetching config:', configError);
           }
           
-          // If no configuration exists for this user, create one
           if (!configData) {
             const { error: insertError } = await supabase
               .from('agency_configurations')
@@ -93,7 +88,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     checkAuth();
 
-    // Subscribe to auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
       
@@ -105,7 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           agencyName: session.user.user_metadata?.agencyName
         };
         
-        // Check if configuration exists
         const { data: configData, error: configError } = await supabase
           .from('agency_configurations')
           .select('setup_completed')
@@ -116,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Error fetching config:', configError);
         }
         
-        // If no configuration exists, create one
         if (!configData) {
           console.log('Creating new configuration for user:', userData.id);
           const { error: insertError } = await supabase
@@ -168,7 +160,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           agencyName: data.user.user_metadata?.agencyName
         };
         
-        // Check setup status
         const { data: configData, error: configError } = await supabase
           .from('agency_configurations')
           .select('setup_completed')
@@ -179,7 +170,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Error fetching config:', configError);
         }
         
-        // If no configuration exists, create one
         if (!configData) {
           const { error: insertError } = await supabase
             .from('agency_configurations')
@@ -246,35 +236,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setupCompleted: false
         };
         
-        console.log('User signed up:', userData.id);
-        
-        // Create the agency configuration
-        const { error: insertError } = await supabase
+        const { error: configError } = await supabase
           .from('agency_configurations')
           .insert({
             user_id: userData.id,
             setup_completed: false
-          });
+          })
+          .select()
+          .single();
         
-        if (insertError) {
-          console.error('Error creating configuration after signup:', insertError);
-          // Try to create it again with a delay
-          setTimeout(async () => {
-            const { error: retryError } = await supabase
-              .from('agency_configurations')
-              .insert({
-                user_id: userData.id,
-                setup_completed: false
-              });
-            
-            if (retryError) {
-              console.error('Retry failed to create configuration:', retryError);
-            } else {
-              console.log('Successfully created configuration on retry');
-            }
-          }, 2000);
-        } else {
-          console.log('Configuration created successfully');
+        if (configError) {
+          console.error('Error creating configuration:', configError);
+          if (configError.code !== '23505') {
+            throw configError;
+          }
         }
         
         setUser(userData);

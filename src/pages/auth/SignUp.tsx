@@ -13,7 +13,6 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import SignUpForm from '@/components/auth/SignUpForm';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
-import { supabase } from '@/integrations/supabase/client';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -31,47 +30,11 @@ const SignUp = () => {
     }
   }, [user, navigate]);
 
-  const verifyUserConfiguration = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('agency_configurations')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-      
-      if (error) {
-        console.error('Error checking user configuration:', error);
-        
-        if (error.code === 'PGRST116') {
-          console.log('No configuration found, creating one manually...');
-          const { error: insertError } = await supabase
-            .from('agency_configurations')
-            .insert([{ user_id: userId, setup_completed: false }]);
-            
-          if (insertError) {
-            console.error('Error creating user configuration:', insertError);
-            throw insertError;
-          }
-          console.log('Manual configuration created successfully');
-        } else {
-          throw error;
-        }
-      } else {
-        console.log('User configuration verified:', data);
-      }
-    } catch (error) {
-      console.error('Failed to verify user configuration:', error);
-    }
-  };
-
   const handleSignUp = async (name: string, email: string, password: string, agencyName: string) => {
     setIsLoading(true);
     try {
       console.log('Attempting signup with:', name, email, agencyName);
       await signup(name, email, password, agencyName);
-      
-      // After signup, the user should be set in the AuthContext
-      // We'll check if the user exists in AuthContext in the useEffect
       console.log('Signup process completed, user will be redirected by useEffect if authenticated');
     } catch (error) {
       console.error('Signup error:', error);
