@@ -4,7 +4,18 @@ import { AuthContextType } from '@/types/auth.types';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthActions } from '@/hooks/useAuthActions';
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+// Create context with a default value that matches the shape
+const defaultValue: AuthContextType = {
+  user: null,
+  isLoading: true,
+  login: async () => false,
+  signup: async () => false,
+  logout: async () => {},
+  checkSetupStatus: async () => false,
+  updateSetupStatus: async () => false
+};
+
+const AuthContext = createContext<AuthContextType>(defaultValue);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);

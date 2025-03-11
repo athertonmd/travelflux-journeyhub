@@ -13,12 +13,12 @@ export const useLogin = (
       
       // First check if we already have an active session
       const { data: sessionData } = await supabase.auth.getSession();
-      if (sessionData.session) {
+      if (sessionData?.session) {
         console.log('Active session found, using existing session');
         
         // Get user data from the session
         const { data: userData } = await supabase.auth.getUser();
-        if (userData.user) {
+        if (userData?.user) {
           // Get configuration data
           const { data: configData } = await supabase
             .from('agency_configurations')
@@ -44,60 +44,58 @@ export const useLogin = (
           
           return true;
         }
-      } else {
-        // No session, attempt login
-        console.log('No active session, attempting login with credentials');
-        
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-        
-        if (error) {
-          console.error('Login error from Supabase:', error);
-          throw error;
-        }
-        
-        if (!data.user) {
-          console.error('Login succeeded but no user returned');
-          throw new Error('Login succeeded but no user data was returned');
-        }
-        
-        console.log('Login successful, user data:', data.user);
-        
-        // Setup user data
-        const userData = {
-          id: data.user.id,
-          email: data.user.email || '',
-          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || '',
-          agencyName: data.user.user_metadata?.agencyName
-        };
-        
-        // Get configuration data
-        const { data: configData, error: configError } = await supabase
-          .from('agency_configurations')
-          .select('setup_completed')
-          .eq('user_id', userData.id)
-          .maybeSingle();
-        
-        if (configError) {
-          console.error('Error fetching config:', configError);
-        }
-        
-        setUser({
-          ...userData,
-          setupCompleted: configData?.setup_completed || false
-        });
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome back to Tripscape!",
-        });
-        
-        return true;
       }
       
-      return false;
+      // No session, attempt login
+      console.log('No active session, attempting login with credentials');
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (error) {
+        console.error('Login error from Supabase:', error);
+        throw error;
+      }
+      
+      if (!data?.user) {
+        console.error('Login succeeded but no user returned');
+        throw new Error('Login succeeded but no user data was returned');
+      }
+      
+      console.log('Login successful, user data:', data.user);
+      
+      // Setup user data
+      const userData = {
+        id: data.user.id,
+        email: data.user.email || '',
+        name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || '',
+        agencyName: data.user.user_metadata?.agencyName
+      };
+      
+      // Get configuration data
+      const { data: configData, error: configError } = await supabase
+        .from('agency_configurations')
+        .select('setup_completed')
+        .eq('user_id', userData.id)
+        .maybeSingle();
+      
+      if (configError) {
+        console.error('Error fetching config:', configError);
+      }
+      
+      setUser({
+        ...userData,
+        setupCompleted: configData?.setup_completed || false
+      });
+      
+      toast({
+        title: "Login successful",
+        description: "Welcome back to Tripscape!",
+      });
+      
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       

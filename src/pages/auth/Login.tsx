@@ -16,7 +16,7 @@ import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   
@@ -54,7 +54,6 @@ const Login = () => {
       setIsLoading(true);
       console.log('Login attempt starting');
       
-      const { login } = useAuth();
       const success = await login(email, password);
       
       // If login failed, show error message
