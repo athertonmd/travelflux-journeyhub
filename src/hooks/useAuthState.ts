@@ -8,10 +8,22 @@ export const useAuthState = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.log("useAuthState: Initializing auth state");
+    let mounted = true;
+
     const checkAuth = async () => {
       try {
-        const { data } = await supabase.auth.getSession();
+        console.log("useAuthState: Checking current session");
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session error:", error);
+          if (mounted) setIsLoading(false);
+          return;
+        }
+        
         if (data.session?.user) {
+          console.log("useAuthState: Session found for user:", data.session.user.id);
           const userData = {
             id: data.session.user.id,
             email: data.session.user.email || '',
@@ -30,6 +42,7 @@ export const useAuthState = () => {
           }
           
           if (!configData) {
+            console.log("useAuthState: No config found, creating new one");
             const { error: insertError } = await supabase
               .from('agency_configurations')
               .insert({
@@ -41,21 +54,29 @@ export const useAuthState = () => {
               console.error('Error creating configuration:', insertError);
             }
             
-            setUser({
-              ...userData,
-              setupCompleted: false
-            });
+            if (mounted) {
+              setUser({
+                ...userData,
+                setupCompleted: false
+              });
+            }
           } else {
-            setUser({
-              ...userData,
-              setupCompleted: configData?.setup_completed || false
-            });
+            console.log("useAuthState: Config found, setup completed:", configData.setup_completed);
+            if (mounted) {
+              setUser({
+                ...userData,
+                setupCompleted: configData?.setup_completed || false
+              });
+            }
           }
+        } else {
+          console.log("useAuthState: No session found");
+          if (mounted) setUser(null);
         }
       } catch (error) {
         console.error('Auth check error:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
 
@@ -65,6 +86,8 @@ export const useAuthState = () => {
       console.log('Auth state changed:', event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
+        setIsLoading(true); // Set loading to true when auth state changes
+        
         const userData = {
           id: session.user.id,
           email: session.user.email || '',
@@ -105,12 +128,16 @@ export const useAuthState = () => {
             setupCompleted: configData?.setup_completed || false
           });
         }
+        
+        setIsLoading(false); // Ensure loading is set to false after handling sign in
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
+        setIsLoading(false);
       }
     });
 
     return () => {
+      mounted = false;
       authListener.subscription.unsubscribe();
     };
   }, []);

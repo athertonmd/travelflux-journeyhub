@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,17 +19,33 @@ import { useCredits } from '@/hooks/useCredits';
 import CreditStatusCard from '@/components/CreditStatusCard';
 import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
+import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   console.log('Dashboard component rendering');
   const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
-  const { creditInfo, isLoading: isCreditsLoading, purchaseCredits } = useCredits();
+  const { creditInfo, isLoading: isCreditsLoading, error, purchaseCredits } = useCredits();
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [hasReportedError, setHasReportedError] = useState(false);
 
-  console.log('Auth state:', { user, isAuthLoading });
-  console.log('Credits state:', { creditInfo, isCreditsLoading });
+  console.log('Dashboard - Auth state:', { user, isAuthLoading });
+  console.log('Dashboard - Credits state:', { creditInfo, isCreditsLoading, error });
 
+  // Report any errors loading credits
+  useEffect(() => {
+    if (error && !hasReportedError) {
+      console.error('Dashboard - Credit loading error:', error);
+      toast({
+        title: "Error loading dashboard data",
+        description: error instanceof Error ? error.message : "An unknown error occurred",
+        variant: "destructive",
+      });
+      setHasReportedError(true);
+    }
+  }, [error, hasReportedError]);
+
+  // Handle redirects based on auth state
   useEffect(() => {
     console.log('Dashboard useEffect - checking auth state');
     if (!isAuthLoading && !user) {
@@ -40,16 +57,37 @@ const Dashboard = () => {
     }
   }, [user, isAuthLoading, navigate]);
 
+  // Force timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isAuthLoading) {
+        console.log('Auth loading timeout reached, forcing refresh');
+        window.location.reload();
+      }
+    }, 10000); // 10 seconds timeout
+    
+    return () => clearTimeout(timeout);
+  }, [isAuthLoading]);
+
   // If we're still loading auth, show loading spinner
   if (isAuthLoading) {
     console.log('Auth is still loading, showing spinner');
-    return <LoadingSpinner />;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <LoadingSpinner />
+        <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
+      </div>
+    );
   }
 
   // If no user and not loading, redirect (the useEffect will handle this)
   if (!user) {
-    console.log('No user found and not loading');
-    return null;
+    console.log('No user found and not loading, showing placeholder');
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Redirecting to login...</p>
+      </div>
+    );
   }
 
   // Now we know we have a user and auth is not loading
@@ -141,6 +179,13 @@ const Dashboard = () => {
             <div className="bg-card rounded-lg border border-border p-6">
               <h3 className="text-lg font-medium mb-2">Credit Status</h3>
               <p>Unable to load credit information. Please try again later.</p>
+              <Button 
+                variant="outline"
+                className="mt-4" 
+                onClick={() => window.location.reload()}
+              >
+                Retry
+              </Button>
             </div>
           )}
 

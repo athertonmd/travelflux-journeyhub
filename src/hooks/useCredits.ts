@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
@@ -17,8 +17,9 @@ export const useCredits = () => {
   const { user } = useAuth();
   const [creditInfo, setCreditInfo] = useState<CreditInfo | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
 
-  const fetchCreditInfo = async () => {
+  const fetchCreditInfo = useCallback(async () => {
     console.log('Fetching credit info, user:', user?.id);
     if (!user) {
       console.log('No user, skipping credit fetch');
@@ -27,6 +28,8 @@ export const useCredits = () => {
     }
     
     setIsLoading(true);
+    setError(null);
+    
     try {
       console.log('Making Supabase query for credits');
       const { data, error } = await supabase
@@ -37,6 +40,7 @@ export const useCredits = () => {
       
       if (error) {
         console.error('Error fetching credit info:', error);
+        setError(error);
         throw error;
       }
       
@@ -71,6 +75,7 @@ export const useCredits = () => {
         
         if (insertError) {
           console.error('Error creating credit record:', insertError);
+          setError(insertError);
           throw insertError;
         }
 
@@ -87,16 +92,23 @@ export const useCredits = () => {
       }
     } catch (error) {
       console.error('Error in fetchCreditInfo:', error);
+      if (error instanceof Error) {
+        setError(error);
+      } else {
+        setError(new Error('Unknown error occurred'));
+      }
+      
       toast({
         title: "Error fetching credit info",
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
+      
       setCreditInfo(null);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
 
   const purchaseCredits = async (amount: number) => {
     if (!user || !creditInfo) {
@@ -146,18 +158,20 @@ export const useCredits = () => {
   };
 
   useEffect(() => {
-    console.log('useCredits useEffect triggered');
+    console.log('useCredits useEffect triggered, user:', user?.id);
     if (user) {
       fetchCreditInfo();
     } else {
+      console.log('useCredits: No user available, resetting state');
       setIsLoading(false);
       setCreditInfo(null);
     }
-  }, [user]);
+  }, [user, fetchCreditInfo]);
 
   return {
     creditInfo,
     isLoading,
+    error,
     fetchCreditInfo,
     purchaseCredits
   };
