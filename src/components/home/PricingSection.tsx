@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,7 +23,7 @@ const PricingSection = () => {
     popular: true
   }, {
     name: 'Enterprise',
-    price: 199,
+    price: 'PoA',
     description: 'Comprehensive solution for established agencies.',
     features: ['Unlimited customers', 'Advanced itinerary management', 'Custom document templates', 'Tripscape Mobile integration', 'Advanced customer management', 'Comprehensive analytics', 'API access', 'Dedicated account manager'],
     cta: 'Contact sales',
@@ -54,7 +55,7 @@ const PricingSection = () => {
                   {plan.name === "Professional" ? "Scale" : plan.name}
                 </h3>
                 <div className="flex items-baseline mb-4">
-                  <span className="text-3xl font-bold">${plan.price}</span>
+                  <span className="text-3xl font-bold">{typeof plan.price === 'number' ? `$${plan.price}` : plan.price}</span>
                   <span className="text-gray-500 ml-1"></span>
                 </div>
                 <p className="text-gray-600 mb-6">{plan.description}</p>
