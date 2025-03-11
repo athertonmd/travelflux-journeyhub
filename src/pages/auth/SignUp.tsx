@@ -27,7 +27,9 @@ const SignUp = () => {
       console.log('User authenticated, redirecting:', user);
       setIsRedirecting(true);
       
+      // Force a short delay to ensure loading state shows and auth state is fully processed
       const redirectTimer = setTimeout(() => {
+        console.log('Redirecting user to:', user.setupCompleted ? '/' : '/welcome');
         if (!user.setupCompleted) {
           navigate('/welcome');
         } else {
@@ -52,8 +54,12 @@ const SignUp = () => {
       
       if (!success) {
         setIsLoading(false);
+      } else {
+        // On success, make sure we explicitly start the redirecting state
+        // This helps avoid UI flickering between states
+        console.log('Signup successful, preparing for redirect');
+        setIsRedirecting(true);
       }
-      // If successful, the useEffect will handle redirection once user state updates
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
@@ -67,11 +73,13 @@ const SignUp = () => {
 
   // Show loading spinner when redirecting after successful signup
   if (isRedirecting) {
+    console.log('Showing redirect spinner');
     return <LoadingSpinner />;
   }
 
   // Show loading spinner during initial auth check
   if (authLoading && !isLoading) {
+    console.log('Showing auth loading spinner');
     return <LoadingSpinner />;
   }
 
