@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Menu, X, User, LogOut } from 'lucide-react';
+import { Menu, X, User, LogOut, ChevronDown, Smartphone, FileText, MessageSquare, ShieldAlert } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -14,6 +15,30 @@ const Navbar = () => {
 
   // Determine if user is authenticated
   const isAuthenticated = !!user;
+
+  // Feature submenu items
+  const featureSubItems = [
+    {
+      name: 'Mobile',
+      path: '/features/mobile',
+      icon: <Smartphone className="h-4 w-4 mr-2" />
+    },
+    {
+      name: 'Document Delivery',
+      path: '/features/document-delivery',
+      icon: <FileText className="h-4 w-4 mr-2" />
+    },
+    {
+      name: 'Microsoft Teams',
+      path: '/features/microsoft-teams',
+      icon: <MessageSquare className="h-4 w-4 mr-2" />
+    },
+    {
+      name: 'Risk Management',
+      path: '/features/risk-management',
+      icon: <ShieldAlert className="h-4 w-4 mr-2" />
+    }
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -71,7 +96,8 @@ const Navbar = () => {
   }, {
     name: 'Features',
     path: '/#features',
-    section: 'features'
+    section: 'features',
+    hasSubmenu: true
   }, {
     name: 'Pricing',
     path: '/#pricing',
@@ -92,14 +118,44 @@ const Navbar = () => {
           
           <div className="hidden md:flex items-center space-x-4">
             <div className="flex space-x-8">
-              {navLinks.map(link => <Link 
-                  key={link.name} 
-                  to={link.path} 
-                  onClick={(e) => link.section && handleNavClick(e, link.section)}
-                  className={`text-sm font-medium transition-colors hover:text-primary ${location.pathname === link.path ? 'text-primary' : 'text-gray-600'}`}
-                >
-                  {link.name}
-                </Link>)}
+              {navLinks.map(link => 
+                link.hasSubmenu ? (
+                  <DropdownMenu key={link.name}>
+                    <DropdownMenuTrigger className="group flex items-center text-sm font-medium transition-colors hover:text-primary">
+                      <Link 
+                        to={link.path} 
+                        onClick={(e) => link.section && handleNavClick(e, link.section)}
+                        className={`flex items-center ${location.pathname.startsWith('/features') ? 'text-primary' : 'text-gray-600'}`}
+                      >
+                        {link.name}
+                        <ChevronDown className="ml-1 h-4 w-4 transition-transform group-data-[state=open]:rotate-180" />
+                      </Link>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="center" className="w-56">
+                      {featureSubItems.map(subItem => (
+                        <DropdownMenuItem key={subItem.name} asChild>
+                          <Link 
+                            to={subItem.path} 
+                            className="flex items-center cursor-pointer"
+                          >
+                            {subItem.icon}
+                            <span>{subItem.name}</span>
+                          </Link>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Link 
+                    key={link.name} 
+                    to={link.path} 
+                    onClick={(e) => link.section && handleNavClick(e, link.section)}
+                    className={`text-sm font-medium transition-colors hover:text-primary ${location.pathname === link.path ? 'text-primary' : 'text-gray-600'}`}
+                  >
+                    {link.name}
+                  </Link>
+                )
+              )}
             </div>
             
             <div className="flex items-center space-x-2">
@@ -146,14 +202,41 @@ const Navbar = () => {
       {/* Mobile menu */}
       <div className={`md:hidden transition-all duration-300 ease-in-out overflow-hidden ${isMobileMenuOpen ? 'max-h-screen bg-white/95 backdrop-blur-md shadow-lg' : 'max-h-0'}`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-          {navLinks.map(link => <Link 
-              key={link.name} 
-              to={link.path} 
-              onClick={(e) => link.section && handleNavClick(e, link.section)}
-              className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === link.path ? 'text-primary bg-primary/10' : 'text-gray-700 hover:bg-gray-50'}`}
-            >
-              {link.name}
-            </Link>)}
+          {navLinks.map(link => 
+            link.hasSubmenu ? (
+              <div key={link.name} className="space-y-1">
+                <Link 
+                  to={link.path} 
+                  onClick={(e) => link.section && handleNavClick(e, link.section)}
+                  className={`flex items-center justify-between px-3 py-2 rounded-md text-base font-medium ${location.pathname.startsWith('/features') ? 'text-primary bg-primary/10' : 'text-gray-700 hover:bg-gray-50'}`}
+                >
+                  <span>{link.name}</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Link>
+                <div className="pl-4 space-y-1 border-l-2 border-gray-200 ml-3">
+                  {featureSubItems.map(subItem => (
+                    <Link 
+                      key={subItem.name}
+                      to={subItem.path}
+                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium ${location.pathname === subItem.path ? 'text-primary bg-primary/10' : 'text-gray-600 hover:bg-gray-50'}`}
+                    >
+                      {subItem.icon}
+                      <span>{subItem.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <Link 
+                key={link.name} 
+                to={link.path} 
+                onClick={(e) => link.section && handleNavClick(e, link.section)}
+                className={`block px-3 py-2 rounded-md text-base font-medium ${location.pathname === link.path ? 'text-primary bg-primary/10' : 'text-gray-700 hover:bg-gray-50'}`}
+              >
+                {link.name}
+              </Link>
+            )
+          )}
           
           {isAuthenticated ? <div className="border-t border-gray-200 pt-4 pb-3">
               <div className="flex items-center px-5">

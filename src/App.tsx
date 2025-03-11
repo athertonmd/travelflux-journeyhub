@@ -10,6 +10,10 @@ import SignUp from "./pages/auth/SignUp";
 import Login from "./pages/auth/Login";
 import Contact from "./pages/Contact";
 import { AuthProvider } from "./contexts/AuthContext";
+import MobilePage from "./pages/features/Mobile";
+import DocumentDeliveryPage from "./pages/features/DocumentDelivery";
+import MicrosoftTeamsPage from "./pages/features/MicrosoftTeams";
+import RiskManagementPage from "./pages/features/RiskManagement";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +29,10 @@ const App = () => (
             <Route path="/signup" element={<SignUp />} />
             <Route path="/login" element={<Login />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/features/mobile" element={<MobilePage />} />
+            <Route path="/features/document-delivery" element={<DocumentDeliveryPage />} />
+            <Route path="/features/microsoft-teams" element={<MicrosoftTeamsPage />} />
+            <Route path="/features/risk-management" element={<RiskManagementPage />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
