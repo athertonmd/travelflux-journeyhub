@@ -34,7 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     console.log('AuthContext state updated:', { 
       isLoggedIn: !!user, 
       isLoading, 
-      setupCompleted: user?.setupCompleted
+      user: user ? {
+        id: user.id,
+        email: user.email,
+        setupCompleted: user.setupCompleted
+      } : null
     });
   }, [user, isLoading]);
 

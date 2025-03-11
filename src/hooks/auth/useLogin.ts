@@ -8,59 +8,14 @@ export const useLogin = (
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
   const login = async (email: string, password: string) => {
+    console.log('Login function called with email:', email);
+    
     try {
-      console.log('Attempting login with:', email);
-      
-      // First check if we already have an active session
-      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-      console.log('Session check result:', sessionData?.session ? 'Active session found' : 'No active session', sessionError);
-      
-      if (sessionData?.session) {
-        console.log('Active session found, using existing session');
-        
-        // Get user data from the session
-        const { data: userData, error: userError } = await supabase.auth.getUser();
-        console.log('User data result:', userData?.user ? 'User found' : 'No user found', userError);
-        
-        if (userData?.user) {
-          // Get configuration data
-          const { data: configData, error: configError } = await supabase
-            .from('agency_configurations')
-            .select('setup_completed')
-            .eq('user_id', userData.user.id)
-            .maybeSingle();
-            
-          console.log('Config data result:', configData ? 'Config found' : 'No config found', configError);
-            
-          // Set user with session data
-          const user = {
-            id: userData.user.id,
-            email: userData.user.email || '',
-            name: userData.user.user_metadata?.name || userData.user.email?.split('@')[0] || '',
-            agencyName: userData.user.user_metadata?.agencyName,
-            setupCompleted: configData?.setup_completed || false
-          };
-          
-          setUser(user);
-          
-          toast({
-            title: "Already logged in",
-            description: "You're already logged in with an active session",
-          });
-          
-          return true;
-        }
-      }
-      
-      // No session, attempt login
-      console.log('No active session, attempting login with credentials');
-      
+      // Attempt login with provided credentials
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
-      
-      console.log('Login attempt result:', error ? 'Error' : 'Success', error || 'No error');
       
       if (error) {
         console.error('Login error from Supabase:', error);

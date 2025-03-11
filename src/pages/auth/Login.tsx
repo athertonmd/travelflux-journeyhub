@@ -18,13 +18,13 @@ const Login = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [isRedirecting, setIsRedirecting] = useState(false);
   
   // Check if user is already logged in and redirect
   useEffect(() => {
-    if (user && !isRedirecting && !authLoading) {
+    console.log('Login page rendered, auth state:', { user, authLoading });
+    
+    if (user && !authLoading) {
       console.log('User is already authenticated, redirecting:', user);
-      setIsRedirecting(true);
       
       toast({
         title: "Already signed in",
@@ -32,34 +32,32 @@ const Login = () => {
       });
       
       // Use a short timeout to allow the UI to update before redirect
-      const redirectTimer = setTimeout(() => {
+      setTimeout(() => {
         if (user.setupCompleted) {
           navigate('/dashboard');
         } else {
           navigate('/welcome');
         }
-      }, 500);
-      
-      return () => clearTimeout(redirectTimer);
+      }, 100);
     }
-  }, [user, navigate, isRedirecting, authLoading]);
+  }, [user, navigate, authLoading]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
+    console.log('Login handler called with:', email);
+    
     // Prevent login attempt if already processing
-    if (isLoading || authLoading || isRedirecting) {
+    if (isLoading || authLoading) {
       console.log('Skipping login attempt: already processing');
       return false;
     }
     
-    console.log('Login attempt starting');
-    setIsLoading(true);
-    
     try {
+      setIsLoading(true);
+      
       // Call the login function from AuthContext
       const success = await login(email, password);
       console.log('Login result:', success ? 'Success' : 'Failed');
       
-      // Reset loading state if login failed
       if (!success) {
         setIsLoading(false);
       }
@@ -76,11 +74,6 @@ const Login = () => {
       return false;
     }
   };
-  
-  // If we're already redirecting, show loading spinner
-  if (isRedirecting) {
-    return <LoadingSpinner />;
-  }
   
   // If initial auth check is in progress (and we're not already trying to log in),
   // show a loading spinner

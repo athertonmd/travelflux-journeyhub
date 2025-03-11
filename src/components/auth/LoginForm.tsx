@@ -49,6 +49,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     }
     
     console.log('Form submitted, attempting login...');
+    
     try {
       await onLogin(formData.email, formData.password, formData.remember);
     } catch (error) {
