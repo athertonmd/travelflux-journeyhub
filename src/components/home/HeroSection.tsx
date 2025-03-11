@@ -37,15 +37,31 @@ const HeroSection = () => {
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                {/* Direct embed using the proper Synthesia format */}
-                <iframe 
-                  src="https://play.synthesia.io/embed/4fe30803-dd2d-4564-861d-35dbb3e25b71"
+                {/* Using direct embed script from Synthesia */}
+                <div 
+                  id="synthesia-player" 
                   className="w-full h-full"
-                  title="Tripscape SaaS Demo"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  loading="lazy"
-                ></iframe>
+                  data-video-id="4fe30803-dd2d-4564-861d-35dbb3e25b71"
+                >
+                  <img 
+                    src="/lovable-uploads/d6fadef4-f3df-4f27-93f8-a01123582118.png" 
+                    alt="Tripscape SaaS Demo" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <a 
+                      href="https://share.synthesia.io/4fe30803-dd2d-4564-861d-35dbb3e25b71" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="bg-primary/90 hover:bg-primary text-white rounded-full px-6 py-3 font-medium flex items-center gap-2"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-play">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                      Watch Video
+                    </a>
+                  </div>
+                </div>
               </div>
             </CardContent>
           </Card>
