@@ -14,6 +14,7 @@ import MobilePage from "./pages/features/Mobile";
 import DocumentDeliveryPage from "./pages/features/DocumentDelivery";
 import MicrosoftTeamsPage from "./pages/features/MicrosoftTeams";
 import RiskManagementPage from "./pages/features/RiskManagement";
+import Welcome from "./pages/onboarding/Welcome";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/features/document-delivery" element={<DocumentDeliveryPage />} />
             <Route path="/features/microsoft-teams" element={<MicrosoftTeamsPage />} />
             <Route path="/features/risk-management" element={<RiskManagementPage />} />
+            <Route path="/welcome" element={<Welcome />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
