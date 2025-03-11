@@ -22,7 +22,7 @@ const Login = () => {
   
   // Check if user is already logged in and redirect
   useEffect(() => {
-    if (user && !isRedirecting) {
+    if (user && !isRedirecting && !isLoading) {
       console.log('User is already authenticated, redirecting:', user);
       setIsRedirecting(true);
       
@@ -41,7 +41,7 @@ const Login = () => {
       
       return () => clearTimeout(redirectTimer);
     }
-  }, [user, navigate, isRedirecting]);
+  }, [user, navigate, isRedirecting, isLoading]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     // Don't attempt login if already loading or redirecting
@@ -50,19 +50,18 @@ const Login = () => {
       return false;
     }
     
+    setIsLoading(true);
+    console.log('Login attempt starting');
+    
     try {
-      setIsLoading(true);
-      console.log('Login attempt starting');
-      
       const success = await login(email, password);
       
       if (!success) {
-        // If login failed, show error message (already handled in useLogin)
+        // Login failed, reset loading state (this is already handled in useLogin)
         setIsLoading(false);
-        return false;
       }
       
-      return true;
+      return success;
     } catch (error) {
       console.error('Login handler error:', error);
       toast({
@@ -81,7 +80,7 @@ const Login = () => {
   }
   
   // Show loading spinner during initial auth check
-  if (authLoading) {
+  if (authLoading && !isLoading) {
     return <LoadingSpinner />;
   }
   

@@ -10,6 +10,7 @@ export const useLogin = (
   const login = async (email: string, password: string) => {
     try {
       console.log('Attempting login with:', email);
+      setIsLoading(true);
       
       // First check if we already have an active session
       const { data: sessionData } = await supabase.auth.getSession();
@@ -36,6 +37,7 @@ export const useLogin = (
           };
           
           setUser(user);
+          setIsLoading(false);
           
           toast({
             title: "Already logged in",
@@ -63,6 +65,7 @@ export const useLogin = (
           variant: "destructive",
         });
         
+        setIsLoading(false);
         return false;
       }
       
@@ -75,6 +78,7 @@ export const useLogin = (
           variant: "destructive",
         });
         
+        setIsLoading(false);
         return false;
       }
       
@@ -109,6 +113,7 @@ export const useLogin = (
         description: "Welcome back to Tripscape!",
       });
       
+      setIsLoading(false);
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -119,6 +124,7 @@ export const useLogin = (
         variant: "destructive",
       });
       
+      setIsLoading(false);
       return false;
     }
   };

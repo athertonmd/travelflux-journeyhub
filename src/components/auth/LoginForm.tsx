@@ -34,6 +34,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     
     // Prevent submission if already loading
     if (isLoading) {
+      console.log('Form submission prevented: already loading');
       return;
     }
     
@@ -47,6 +48,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
       return;
     }
     
+    console.log('Form submitted, attempting login...');
     try {
       await onLogin(formData.email, formData.password, formData.remember);
     } catch (error) {
