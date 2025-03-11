@@ -18,12 +18,9 @@ export const useOnboarding = () => {
     setIsLoading: setFormLoading
   } = useOnboardingForm(user?.id);
 
-  // Set the user's name when the component initializes
   useEffect(() => {
     if (user && user.email && !formData.userName) {
-      // Extract user name from email (everything before the @)
       const userName = user.email.split('@')[0];
-      // Capitalize the first letter for a nicer display
       const formattedUserName = userName.charAt(0).toUpperCase() + userName.slice(1);
       updateFormData('userName', formattedUserName);
     }
@@ -47,18 +44,14 @@ export const useOnboarding = () => {
     formData
   );
 
-  // Redirect if not logged in
   useEffect(() => {
     if (!user && !isLoading) {
       navigate('/login');
     }
   }, [user, navigate, isLoading]);
 
-  const handleComplete = async () => {
-    const success = await completeSetup(formData, updateSetupStatus);
-    if (success) {
-      navigateToDashboard();
-    }
+  const handleComplete = async (): Promise<boolean> => {
+    return await completeSetup(formData, updateSetupStatus);
   };
 
   return {
