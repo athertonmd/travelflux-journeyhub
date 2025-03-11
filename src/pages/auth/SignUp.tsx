@@ -16,6 +16,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -36,6 +37,7 @@ const SignUp = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
+      console.log('User already authenticated:', user);
       if (!user.setupCompleted) {
         navigate('/welcome');
       } else {
@@ -70,6 +72,42 @@ const SignUp = () => {
     }));
   };
 
+  const verifyUserConfiguration = async (userId: string) => {
+    try {
+      // Verify if the user has a configuration record
+      const { data, error } = await supabase
+        .from('agency_configurations')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error) {
+        console.error('Error checking user configuration:', error);
+        
+        // If no configuration exists, create one manually
+        if (error.code === 'PGRST116') { // No rows returned error
+          console.log('No configuration found, creating one manually...');
+          const { error: insertError } = await supabase
+            .from('agency_configurations')
+            .insert([{ user_id: userId, setup_completed: false }]);
+            
+          if (insertError) {
+            console.error('Error creating user configuration:', insertError);
+            throw insertError;
+          }
+          console.log('Manual configuration created successfully');
+        } else {
+          throw error;
+        }
+      } else {
+        console.log('User configuration verified:', data);
+      }
+    } catch (error) {
+      console.error('Failed to verify user configuration:', error);
+      // Continue the flow even if this fails, the trigger should handle it
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -79,21 +117,35 @@ const SignUp = () => {
     
     try {
       console.log('Attempting signup with:', formData.name, formData.email, formData.agencyName);
-      await signup(
+      const { user: newUser, error } = await signup(
         formData.name,
         formData.email,
         formData.password,
         formData.agencyName
       );
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (newUser?.id) {
+        console.log('Signup successful, verifying user configuration...');
+        await verifyUserConfiguration(newUser.id);
+      }
+      
       // Navigation will be handled by the useEffect
-      console.log('Signup successful, redirecting soon...');
+      console.log('Signup process completed, redirecting soon...');
       toast({
         title: "Account created",
         description: "You will be redirected to complete your setup.",
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error);
-      // Error is handled in the auth context
+      toast({
+        title: "Signup Failed",
+        description: error?.message || "Failed to create account. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

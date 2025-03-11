@@ -16,6 +16,7 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
+      console.log('User is authenticated, checking setup status:', user);
       if (!user.setupCompleted) {
         navigate('/welcome');
       } else {
@@ -51,11 +53,17 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      console.log('Attempting login with:', formData.email);
       await login(formData.email, formData.password);
       // Navigation will be handled by the useEffect
-    } catch (error) {
+      console.log('Login successful, redirection will occur via useEffect');
+    } catch (error: any) {
       console.error('Login error:', error);
-      // Error is handled in the auth context
+      toast({
+        title: "Login Failed",
+        description: error?.message || "Invalid email or password. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
