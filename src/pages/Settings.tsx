@@ -1,16 +1,19 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import StepController from '@/components/onboarding/StepController';
-import { Card, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Settings as SettingsIcon } from 'lucide-react';
 
 const Settings = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('products');
   const {
     formData,
     isLoading,
@@ -54,11 +57,64 @@ const Settings = () => {
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
           <Card className="max-w-4xl mx-auto">
-            <StepController 
-              currentStep="products"
-              formData={formData}
-              updateFormData={updateFormData}
-            />
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <SettingsIcon className="h-5 w-5 mr-2" />
+                Configuration Settings
+              </CardTitle>
+            </CardHeader>
+            
+            <CardContent>
+              <Tabs defaultValue="products" value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="grid grid-cols-5 mb-6">
+                  <TabsTrigger value="products">Products</TabsTrigger>
+                  <TabsTrigger value="gds">GDS</TabsTrigger>
+                  <TabsTrigger value="config">GDS Config</TabsTrigger>
+                  <TabsTrigger value="trips">Trip Tiles</TabsTrigger>
+                  <TabsTrigger value="branding">Branding</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="products">
+                  <StepController 
+                    currentStep="products"
+                    formData={formData}
+                    updateFormData={updateFormData}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="gds">
+                  <StepController 
+                    currentStep="gds"
+                    formData={formData}
+                    updateFormData={updateFormData}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="config">
+                  <StepController 
+                    currentStep="config"
+                    formData={formData}
+                    updateFormData={updateFormData}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="trips">
+                  <StepController 
+                    currentStep="trips"
+                    formData={formData}
+                    updateFormData={updateFormData}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="branding">
+                  <StepController 
+                    currentStep="branding"
+                    formData={formData}
+                    updateFormData={updateFormData}
+                  />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
 
             <CardFooter>
               <div className="flex justify-end w-full">
@@ -66,7 +122,15 @@ const Settings = () => {
                   onClick={handleSave}
                   disabled={isLoading}
                 >
-                  Save Changes
+                  {isLoading ? (
+                    <span className="flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : "Save Changes"}
                 </Button>
               </div>
             </CardFooter>
