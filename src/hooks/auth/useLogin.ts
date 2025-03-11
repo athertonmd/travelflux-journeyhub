@@ -56,12 +56,26 @@ export const useLogin = (
       
       if (error) {
         console.error('Login error from Supabase:', error);
-        throw error;
+        
+        toast({
+          title: "Login failed",
+          description: error.message || "Please check your credentials and try again",
+          variant: "destructive",
+        });
+        
+        return false;
       }
       
       if (!data?.user) {
         console.error('Login succeeded but no user returned');
-        throw new Error('Login succeeded but no user data was returned');
+        
+        toast({
+          title: "Login error",
+          description: "Login succeeded but no user data was returned",
+          variant: "destructive",
+        });
+        
+        return false;
       }
       
       console.log('Login successful, user data:', data.user);
