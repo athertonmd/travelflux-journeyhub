@@ -3,7 +3,6 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardCard from '@/components/DashboardCard';
-import { PieChart, LineChart, BarChart } from 'recharts';
 import { 
   CreditCard, 
   Users, 
@@ -15,6 +14,7 @@ import {
   Settings,
   HelpCircle
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -43,8 +43,19 @@ const Dashboard = () => {
           <h1 className="text-2xl font-semibold">Agency Dashboard</h1>
           <div className="flex items-center gap-4">
             <span className="text-sm">Welcome, {user.name || user.email}</span>
-            <Settings className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary" />
-            <HelpCircle className="h-5 w-5 cursor-pointer text-gray-500 hover:text-primary" />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate('/settings')}
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </header>
