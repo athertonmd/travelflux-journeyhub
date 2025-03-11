@@ -37,20 +37,13 @@ const HeroSection = () => {
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                <video 
-                  className="w-full h-full object-cover"
-                  autoPlay 
-                  muted 
-                  loop 
-                  playsInline
-                >
-                  <source 
-                    src="https://static.videezy.com/system/resources/previews/000/005/929/original/Travel_Planning.mp4" 
-                    type="video/mp4" 
-                  />
-                  Your browser does not support the video tag.
-                </video>
-                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+                <iframe
+                  className="w-full h-full"
+                  src="https://share.synthesia.io/embeds/4fe30803-dd2d-4564-861d-35dbb3e25b71"
+                  title="Tripscape SaaS Demo"
+                  allow="autoplay; encrypted-media; fullscreen;"
+                  frameBorder="0"
+                ></iframe>
               </div>
             </CardContent>
           </Card>
