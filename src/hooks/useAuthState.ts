@@ -60,6 +60,7 @@ export const useAuthState = () => {
                   ...userData,
                   setupCompleted: false
                 });
+                setIsLoading(false); // Make sure to set loading state to false
               }
             } else {
               console.log("useAuthState: Config found, setup completed:", configData.setup_completed);
@@ -68,6 +69,7 @@ export const useAuthState = () => {
                   ...userData,
                   setupCompleted: configData?.setup_completed || false
                 });
+                setIsLoading(false); // Make sure to set loading state to false
               }
             }
           } catch (configError) {
@@ -78,19 +80,19 @@ export const useAuthState = () => {
                 ...userData,
                 setupCompleted: false
               });
+              setIsLoading(false); // Make sure to set loading state to false
             }
           }
         } else {
           console.log("useAuthState: No session found");
-          if (mounted) setUser(null);
+          if (mounted) {
+            setUser(null);
+            setIsLoading(false); // Make sure to set loading state to false
+          }
         }
       } catch (error) {
         console.error('Auth check error:', error);
-      } finally {
-        if (mounted) {
-          console.log("useAuthState: Setting isLoading to false after initial check");
-          setIsLoading(false);
-        }
+        if (mounted) setIsLoading(false); // Make sure to set loading state to false
       }
     };
 

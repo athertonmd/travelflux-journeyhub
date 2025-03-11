@@ -18,6 +18,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
   
   // Redirect if already logged in
   useEffect(() => {
@@ -28,11 +29,15 @@ const Login = () => {
       } else {
         navigate('/');
       }
+    } else if (loginAttempted && !isLoading && !authLoading) {
+      // Reset login attempted state if login fails
+      setLoginAttempted(false);
     }
-  }, [user, navigate]);
+  }, [user, navigate, loginAttempted, isLoading, authLoading]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     setIsLoading(true);
+    setLoginAttempted(true);
     
     try {
       console.log('Attempting login with:', email);
@@ -41,18 +46,35 @@ const Login = () => {
       console.log('Login successful, redirection will occur via useEffect');
     } catch (error: any) {
       console.error('Login error:', error);
+      setLoginAttempted(false);
       toast({
         title: "Login Failed",
         description: error?.message || "Invalid email or password. Please try again.",
         variant: "destructive"
       });
-      throw error;
-    } finally {
       setIsLoading(false);
     }
   };
   
-  if (authLoading) {
+  // Prevent infinite loading by adding a failsafe timeout
+  useEffect(() => {
+    let timeoutId: NodeJS.Timeout;
+    
+    if (isLoading || authLoading) {
+      timeoutId = setTimeout(() => {
+        if (isLoading) {
+          console.log('Login timeout reached, resetting loading state');
+          setIsLoading(false);
+        }
+      }, 10000); // 10 seconds timeout
+    }
+    
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [isLoading, authLoading]);
+  
+  if (authLoading && !loginAttempted) {
     return <LoadingSpinner />;
   }
   
