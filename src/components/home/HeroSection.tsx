@@ -36,7 +36,22 @@ const HeroSection = () => {
           <div className="absolute inset-0 bg-primary/5 rounded-xl transform rotate-1"></div>
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
-              <img src="https://placehold.co/1200x600/f5f9ff/4287f5?text=Dashboard+Preview" alt="TravelFlux Dashboard Preview" className="w-full h-auto object-cover" />
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                <video 
+                  className="w-full h-full object-cover"
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline
+                >
+                  <source 
+                    src="https://static.videezy.com/system/resources/previews/000/005/929/original/Travel_Planning.mp4" 
+                    type="video/mp4" 
+                  />
+                  Your browser does not support the video tag.
+                </video>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+              </div>
             </CardContent>
           </Card>
         </div>
