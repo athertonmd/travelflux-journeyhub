@@ -74,11 +74,14 @@ export const useOnboarding = () => {
           if (data.gds_provider) newFormData.gdsProvider = data.gds_provider;
           if (data.gds_config) newFormData.gdsConfig = data.gds_config as OnboardingFormData['gdsConfig'];
           if (data.selected_trip_tiles) newFormData.selectedTripTiles = data.selected_trip_tiles;
-          if (data.branding) newFormData.branding = {
-            ...newFormData.branding,
-            primaryColor: data.branding.primaryColor || '#1EAEDB',
-            secondaryColor: data.branding.secondaryColor || '#0FA0CE'
-          };
+          if (data.branding && typeof data.branding === 'object') {
+            const brandingData = data.branding as Record<string, unknown>;
+            newFormData.branding = {
+              ...newFormData.branding,
+              primaryColor: typeof brandingData.primaryColor === 'string' ? brandingData.primaryColor : '#1EAEDB',
+              secondaryColor: typeof brandingData.secondaryColor === 'string' ? brandingData.secondaryColor : '#0FA0CE'
+            };
+          }
           
           setFormData(newFormData);
         }

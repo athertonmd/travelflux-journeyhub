@@ -12,6 +12,8 @@ interface DashboardCardProps {
     value: number;
     isPositive: boolean;
   };
+  isPositive?: boolean; // For backward compatibility
+  changeValue?: number; // For backward compatibility
   className?: string;
   children?: React.ReactNode;
 }
@@ -22,9 +24,18 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   icon,
   value,
   trend,
+  isPositive,
+  changeValue,
   className,
   children,
 }) => {
+  // Convert legacy props to trend object if provided
+  const trendData = trend || (
+    isPositive !== undefined && changeValue !== undefined 
+      ? { value: changeValue, isPositive } 
+      : undefined
+  );
+
   return (
     <Card className={cn("overflow-hidden transition-all duration-200 hover:shadow-md glass-card", className)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -38,12 +49,12 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
         {value !== undefined && (
           <div className="flex items-baseline space-x-2">
             <div className="text-2xl font-bold">{value}</div>
-            {trend && (
+            {trendData && (
               <div className={cn(
                 "text-xs",
-                trend.isPositive ? "text-green-500" : "text-red-500"
+                trendData.isPositive ? "text-green-500" : "text-red-500"
               )}>
-                {trend.isPositive ? "+" : "-"}{Math.abs(trend.value)}%
+                {trendData.isPositive ? "+" : "-"}{Math.abs(trendData.value)}%
               </div>
             )}
           </div>

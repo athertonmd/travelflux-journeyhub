@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardFooter } from '@/components/ui/card';
+import { Card, CardFooter, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { ChevronRight, ChevronLeft } from 'lucide-react';
 import ProductSelection from '@/components/onboarding/ProductSelection';
 import GdsSelection from '@/components/onboarding/GdsSelection';
