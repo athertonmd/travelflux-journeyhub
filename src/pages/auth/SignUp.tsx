@@ -13,6 +13,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import SignUpForm from '@/components/auth/SignUpForm';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
+import { toast } from '@/hooks/use-toast';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -33,12 +34,16 @@ const SignUp = () => {
   const handleSignUp = async (name: string, email: string, password: string, agencyName: string) => {
     setIsLoading(true);
     try {
-      console.log('Attempting signup with:', name, email, agencyName);
+      console.log('Attempting signup with:', { name, email, agencyName });
       await signup(name, email, password, agencyName);
       console.log('Signup process completed, user will be redirected by useEffect if authenticated');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Signup error:', error);
-      throw error;
+      toast({
+        title: "Signup Failed",
+        description: error?.message || "Failed to create account. Please try again.",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

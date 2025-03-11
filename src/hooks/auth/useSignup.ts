@@ -10,6 +10,25 @@ export const useSignup = (
   const signup = async (name: string, email: string, password: string, agencyName?: string) => {
     setIsLoading(true);
     try {
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from('auth.users')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
+      
+      if (existingUser) {
+        toast({
+          title: "User already exists",
+          description: "This email is already registered. Please login instead.",
+          variant: "destructive",
+        });
+        setIsLoading(false);
+        return;
+      }
+
+      console.log('Creating user with:', { name, email, agencyName });
+      
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -23,6 +42,8 @@ export const useSignup = (
       
       if (error) throw error;
       
+      console.log('Signup response:', data);
+      
       if (data.user) {
         const userData = {
           id: data.user.id,
@@ -33,6 +54,7 @@ export const useSignup = (
         };
         
         try {
+          // Create configuration record for the new user
           const { error: configError } = await supabase
             .from('agency_configurations')
             .insert({
@@ -45,6 +67,20 @@ export const useSignup = (
             if (configError.code !== '23505') { // not a duplicate key error
               throw configError;
             }
+          }
+          
+          // Create initial credits for the new user
+          const { error: creditsError } = await supabase
+            .from('credits')
+            .insert({
+              user_id: userData.id,
+              total_credits: 30,
+              used_credits: 0,
+              is_free_tier: true
+            });
+            
+          if (creditsError) {
+            console.error('Error creating credits:', creditsError);
           }
           
           setUser(userData);

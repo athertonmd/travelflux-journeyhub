@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { CardContent } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 
 interface SignUpFormProps {
   isLoading: boolean;
@@ -22,13 +21,33 @@ const SignUpForm = ({ isLoading, onSignUp }: SignUpFormProps) => {
   });
 
   const [errors, setErrors] = useState({
+    name: '',
+    email: '',
     password: '',
     confirmPassword: '',
   });
 
   const validateForm = () => {
     let valid = true;
-    const newErrors = { password: '', confirmPassword: '' };
+    const newErrors = { 
+      name: '', 
+      email: '', 
+      password: '', 
+      confirmPassword: '' 
+    };
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required';
+      valid = false;
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+      valid = false;
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+      valid = false;
+    }
 
     if (formData.password.length < 6) {
       newErrors.password = 'Password must be at least 6 characters';
@@ -57,6 +76,12 @@ const SignUpForm = ({ isLoading, onSignUp }: SignUpFormProps) => {
     if (!validateForm()) return;
     
     try {
+      console.log('Submitting form with data:', {
+        name: formData.name,
+        email: formData.email,
+        agencyName: formData.agencyName
+      });
+      
       await onSignUp(
         formData.name,
         formData.email,
@@ -86,8 +111,13 @@ const SignUpForm = ({ isLoading, onSignUp }: SignUpFormProps) => {
             value={formData.name}
             onChange={handleChange}
             required
-            className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
+            className={`transition-all duration-200 focus:ring-2 focus:ring-primary/30 ${
+              errors.name ? 'border-red-500' : ''
+            }`}
           />
+          {errors.name && (
+            <p className="text-red-500 text-xs mt-1">{errors.name}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -113,8 +143,13 @@ const SignUpForm = ({ isLoading, onSignUp }: SignUpFormProps) => {
             value={formData.email}
             onChange={handleChange}
             required
-            className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
+            className={`transition-all duration-200 focus:ring-2 focus:ring-primary/30 ${
+              errors.email ? 'border-red-500' : ''
+            }`}
           />
+          {errors.email && (
+            <p className="text-red-500 text-xs mt-1">{errors.email}</p>
+          )}
         </div>
 
         <div className="space-y-2">

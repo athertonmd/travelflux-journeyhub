@@ -10,12 +10,16 @@ export const useLogin = (
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
+      console.log('Attempting login with:', email);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
       
       if (error) throw error;
+      
+      console.log('Login successful, user data:', data.user);
       
       if (data.user) {
         const userData = {
@@ -36,6 +40,7 @@ export const useLogin = (
         }
         
         if (!configData) {
+          console.log('No configuration found, creating one...');
           const { error: insertError } = await supabase
             .from('agency_configurations')
             .insert({
@@ -52,6 +57,7 @@ export const useLogin = (
             setupCompleted: false
           });
         } else {
+          console.log('Configuration found:', configData);
           setUser({
             ...userData,
             setupCompleted: configData?.setup_completed || false
