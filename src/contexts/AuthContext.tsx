@@ -50,16 +50,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           };
           
           // Check setup status
-          const { data: configData } = await supabase
+          const { data: configData, error: configError } = await supabase
             .from('agency_configurations')
             .select('setup_completed')
             .eq('user_id', userData.id)
-            .single();
+            .maybeSingle();
           
-          setUser({
-            ...userData,
-            setupCompleted: configData?.setup_completed || false
-          });
+          if (configError && configError.code !== 'PGRST116') {
+            console.error('Error fetching config:', configError);
+          }
+          
+          // If no configuration exists for this user, create one
+          if (!configData) {
+            const { error: insertError } = await supabase
+              .from('agency_configurations')
+              .insert({
+                user_id: userData.id,
+                setup_completed: false
+              });
+            
+            if (insertError) {
+              console.error('Error creating configuration:', insertError);
+            }
+            
+            setUser({
+              ...userData,
+              setupCompleted: false
+            });
+          } else {
+            setUser({
+              ...userData,
+              setupCompleted: configData?.setup_completed || false
+            });
+          }
         }
       } catch (error) {
         console.error('Auth check error:', error);
@@ -72,6 +95,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Subscribe to auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.id);
+      
       if (event === 'SIGNED_IN' && session) {
         const userData = {
           id: session.user.id,
@@ -80,17 +105,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           agencyName: session.user.user_metadata?.agencyName
         };
         
-        // Check setup status
-        const { data: configData } = await supabase
+        // Check if configuration exists
+        const { data: configData, error: configError } = await supabase
           .from('agency_configurations')
           .select('setup_completed')
           .eq('user_id', userData.id)
-          .single();
+          .maybeSingle();
         
-        setUser({
-          ...userData,
-          setupCompleted: configData?.setup_completed || false
-        });
+        if (configError && configError.code !== 'PGRST116') {
+          console.error('Error fetching config:', configError);
+        }
+        
+        // If no configuration exists, create one
+        if (!configData) {
+          console.log('Creating new configuration for user:', userData.id);
+          const { error: insertError } = await supabase
+            .from('agency_configurations')
+            .insert({
+              user_id: userData.id,
+              setup_completed: false
+            });
+          
+          if (insertError) {
+            console.error('Error creating configuration:', insertError);
+          }
+          
+          setUser({
+            ...userData,
+            setupCompleted: false
+          });
+        } else {
+          setUser({
+            ...userData,
+            setupCompleted: configData?.setup_completed || false
+          });
+        }
       } else if (event === 'SIGNED_OUT') {
         setUser(null);
       }
@@ -120,16 +169,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
         
         // Check setup status
-        const { data: configData } = await supabase
+        const { data: configData, error: configError } = await supabase
           .from('agency_configurations')
           .select('setup_completed')
           .eq('user_id', userData.id)
-          .single();
+          .maybeSingle();
         
-        setUser({
-          ...userData,
-          setupCompleted: configData?.setup_completed || false
-        });
+        if (configError && configError.code !== 'PGRST116') {
+          console.error('Error fetching config:', configError);
+        }
+        
+        // If no configuration exists, create one
+        if (!configData) {
+          const { error: insertError } = await supabase
+            .from('agency_configurations')
+            .insert({
+              user_id: userData.id,
+              setup_completed: false
+            });
+          
+          if (insertError) {
+            console.error('Error creating configuration:', insertError);
+          }
+          
+          setUser({
+            ...userData,
+            setupCompleted: false
+          });
+        } else {
+          setUser({
+            ...userData,
+            setupCompleted: configData?.setup_completed || false
+          });
+        }
         
         toast({
           title: "Login successful",
@@ -173,6 +245,37 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           agencyName: data.user.user_metadata?.agencyName,
           setupCompleted: false
         };
+        
+        console.log('User signed up:', userData.id);
+        
+        // Create the agency configuration
+        const { error: insertError } = await supabase
+          .from('agency_configurations')
+          .insert({
+            user_id: userData.id,
+            setup_completed: false
+          });
+        
+        if (insertError) {
+          console.error('Error creating configuration after signup:', insertError);
+          // Try to create it again with a delay
+          setTimeout(async () => {
+            const { error: retryError } = await supabase
+              .from('agency_configurations')
+              .insert({
+                user_id: userData.id,
+                setup_completed: false
+              });
+            
+            if (retryError) {
+              console.error('Retry failed to create configuration:', retryError);
+            } else {
+              console.log('Successfully created configuration on retry');
+            }
+          }, 2000);
+        } else {
+          console.log('Configuration created successfully');
+        }
         
         setUser(userData);
         

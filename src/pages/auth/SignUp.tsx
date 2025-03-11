@@ -15,6 +15,7 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -77,6 +78,7 @@ const SignUp = () => {
     setIsLoading(true);
     
     try {
+      console.log('Attempting signup with:', formData.name, formData.email, formData.agencyName);
       await signup(
         formData.name,
         formData.email,
@@ -84,6 +86,11 @@ const SignUp = () => {
         formData.agencyName
       );
       // Navigation will be handled by the useEffect
+      console.log('Signup successful, redirecting soon...');
+      toast({
+        title: "Account created",
+        description: "You will be redirected to complete your setup.",
+      });
     } catch (error) {
       console.error('Signup error:', error);
       // Error is handled in the auth context
