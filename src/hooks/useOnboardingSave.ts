@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { OnboardingFormData } from './useOnboardingForm';
@@ -45,7 +44,7 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
     }
   };
 
-  const completeSetup = async (formData: OnboardingFormData, updateSetupStatus: (completed: boolean) => Promise<void>) => {
+  const completeSetup = async (formData: OnboardingFormData) => {
     setIsLoading(true);
     
     try {
@@ -60,9 +59,6 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         .eq('user_id', userId);
       
       if (error) throw error;
-      
-      // Update local user state
-      await updateSetupStatus(true);
       
       toast({
         title: "Setup Complete!",
