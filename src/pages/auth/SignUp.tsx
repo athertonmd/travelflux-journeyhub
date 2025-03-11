@@ -68,11 +68,12 @@ const SignUp = () => {
     setIsLoading(true);
     try {
       console.log('Attempting signup with:', name, email, agencyName);
-      const result = await signup(name, email, password, agencyName);
-
-      if (result && result.data && result.data.user && result.data.user.id) {
+      const signupResult = await signup(name, email, password, agencyName);
+      
+      // Check if we have a valid result with a user ID
+      if (signupResult && signupResult.data && signupResult.data.user && signupResult.data.user.id) {
         console.log('Signup successful, verifying user configuration...');
-        await verifyUserConfiguration(result.data.user.id);
+        await verifyUserConfiguration(signupResult.data.user.id);
       }
 
       console.log('Signup process completed, redirecting soon...');
