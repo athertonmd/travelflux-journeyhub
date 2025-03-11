@@ -37,12 +37,13 @@ const HeroSection = () => {
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                {/* Direct embed using the proper Synthesia format */}
                 <iframe 
+                  src="https://play.synthesia.io/embed/4fe30803-dd2d-4564-861d-35dbb3e25b71"
                   className="w-full h-full"
-                  src="https://share.synthesia.io/embeds/4fe30803-dd2d-4564-861d-35dbb3e25b71" 
                   title="Tripscape SaaS Demo"
-                  allow="autoplay; encrypted-media; fullscreen;"
-                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
                   loading="lazy"
                 ></iframe>
               </div>
