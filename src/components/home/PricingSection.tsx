@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2 } from 'lucide-react';
+
 const PricingSection = () => {
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  
   const pricingPlans = [{
     name: 'Starter',
     price: 0,
@@ -13,9 +15,9 @@ const PricingSection = () => {
     popular: false
   }, {
     name: 'Professional',
-    price: 79,
+    price: 100,
     description: 'Everything you need for a growing travel agency.',
-    features: ['Up to 500 customers', 'Advanced itinerary management', 'Custom document templates', 'Tripscape Mobile integration', 'Customer management', 'Analytics dashboard', 'Priority support'],
+    features: ['200 credits', 'Advanced itinerary management', 'Custom document templates', 'Tripscape Mobile integration', 'Customer management', 'Analytics dashboard'],
     cta: 'Sign Up',
     popular: true
   }, {
@@ -26,6 +28,7 @@ const PricingSection = () => {
     cta: 'Contact sales',
     popular: false
   }];
+
   return <section id="pricing" className="py-16 md:py-24 px-4 bg-gradient-to-b from-gray-50 to-background">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
@@ -72,4 +75,5 @@ const PricingSection = () => {
       </div>
     </section>;
 };
+
 export default PricingSection;
