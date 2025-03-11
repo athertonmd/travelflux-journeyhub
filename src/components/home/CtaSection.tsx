@@ -1,10 +1,17 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
 const CtaSection = () => {
+  const scrollToPricing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const pricingSection = document.getElementById('pricing');
+    if (pricingSection) {
+      pricingSection.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <section className="py-16 md:py-24 px-4 relative overflow-hidden">
       <div className="absolute inset-0 bg-primary/5 skew-y-3 transform -translate-y-20"></div>
@@ -16,11 +23,9 @@ const CtaSection = () => {
                 Transform the way you serve your clients
               </h2>
               <p className="text-lg text-gray-600 mb-6">Join hundreds of travel agencies already using Tripscape to streamline their operations and enhance client satisfaction.</p>
-              <Button asChild size="lg" className="animated-border-button">
-                <Link to="/signup">
-                  Get started today
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
+              <Button size="lg" className="animated-border-button" onClick={scrollToPricing}>
+                Get started today
+                <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             </div>
             <div className="flex justify-center">
