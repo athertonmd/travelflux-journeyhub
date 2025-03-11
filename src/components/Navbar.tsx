@@ -1,21 +1,20 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Menu, X, User, LogOut } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
-  // Sample authentication state - replace with actual auth
-  const isAuthenticated = location.pathname.includes('/dashboard');
-  const user = isAuthenticated ? {
-    name: 'John Doe',
-    email: 'john@example.com'
-  } : null;
+  // Determine if user is authenticated
+  const isAuthenticated = !!user;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -47,6 +46,11 @@ const Navbar = () => {
         }
       }
     }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
   };
 
   const navLinks = isAuthenticated ? [{
@@ -111,13 +115,13 @@ const Navbar = () => {
                     <DropdownMenuLabel>My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="flex items-center space-x-2">
-                      <span>{user?.name}</span>
+                      <span>{user.name}</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="flex items-center space-x-2 text-sm text-muted-foreground">
-                      <span>{user?.email}</span>
+                      <span>{user.email}</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer">
+                    <DropdownMenuItem className="flex items-center space-x-2 cursor-pointer" onClick={handleLogout}>
                       <LogOut size={16} />
                       <span>Log out</span>
                     </DropdownMenuItem>
@@ -161,14 +165,17 @@ const Navbar = () => {
                   </div>
                 </div>
                 <div className="ml-3">
-                  <div className="text-base font-medium text-gray-800">{user?.name}</div>
-                  <div className="text-sm font-medium text-gray-500">{user?.email}</div>
+                  <div className="text-base font-medium text-gray-800">{user.name}</div>
+                  <div className="text-sm font-medium text-gray-500">{user.email}</div>
                 </div>
               </div>
               <div className="mt-3 space-y-1">
-                <Link to="/" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">
+                <button 
+                  onClick={handleLogout}
+                  className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50"
+                >
                   Log out
-                </Link>
+                </button>
               </div>
             </div> : <div className="mt-4 space-y-2 px-3">
               <Button variant="outline" asChild className="w-full justify-center">
