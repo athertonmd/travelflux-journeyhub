@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { AuthContextType } from '@/types/auth.types';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useAuthActions } from '@/hooks/useAuthActions';
@@ -30,10 +30,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { login, signup, logout, checkSetupStatus, updateSetupStatus } = useAuthActions(setUser, setIsLoading);
 
   // Add debug logging to help diagnose auth state issues
-  React.useEffect(() => {
+  useEffect(() => {
     console.log('AuthContext state updated:', { 
       isLoggedIn: !!user, 
       isLoading, 
+      setupCompleted: user?.setupCompleted,
       user: user ? {
         id: user.id,
         email: user.email,

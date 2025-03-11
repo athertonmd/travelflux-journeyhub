@@ -51,9 +51,11 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     console.log('Form submitted, attempting login...');
     
     try {
+      // Don't wrap this in another try/catch since onLogin already has error handling
       await onLogin(formData.email, formData.password, formData.remember);
     } catch (error) {
-      console.error('Form submission error:', error);
+      console.error('Unexpected form submission error:', error);
+      // The parent component will handle setting isLoading to false
     }
   };
   

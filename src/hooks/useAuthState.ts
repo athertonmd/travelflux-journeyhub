@@ -32,6 +32,8 @@ export const useAuthState = () => {
           };
           
           try {
+            // Fetch user configuration data
+            console.log("useAuthState: Fetching user configuration for:", userData.id);
             const { data: configData, error: configError } = await supabase
               .from('agency_configurations')
               .select('setup_completed')
@@ -44,6 +46,7 @@ export const useAuthState = () => {
             
             if (!configData) {
               console.log("useAuthState: No config found, creating new one");
+              // Create configuration if it doesn't exist
               const { error: insertError } = await supabase
                 .from('agency_configurations')
                 .insert({
@@ -56,6 +59,7 @@ export const useAuthState = () => {
               }
               
               if (mounted) {
+                console.log("useAuthState: Setting user with setupCompleted=false");
                 setUser({
                   ...userData,
                   setupCompleted: false
@@ -64,6 +68,7 @@ export const useAuthState = () => {
             } else {
               console.log("useAuthState: Config found, setup completed:", configData.setup_completed);
               if (mounted) {
+                console.log("useAuthState: Setting user with config data");
                 setUser({
                   ...userData,
                   setupCompleted: configData?.setup_completed || false
@@ -74,6 +79,7 @@ export const useAuthState = () => {
             console.error('Error processing configuration:', configError);
             // Even with config error, set the user to prevent blocking the UI
             if (mounted) {
+              console.log("useAuthState: Setting user despite config error");
               setUser({
                 ...userData,
                 setupCompleted: false
@@ -98,12 +104,15 @@ export const useAuthState = () => {
       }
     };
 
+    // Initial auth check
     checkAuth();
 
+    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
       
       if (event === 'SIGNED_IN' && session) {
+        console.log("useAuthState: Sign in detected, updating user data");
         if (mounted) setIsLoading(true); // Set loading to true when auth state changes
         
         const userData = {
@@ -114,6 +123,7 @@ export const useAuthState = () => {
         };
         
         try {
+          console.log("useAuthState: Fetching config after sign in for:", userData.id);
           const { data: configData, error: configError } = await supabase
             .from('agency_configurations')
             .select('setup_completed')
@@ -125,24 +135,25 @@ export const useAuthState = () => {
           }
           
           if (mounted) {
+            const setupCompleted = configData?.setup_completed || false;
+            console.log("useAuthState: User data updated after sign in, setup completed:", setupCompleted);
             setUser({
               ...userData,
-              setupCompleted: configData?.setup_completed || false
+              setupCompleted
             });
+            console.log("useAuthState: Setting isLoading to false after sign in processing");
+            setIsLoading(false);
           }
         } catch (error) {
           console.error('Error during sign in configuration:', error);
           // Even with config error, set the user to prevent blocking the UI
           if (mounted) {
+            console.log("useAuthState: Setting user despite config error after sign in");
             setUser({
               ...userData,
               setupCompleted: false
             });
-          }
-        } finally {
-          if (mounted) {
-            console.log("useAuthState: Setting isLoading to false after sign in");
-            setIsLoading(false); // Always set loading to false after auth changes
+            setIsLoading(false);
           }
         }
       } else if (event === 'SIGNED_OUT') {
@@ -151,6 +162,12 @@ export const useAuthState = () => {
           setUser(null);
           setIsLoading(false);
         }
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log("useAuthState: Token refreshed, no user state change needed");
+      } else {
+        console.log(`useAuthState: Other auth event (${event}), checking if we need to update state`);
+        // For other events, we might still want to update our state
+        checkAuth();
       }
     });
 
@@ -160,7 +177,7 @@ export const useAuthState = () => {
         console.log("useAuthState: Safety timeout triggered - forcing loading state to false");
         setIsLoading(false);
       }
-    }, 2000); // Reduced to 2 second timeout for faster feedback
+    }, 5000); // 5 second timeout for safety
 
     return () => {
       mounted = false;

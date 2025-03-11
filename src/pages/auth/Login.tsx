@@ -21,24 +21,27 @@ const Login = () => {
   
   // Check if user is already logged in and redirect
   useEffect(() => {
-    console.log('Login page rendered, auth state:', { user, authLoading });
+    console.log('Login page rendered, auth state:', { 
+      user, 
+      authLoading,
+      userExists: !!user,
+      setupStatus: user?.setupCompleted 
+    });
     
     if (user && !authLoading) {
-      console.log('User is already authenticated, redirecting:', user);
+      console.log('User is already authenticated, redirecting to:', user.setupCompleted ? 'dashboard' : 'welcome');
       
       toast({
         title: "Already signed in",
         description: "You're already logged in, redirecting...",
       });
       
-      // Use a short timeout to allow the UI to update before redirect
-      setTimeout(() => {
-        if (user.setupCompleted) {
-          navigate('/dashboard');
-        } else {
-          navigate('/welcome');
-        }
-      }, 100);
+      // Redirect based on setup status
+      if (user.setupCompleted) {
+        navigate('/dashboard');
+      } else {
+        navigate('/welcome');
+      }
     }
   }, [user, navigate, authLoading]);
   
@@ -58,9 +61,9 @@ const Login = () => {
       const success = await login(email, password);
       console.log('Login result:', success ? 'Success' : 'Failed');
       
-      if (!success) {
-        setIsLoading(false);
-      }
+      // Always reset loading state, even on success
+      // The redirect will happen via the useEffect when the user state updates
+      setIsLoading(false);
       
       return success;
     } catch (error) {
@@ -75,9 +78,8 @@ const Login = () => {
     }
   };
   
-  // If initial auth check is in progress (and we're not already trying to log in),
-  // show a loading spinner
-  if (authLoading && !isLoading) {
+  // If initial auth check is in progress, show a loading spinner
+  if (authLoading) {
     return <LoadingSpinner />;
   }
   

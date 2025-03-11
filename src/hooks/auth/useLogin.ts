@@ -11,7 +11,7 @@ export const useLogin = (
     console.log('Login function called with email:', email);
     
     try {
-      // Attempt login with provided credentials
+      // Don't rely on the context to set the user, as Supabase auth events will handle that
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -41,58 +41,15 @@ export const useLogin = (
         return false;
       }
       
-      console.log('Login successful, user data:', data.user);
+      console.log('Login successful, user data:', data.user.id);
       
-      // Setup user data
-      const userData = {
-        id: data.user.id,
-        email: data.user.email || '',
-        name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || '',
-        agencyName: data.user.user_metadata?.agencyName
-      };
+      toast({
+        title: "Login successful",
+        description: "Welcome back to Tripscape!",
+      });
       
-      try {
-        // Get configuration data
-        const { data: configData, error: configError } = await supabase
-          .from('agency_configurations')
-          .select('setup_completed')
-          .eq('user_id', userData.id)
-          .maybeSingle();
-        
-        if (configError) {
-          console.error('Error fetching config:', configError);
-        }
-        
-        const setupCompleted = configData?.setup_completed || false;
-        console.log('User setup status:', setupCompleted ? 'Completed' : 'Not completed');
-        
-        setUser({
-          ...userData,
-          setupCompleted
-        });
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome back to Tripscape!",
-        });
-        
-        return true;
-      } catch (configError) {
-        console.error('Config fetch error:', configError);
-        
-        // Even if we couldn't get the config, still log the user in
-        setUser({
-          ...userData,
-          setupCompleted: false
-        });
-        
-        toast({
-          title: "Login successful",
-          description: "Welcome back to Tripscape!",
-        });
-        
-        return true;
-      }
+      // Return true to indicate success - user data will be set by the auth listener
+      return true;
     } catch (error) {
       console.error('Login error:', error);
       
