@@ -10,7 +10,6 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
 import LoginForm from '@/components/auth/LoginForm';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 
@@ -18,83 +17,50 @@ const Login = () => {
   const navigate = useNavigate();
   const { login, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [loginAttempted, setLoginAttempted] = useState(false);
   
-  // Check if user is already logged in and redirect them
+  // Check if user is already logged in and redirect
   useEffect(() => {
     if (user) {
       console.log('User is already authenticated, redirecting:', user);
-      if (!user.setupCompleted) {
-        navigate('/welcome');
-      } else {
-        navigate('/');
-      }
+      setTimeout(() => {
+        if (!user.setupCompleted) {
+          navigate('/welcome');
+        } else {
+          navigate('/');
+        }
+      }, 500); // Short delay to ensure smooth transition
     }
   }, [user, navigate]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
-    // If user is already authenticated, prevent login attempt
-    if (user) {
-      console.log('User is already logged in, redirecting instead of attempting login');
-      if (!user.setupCompleted) {
-        navigate('/welcome');
-      } else {
-        navigate('/');
-      }
+    // Don't attempt login if already loading or already authenticated
+    if (isLoading || authLoading || user) {
+      console.log('Skipping login attempt: already loading or authenticated');
       return;
     }
     
-    setIsLoading(true);
-    setLoginAttempted(true);
-    
     try {
-      console.log('Attempting login with:', email);
-      const success = await login(email, password);
+      setIsLoading(true);
+      console.log('Login attempt starting');
       
-      // If login was not successful but didn't throw an error, reset state
-      if (success === false) {
-        setIsLoading(false);
-        setLoginAttempted(false);
-      }
-      // If successful, navigation will be handled by the useEffect
-    } catch (error: any) {
-      console.error('Login error:', error);
-      setLoginAttempted(false);
-      toast({
-        title: "Login Failed",
-        description: error?.message || "Invalid email or password. Please try again.",
-        variant: "destructive"
-      });
+      // Perform login
+      await login(email, password);
+      
+      // No need to manually navigate - the useEffect will handle it when user state updates
+    } catch (error) {
+      console.error('Login handler error:', error);
+    } finally {
+      // Always reset loading state
       setIsLoading(false);
     }
   };
   
-  // Prevent infinite loading by adding a failsafe timeout
-  useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-    
-    if (isLoading || authLoading) {
-      timeoutId = setTimeout(() => {
-        if (isLoading) {
-          console.log('Login timeout reached, resetting loading state');
-          setIsLoading(false);
-          setLoginAttempted(false);
-        }
-      }, 5000); // Reduced to 5 seconds timeout for faster feedback
-    }
-    
-    return () => {
-      if (timeoutId) clearTimeout(timeoutId);
-    };
-  }, [isLoading, authLoading]);
-  
-  // Show loading spinner only during initial auth check, not during login attempts
-  if (authLoading && !loginAttempted) {
+  // Show loading spinner during initial auth check
+  if (authLoading) {
     return <LoadingSpinner />;
   }
   
-  // If user is authenticated, we'll redirect in the useEffect
-  // but as a safety measure, don't render the login form
+  // If user is authenticated, show loading until redirect happens
   if (user) {
     return <LoadingSpinner />;
   }
