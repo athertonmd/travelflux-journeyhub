@@ -33,7 +33,7 @@ const Login = () => {
       
       const redirectTimer = setTimeout(() => {
         if (user.setupCompleted) {
-          navigate('/');
+          navigate('/dashboard');
         } else {
           navigate('/welcome');
         }
@@ -56,13 +56,9 @@ const Login = () => {
       
       const success = await login(email, password);
       
-      // If login failed, show error message
       if (!success) {
-        toast({
-          title: "Login failed",
-          description: "Please check your email and password and try again.",
-          variant: "destructive",
-        });
+        // If login failed, show error message (already handled in useLogin)
+        setIsLoading(false);
         return false;
       }
       
@@ -74,9 +70,8 @@ const Login = () => {
         description: error instanceof Error ? error.message : "An unexpected error occurred",
         variant: "destructive",
       });
-      return false;
-    } finally {
       setIsLoading(false);
+      return false;
     }
   };
   

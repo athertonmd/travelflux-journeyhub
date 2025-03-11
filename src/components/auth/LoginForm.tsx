@@ -49,7 +49,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     
     try {
       await onLogin(formData.email, formData.password, formData.remember);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Form submission error:', error);
     }
   };
