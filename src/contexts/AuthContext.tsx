@@ -29,6 +29,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { user, setUser, isLoading, setIsLoading } = useAuthState();
   const { login, signup, logout, checkSetupStatus, updateSetupStatus } = useAuthActions(setUser, setIsLoading);
 
+  // Add debug logging to help diagnose auth state issues
+  React.useEffect(() => {
+    console.log('AuthContext state updated:', { 
+      isLoggedIn: !!user, 
+      isLoading, 
+      setupCompleted: user?.setupCompleted
+    });
+  }, [user, isLoading]);
+
   const value: AuthContextType = {
     user,
     isLoading,

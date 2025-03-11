@@ -10,22 +10,27 @@ export const useLogin = (
   const login = async (email: string, password: string) => {
     try {
       console.log('Attempting login with:', email);
-      setIsLoading(true);
       
       // First check if we already have an active session
-      const { data: sessionData } = await supabase.auth.getSession();
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      console.log('Session check result:', sessionData?.session ? 'Active session found' : 'No active session', sessionError);
+      
       if (sessionData?.session) {
         console.log('Active session found, using existing session');
         
         // Get user data from the session
-        const { data: userData } = await supabase.auth.getUser();
+        const { data: userData, error: userError } = await supabase.auth.getUser();
+        console.log('User data result:', userData?.user ? 'User found' : 'No user found', userError);
+        
         if (userData?.user) {
           // Get configuration data
-          const { data: configData } = await supabase
+          const { data: configData, error: configError } = await supabase
             .from('agency_configurations')
             .select('setup_completed')
             .eq('user_id', userData.user.id)
             .maybeSingle();
+            
+          console.log('Config data result:', configData ? 'Config found' : 'No config found', configError);
             
           // Set user with session data
           const user = {
@@ -37,7 +42,6 @@ export const useLogin = (
           };
           
           setUser(user);
-          setIsLoading(false);
           
           toast({
             title: "Already logged in",
@@ -56,6 +60,8 @@ export const useLogin = (
         password
       });
       
+      console.log('Login attempt result:', error ? 'Error' : 'Success', error || 'No error');
+      
       if (error) {
         console.error('Login error from Supabase:', error);
         
@@ -65,7 +71,6 @@ export const useLogin = (
           variant: "destructive",
         });
         
-        setIsLoading(false);
         return false;
       }
       
@@ -78,7 +83,6 @@ export const useLogin = (
           variant: "destructive",
         });
         
-        setIsLoading(false);
         return false;
       }
       
@@ -92,29 +96,48 @@ export const useLogin = (
         agencyName: data.user.user_metadata?.agencyName
       };
       
-      // Get configuration data
-      const { data: configData, error: configError } = await supabase
-        .from('agency_configurations')
-        .select('setup_completed')
-        .eq('user_id', userData.id)
-        .maybeSingle();
-      
-      if (configError) {
-        console.error('Error fetching config:', configError);
+      try {
+        // Get configuration data
+        const { data: configData, error: configError } = await supabase
+          .from('agency_configurations')
+          .select('setup_completed')
+          .eq('user_id', userData.id)
+          .maybeSingle();
+        
+        if (configError) {
+          console.error('Error fetching config:', configError);
+        }
+        
+        const setupCompleted = configData?.setup_completed || false;
+        console.log('User setup status:', setupCompleted ? 'Completed' : 'Not completed');
+        
+        setUser({
+          ...userData,
+          setupCompleted
+        });
+        
+        toast({
+          title: "Login successful",
+          description: "Welcome back to Tripscape!",
+        });
+        
+        return true;
+      } catch (configError) {
+        console.error('Config fetch error:', configError);
+        
+        // Even if we couldn't get the config, still log the user in
+        setUser({
+          ...userData,
+          setupCompleted: false
+        });
+        
+        toast({
+          title: "Login successful",
+          description: "Welcome back to Tripscape!",
+        });
+        
+        return true;
       }
-      
-      setUser({
-        ...userData,
-        setupCompleted: configData?.setup_completed || false
-      });
-      
-      toast({
-        title: "Login successful",
-        description: "Welcome back to Tripscape!",
-      });
-      
-      setIsLoading(false);
-      return true;
     } catch (error) {
       console.error('Login error:', error);
       
@@ -124,7 +147,6 @@ export const useLogin = (
         variant: "destructive",
       });
       
-      setIsLoading(false);
       return false;
     }
   };

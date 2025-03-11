@@ -22,7 +22,7 @@ const Login = () => {
   
   // Check if user is already logged in and redirect
   useEffect(() => {
-    if (user && !isRedirecting && !isLoading) {
+    if (user && !isRedirecting && !authLoading) {
       console.log('User is already authenticated, redirecting:', user);
       setIsRedirecting(true);
       
@@ -31,6 +31,7 @@ const Login = () => {
         description: "You're already logged in, redirecting...",
       });
       
+      // Use a short timeout to allow the UI to update before redirect
       const redirectTimer = setTimeout(() => {
         if (user.setupCompleted) {
           navigate('/dashboard');
@@ -41,23 +42,25 @@ const Login = () => {
       
       return () => clearTimeout(redirectTimer);
     }
-  }, [user, navigate, isRedirecting, isLoading]);
+  }, [user, navigate, isRedirecting, authLoading]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
-    // Don't attempt login if already loading or redirecting
+    // Prevent login attempt if already processing
     if (isLoading || authLoading || isRedirecting) {
       console.log('Skipping login attempt: already processing');
       return false;
     }
     
-    setIsLoading(true);
     console.log('Login attempt starting');
+    setIsLoading(true);
     
     try {
+      // Call the login function from AuthContext
       const success = await login(email, password);
+      console.log('Login result:', success ? 'Success' : 'Failed');
       
+      // Reset loading state if login failed
       if (!success) {
-        // Login failed, reset loading state (this is already handled in useLogin)
         setIsLoading(false);
       }
       
@@ -79,7 +82,8 @@ const Login = () => {
     return <LoadingSpinner />;
   }
   
-  // Show loading spinner during initial auth check
+  // If initial auth check is in progress (and we're not already trying to log in),
+  // show a loading spinner
   if (authLoading && !isLoading) {
     return <LoadingSpinner />;
   }
