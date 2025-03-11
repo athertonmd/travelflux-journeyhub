@@ -26,9 +26,9 @@ export const useSetupStatus = (
     }
   };
 
-  const updateSetupStatus = async (completed: boolean): Promise<void> => {
+  const updateSetupStatus = async (completed: boolean): Promise<boolean> => {
     const { data: session } = await supabase.auth.getSession();
-    if (!session.session?.user) return;
+    if (!session.session?.user) return false;
     
     try {
       const { error } = await supabase
@@ -39,6 +39,7 @@ export const useSetupStatus = (
       if (error) throw error;
       
       setUser(prev => prev ? { ...prev, setupCompleted: completed } : null);
+      return true;
     } catch (error) {
       console.error('Error updating setup status:', error);
       toast({
@@ -46,6 +47,7 @@ export const useSetupStatus = (
         description: "Failed to update setup status.",
         variant: "destructive",
       });
+      return false;
     }
   };
 
