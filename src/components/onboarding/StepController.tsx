@@ -8,7 +8,7 @@ import BrandingConfig from '@/components/onboarding/BrandingConfig';
 import WelcomeStep from '@/components/onboarding/WelcomeStep';
 import CompleteStep from '@/components/onboarding/CompleteStep';
 import { CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
-import { OnboardingFormData } from '@/hooks/useOnboarding';
+import { OnboardingFormData } from '@/hooks/useOnboardingForm';
 
 interface StepControllerProps {
   currentStep: string;

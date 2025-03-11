@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -18,6 +17,17 @@ export const useOnboarding = () => {
     updateFormData,
     setIsLoading: setFormLoading
   } = useOnboardingForm(user?.id);
+
+  // Set the user's name when the component initializes
+  useEffect(() => {
+    if (user && user.email && !formData.userName) {
+      // Extract user name from email (everything before the @)
+      const userName = user.email.split('@')[0];
+      // Capitalize the first letter for a nicer display
+      const formattedUserName = userName.charAt(0).toUpperCase() + userName.slice(1);
+      updateFormData('userName', formattedUserName);
+    }
+  }, [user, formData.userName, updateFormData]);
 
   const {
     saveConfiguration,

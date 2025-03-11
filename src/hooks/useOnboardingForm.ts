@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export interface OnboardingFormData {
+  userName?: string;
   products: {
     mobile: boolean;
     documentDelivery: boolean;
@@ -25,6 +26,7 @@ export interface OnboardingFormData {
 }
 
 export const initialFormData: OnboardingFormData = {
+  userName: '',
   products: {
     mobile: false,
     documentDelivery: false,
