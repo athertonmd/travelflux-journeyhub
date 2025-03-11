@@ -44,7 +44,7 @@ const Login = () => {
       const success = await login(email, password);
       
       // If login was not successful but didn't throw an error, reset state
-      if (!success) {
+      if (success === false) {
         setIsLoading(false);
         setLoginAttempted(false);
       }
