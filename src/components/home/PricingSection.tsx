@@ -72,14 +72,8 @@ const PricingSection = () => {
                   {plan.name === "Professional" ? "Scale" : plan.name}
                 </h3>
                 <div className="flex items-baseline mb-4">
-                  {plan.price === 0 ? (
-                    <span className="text-3xl font-bold">Free Trial</span>
-                  ) : (
-                    <>
-                      <span className="text-3xl font-bold">${plan.price}</span>
-                      <span className="text-gray-500 ml-1">/month</span>
-                    </>
-                  )}
+                  <span className="text-3xl font-bold">${plan.price}</span>
+                  <span className="text-gray-500 ml-1">/month</span>
                 </div>
                 <p className="text-gray-600 mb-6">{plan.description}</p>
                 <ul className="space-y-3 mb-8">
