@@ -9,7 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      agency_configurations: {
+        Row: {
+          branding: Json | null
+          created_at: string | null
+          gds_config: Json | null
+          gds_provider: string | null
+          id: string
+          products: Json | null
+          selected_trip_tiles: string[] | null
+          setup_completed: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          branding?: Json | null
+          created_at?: string | null
+          gds_config?: Json | null
+          gds_provider?: string | null
+          id?: string
+          products?: Json | null
+          selected_trip_tiles?: string[] | null
+          setup_completed?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          branding?: Json | null
+          created_at?: string | null
+          gds_config?: Json | null
+          gds_provider?: string | null
+          id?: string
+          products?: Json | null
+          selected_trip_tiles?: string[] | null
+          setup_completed?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

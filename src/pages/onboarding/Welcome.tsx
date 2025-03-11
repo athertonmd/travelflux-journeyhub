@@ -1,10 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from '@/hooks/use-toast';
 import { ChevronRight, ChevronLeft, Check, Smartphone, FileText, Shield, Globe } from 'lucide-react';
 import ProductSelection from '@/components/onboarding/ProductSelection';
@@ -12,6 +11,7 @@ import GdsSelection from '@/components/onboarding/GdsSelection';
 import GdsConfigForm from '@/components/onboarding/GdsConfigForm';
 import TripTileSelection from '@/components/onboarding/TripTileSelection';
 import BrandingConfig from '@/components/onboarding/BrandingConfig';
+import { supabase } from '@/integrations/supabase/client';
 
 const steps = [
   { id: 'welcome', title: 'Welcome' },
@@ -24,9 +24,10 @@ const steps = [
 ];
 
 const Welcome = () => {
-  const { user } = useAuth();
+  const { user, updateSetupStatus } = useAuth();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState('welcome');
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     products: {
       mobile: false,
@@ -48,6 +49,51 @@ const Welcome = () => {
     }
   });
 
+  // Fetch existing configuration if available
+  useEffect(() => {
+    const fetchConfig = async () => {
+      if (!user) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('agency_configurations')
+          .select('*')
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+
+        if (data) {
+          // Only update fields that exist in the database
+          const newFormData = { ...formData };
+          
+          if (data.products) newFormData.products = data.products;
+          if (data.gds_provider) newFormData.gdsProvider = data.gds_provider;
+          if (data.gds_config) newFormData.gdsConfig = data.gds_config;
+          if (data.selected_trip_tiles) newFormData.selectedTripTiles = data.selected_trip_tiles;
+          if (data.branding) newFormData.branding = {
+            ...newFormData.branding,
+            primaryColor: data.branding.primaryColor || '#1EAEDB',
+            secondaryColor: data.branding.secondaryColor || '#0FA0CE'
+          };
+          
+          setFormData(newFormData);
+        }
+      } catch (error) {
+        console.error('Error fetching configuration:', error);
+      }
+    };
+
+    fetchConfig();
+  }, [user]);
+
+  // Redirect if not logged in
+  useEffect(() => {
+    if (!user && !isLoading) {
+      navigate('/login');
+    }
+  }, [user, navigate, isLoading]);
+
   const updateFormData = (section, data) => {
     setFormData(prev => ({
       ...prev,
@@ -55,8 +101,54 @@ const Welcome = () => {
     }));
   };
 
-  const handleNext = () => {
+  const saveConfiguration = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    
+    try {
+      // Prepare data for saving to Supabase
+      const configData = {
+        products: formData.products,
+        gds_provider: formData.gdsProvider,
+        gds_config: formData.gdsConfig,
+        selected_trip_tiles: formData.selectedTripTiles,
+        branding: {
+          primaryColor: formData.branding.primaryColor,
+          secondaryColor: formData.branding.secondaryColor
+        }
+      };
+      
+      // Update the configuration in the database
+      const { error } = await supabase
+        .from('agency_configurations')
+        .update(configData)
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      return true;
+    } catch (error) {
+      console.error('Error saving configuration:', error);
+      toast({
+        title: "Save Failed",
+        description: "There was an error saving your configuration.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNext = async () => {
     const currentIndex = steps.findIndex(step => step.id === currentStep);
+    
+    // Save data at specific steps
+    if (['products', 'gds', 'config', 'trips', 'branding'].includes(currentStep)) {
+      await saveConfiguration();
+    }
+    
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1].id);
     }
@@ -70,16 +162,30 @@ const Welcome = () => {
   };
 
   const handleComplete = async () => {
+    setIsLoading(true);
+    
     try {
-      // Here you would typically save all the collected data to your backend
-      console.log('Submitting form data:', formData);
+      // First save all configuration
+      const saveResult = await saveConfiguration();
+      if (!saveResult) return;
+      
+      // Then mark setup as completed
+      const { error } = await supabase
+        .from('agency_configurations')
+        .update({ setup_completed: true })
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      // Update local user state
+      await updateSetupStatus(true);
       
       toast({
         title: "Setup Complete!",
         description: "Your account has been successfully configured.",
       });
       
-      // Navigate to dashboard or another appropriate page
+      // Navigate to dashboard
       navigate('/dashboard');
     } catch (error) {
       console.error('Error completing setup:', error);
@@ -88,13 +194,18 @@ const Welcome = () => {
         description: "There was an error completing your setup. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // If user is not logged in, redirect to login
-  if (!user) {
-    navigate('/login');
-    return null;
+  // If loading, show loading spinner
+  if (!user || isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   return (
@@ -307,7 +418,7 @@ const Welcome = () => {
 
             <CardFooter className="flex justify-between pt-6">
               {currentStep !== 'welcome' && (
-                <Button variant="outline" onClick={handleBack}>
+                <Button variant="outline" onClick={handleBack} disabled={isLoading}>
                   <ChevronLeft className="mr-2 h-4 w-4" />
                   Back
                 </Button>
@@ -315,14 +426,38 @@ const Welcome = () => {
               {currentStep === 'welcome' && <div></div>}
               
               {currentStep !== 'complete' ? (
-                <Button onClick={handleNext}>
-                  Next
-                  <ChevronRight className="ml-2 h-4 w-4" />
+                <Button onClick={handleNext} disabled={isLoading}>
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </span>
+                  ) : (
+                    <>
+                      Next
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               ) : (
-                <Button onClick={handleComplete}>
-                  Go to Dashboard
-                  <ChevronRight className="ml-2 h-4 w-4" />
+                <Button onClick={handleComplete} disabled={isLoading}>
+                  {isLoading ? (
+                    <span className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Completing...
+                    </span>
+                  ) : (
+                    <>
+                      Go to Dashboard
+                      <ChevronRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               )}
             </CardFooter>

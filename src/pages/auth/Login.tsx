@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,13 +19,24 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useAuth();
+  const { login, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     remember: false,
   });
+  
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      if (!user.setupCompleted) {
+        navigate('/welcome');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [user, navigate]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -41,7 +52,7 @@ const Login = () => {
     
     try {
       await login(formData.email, formData.password);
-      navigate('/');
+      // Navigation will be handled by the useEffect
     } catch (error) {
       console.error('Login error:', error);
       // Error is handled in the auth context
@@ -49,6 +60,14 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+  
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
   
   return (
     <div className="min-h-screen flex flex-col">

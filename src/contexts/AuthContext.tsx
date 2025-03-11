@@ -1,12 +1,14 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toast } from "@/hooks/use-toast";
+import { supabase } from '@/integrations/supabase/client';
 
 type User = {
   id: string;
   email: string;
   name: string;
   agencyName?: string;
+  setupCompleted?: boolean;
 };
 
 type AuthContextType = {
@@ -15,6 +17,8 @@ type AuthContextType = {
   login: (email: string, password: string) => Promise<void>;
   signup: (name: string, email: string, password: string, agencyName?: string) => Promise<void>;
   logout: () => void;
+  checkSetupStatus: () => Promise<boolean>;
+  updateSetupStatus: (completed: boolean) => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,40 +37,104 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Check for existing session on mount
   useEffect(() => {
-    const storedUser = localStorage.getItem('tripscape_user');
-    if (storedUser) {
+    const checkAuth = async () => {
       try {
-        setUser(JSON.parse(storedUser));
+        const { data } = await supabase.auth.getSession();
+        if (data.session?.user) {
+          // Get user profile data
+          const userData = {
+            id: data.session.user.id,
+            email: data.session.user.email || '',
+            name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || '',
+            agencyName: data.session.user.user_metadata?.agencyName
+          };
+          
+          // Check setup status
+          const { data: configData } = await supabase
+            .from('agency_configurations')
+            .select('setup_completed')
+            .eq('user_id', userData.id)
+            .single();
+          
+          setUser({
+            ...userData,
+            setupCompleted: configData?.setup_completed || false
+          });
+        }
       } catch (error) {
-        console.error('Failed to parse stored user data:', error);
+        console.error('Auth check error:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    checkAuth();
+
+    // Subscribe to auth changes
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const userData = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+          agencyName: session.user.user_metadata?.agencyName
+        };
+        
+        // Check setup status
+        const { data: configData } = await supabase
+          .from('agency_configurations')
+          .select('setup_completed')
+          .eq('user_id', userData.id)
+          .single();
+        
+        setUser({
+          ...userData,
+          setupCompleted: configData?.setup_completed || false
+        });
+      } else if (event === 'SIGNED_OUT') {
+        setUser(null);
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      // This is a mock implementation - in a real app, you'd call an API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
       
-      // For demo purposes, we'll create a mock user
-      if (email && password) {
-        const newUser = {
-          id: 'user-' + Date.now(),
-          email,
-          name: email.split('@')[0],
+      if (error) throw error;
+      
+      if (data.user) {
+        const userData = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || '',
+          agencyName: data.user.user_metadata?.agencyName
         };
         
-        setUser(newUser);
-        localStorage.setItem('tripscape_user', JSON.stringify(newUser));
+        // Check setup status
+        const { data: configData } = await supabase
+          .from('agency_configurations')
+          .select('setup_completed')
+          .eq('user_id', userData.id)
+          .single();
+        
+        setUser({
+          ...userData,
+          setupCompleted: configData?.setup_completed || false
+        });
         
         toast({
           title: "Login successful",
           description: "Welcome back to Tripscape!",
         });
-      } else {
-        throw new Error('Invalid credentials');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -84,28 +152,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string, agencyName?: string) => {
     setIsLoading(true);
     try {
-      // This is a mock implementation - in a real app, you'd call an API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (!name || !email || !password) {
-        throw new Error('Missing required fields');
-      }
-      
-      // For demo purposes, we'll create a mock user
-      const newUser = {
-        id: 'user-' + Date.now(),
+      const { data, error } = await supabase.auth.signUp({
         email,
-        name,
-        agencyName,
-      };
-      
-      setUser(newUser);
-      localStorage.setItem('tripscape_user', JSON.stringify(newUser));
-      
-      toast({
-        title: "Account created",
-        description: "Welcome to Tripscape!",
+        password,
+        options: {
+          data: {
+            name,
+            agencyName
+          }
+        }
       });
+      
+      if (error) throw error;
+      
+      if (data.user) {
+        const userData = {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: data.user.user_metadata?.name || '',
+          agencyName: data.user.user_metadata?.agencyName,
+          setupCompleted: false
+        };
+        
+        setUser(userData);
+        
+        toast({
+          title: "Account created",
+          description: "Welcome to Tripscape!",
+        });
+      }
     } catch (error) {
       console.error('Signup error:', error);
       toast({
@@ -119,13 +194,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
-    localStorage.removeItem('tripscape_user');
     toast({
       title: "Logged out",
       description: "You have been successfully logged out.",
     });
+  };
+
+  const checkSetupStatus = async (): Promise<boolean> => {
+    if (!user) return false;
+    
+    try {
+      const { data, error } = await supabase
+        .from('agency_configurations')
+        .select('setup_completed')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (error) throw error;
+      
+      return data?.setup_completed || false;
+    } catch (error) {
+      console.error('Error checking setup status:', error);
+      return false;
+    }
+  };
+
+  const updateSetupStatus = async (completed: boolean): Promise<void> => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('agency_configurations')
+        .update({ setup_completed: completed })
+        .eq('user_id', user.id);
+      
+      if (error) throw error;
+      
+      setUser(prev => prev ? { ...prev, setupCompleted: completed } : null);
+    } catch (error) {
+      console.error('Error updating setup status:', error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update setup status.",
+        variant: "destructive",
+      });
+    }
   };
 
   const value = {
@@ -134,6 +250,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     login,
     signup,
     logout,
+    checkSetupStatus,
+    updateSetupStatus
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
