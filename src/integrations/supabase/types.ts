@@ -48,6 +48,36 @@ export type Database = {
         }
         Relationships: []
       }
+      credits: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_free_tier: boolean
+          total_credits: number
+          updated_at: string | null
+          used_credits: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_free_tier?: boolean
+          total_credits?: number
+          updated_at?: string | null
+          used_credits?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_free_tier?: boolean
+          total_credits?: number
+          updated_at?: string | null
+          used_credits?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

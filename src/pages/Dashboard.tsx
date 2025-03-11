@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import DashboardCard from '@/components/DashboardCard';
@@ -12,13 +12,19 @@ import {
   Clock,
   AlertTriangle,
   Settings,
-  HelpCircle
+  HelpCircle,
+  Wallet
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useCredits } from '@/hooks/useCredits';
+import CreditStatusCard from '@/components/CreditStatusCard';
+import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { creditInfo, isLoading, purchaseCredits } = useCredits();
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -62,6 +68,18 @@ const Dashboard = () => {
 
       <main className="container mx-auto py-8 px-4">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {creditInfo && (
+            <DashboardCard 
+              title="Credit Balance" 
+              value={`${creditInfo.remainingCredits} / ${creditInfo.totalCredits}`} 
+              icon={<Wallet className="h-8 w-8 text-primary" />}
+              trend={{
+                value: creditInfo.usagePercentage,
+                isPositive: creditInfo.usagePercentage < 80
+              }}
+            />
+          )}
+          
           <DashboardCard 
             title="Active Trips" 
             value={12} 
@@ -85,25 +103,18 @@ const Dashboard = () => {
             changeValue={1}
             icon={<AlertTriangle className="h-8 w-8 text-primary" />} 
           />
-          
-          <DashboardCard 
-            title="Completed Trips" 
-            value={24} 
-            isPositive={true} 
-            changeValue={6}
-            icon={<BarChartIcon className="h-8 w-8 text-primary" />} 
-          />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-          <div className="bg-card rounded-lg border border-border p-6">
-            <h2 className="text-xl font-semibold mb-6">Credit Usage</h2>
-            <div className="h-64 flex items-center justify-center">
-              <p className="text-muted-foreground">Chart visualization coming soon</p>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {creditInfo && (
+            <CreditStatusCard 
+              creditInfo={creditInfo}
+              onPurchaseClick={() => setIsPurchaseModalOpen(true)}
+              isLoading={isLoading}
+            />
+          )}
 
-          <div className="bg-card rounded-lg border border-border p-6">
+          <div className="lg:col-span-2 bg-card rounded-lg border border-border p-6">
             <h2 className="text-xl font-semibold mb-6">Recent Activity</h2>
             <ul className="space-y-4">
               <li className="flex items-start gap-4 pb-4 border-b border-border">
@@ -139,6 +150,16 @@ const Dashboard = () => {
             </ul>
           </div>
         </div>
+
+        {creditInfo && (
+          <PurchaseCreditsModal
+            isOpen={isPurchaseModalOpen}
+            onClose={() => setIsPurchaseModalOpen(false)}
+            onPurchase={purchaseCredits}
+            creditInfo={creditInfo}
+            isLoading={isLoading}
+          />
+        )}
       </main>
     </div>
   );
