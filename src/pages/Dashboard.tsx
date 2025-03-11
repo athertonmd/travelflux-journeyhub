@@ -12,7 +12,8 @@ import {
   AlertTriangle,
   Settings,
   HelpCircle,
-  Wallet
+  Wallet,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCredits } from '@/hooks/useCredits';
@@ -28,6 +29,7 @@ const Dashboard = () => {
   const { creditInfo, isLoading: isCreditsLoading, error, purchaseCredits } = useCredits();
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [hasReportedError, setHasReportedError] = useState(false);
+  const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
 
   console.log('Dashboard - Auth state:', { user, isAuthLoading });
   console.log('Dashboard - Credits state:', { creditInfo, isCreditsLoading, error });
@@ -61,13 +63,30 @@ const Dashboard = () => {
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (isAuthLoading) {
-        console.log('Auth loading timeout reached, forcing refresh');
-        window.location.reload();
+        console.log('Auth loading timeout reached, setting timeout state');
+        setLoadingTimeoutReached(true);
       }
-    }, 10000); // 10 seconds timeout
+    }, 8000); // 8 seconds timeout
     
     return () => clearTimeout(timeout);
   }, [isAuthLoading]);
+
+  // If auth is still loading after timeout, show a retry button
+  if (isAuthLoading && loadingTimeoutReached) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <p className="mb-4 text-muted-foreground">Loading is taking longer than expected...</p>
+        <Button 
+          onClick={() => window.location.reload()} 
+          variant="default"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh Page
+        </Button>
+      </div>
+    );
+  }
 
   // If we're still loading auth, show loading spinner
   if (isAuthLoading) {

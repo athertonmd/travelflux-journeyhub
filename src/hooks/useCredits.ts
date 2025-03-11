@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -61,33 +60,39 @@ export const useCredits = () => {
         });
       } else {
         console.log('No credit data found, checking if user exists:', user.id);
-        // If no credit record exists (which shouldn't happen with our triggers, but just in case)
-        const { data: newCreditData, error: insertError } = await supabase
-          .from('credits')
-          .insert({
-            user_id: user.id,
-            total_credits: 30,
-            used_credits: 0,
-            is_free_tier: true
-          })
-          .select()
-          .single();
-        
-        if (insertError) {
-          console.error('Error creating credit record:', insertError);
-          setError(insertError);
-          throw insertError;
-        }
+        // If no credit record exists, create a new one
+        try {
+          const { data: newCreditData, error: insertError } = await supabase
+            .from('credits')
+            .insert({
+              user_id: user.id,
+              total_credits: 30,
+              used_credits: 0,
+              is_free_tier: true
+            })
+            .select()
+            .single();
+          
+          if (insertError) {
+            console.error('Error creating credit record:', insertError);
+            setError(insertError);
+            throw insertError;
+          }
 
-        if (newCreditData) {
-          setCreditInfo({
-            id: newCreditData.id,
-            totalCredits: newCreditData.total_credits,
-            usedCredits: newCreditData.used_credits,
-            isFreeTier: newCreditData.is_free_tier,
-            remainingCredits: newCreditData.total_credits,
-            usagePercentage: 0
-          });
+          if (newCreditData) {
+            console.log('New credit record created:', newCreditData);
+            setCreditInfo({
+              id: newCreditData.id,
+              totalCredits: newCreditData.total_credits,
+              usedCredits: newCreditData.used_credits,
+              isFreeTier: newCreditData.is_free_tier,
+              remainingCredits: newCreditData.total_credits,
+              usagePercentage: 0
+            });
+          }
+        } catch (err) {
+          console.error('Failed to create credit record:', err);
+          setError(err instanceof Error ? err : new Error('Failed to create credit record'));
         }
       }
     } catch (error) {
@@ -103,9 +108,8 @@ export const useCredits = () => {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
-      
-      setCreditInfo(null);
     } finally {
+      console.log('Finished fetching credit info, setting isLoading to false');
       setIsLoading(false);
     }
   }, [user]);
