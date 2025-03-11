@@ -9,9 +9,15 @@ const PricingSection = () => {
 
   const pricingPlans = [{
     name: 'Starter',
-    price: 29,
+    price: 0,
     description: 'Perfect for small agencies just getting started.',
-    features: ['Up to 50 customers', 'Tripscape Mobile integration', 'PDF document generation', 'Client web portal', 'Email support'],
+    features: [
+      '30 free credits', 
+      'Tripscape Mobile', 
+      'Tripscape Document Delivery', 
+      'Tripscape Teams', 
+      'Tripscape Risk Management'
+    ],
     cta: 'Start Free Trial',
     popular: false
   }, {
@@ -66,8 +72,14 @@ const PricingSection = () => {
                   {plan.name === "Professional" ? "Scale" : plan.name}
                 </h3>
                 <div className="flex items-baseline mb-4">
-                  <span className="text-3xl font-bold">${plan.price}</span>
-                  <span className="text-gray-500 ml-1">/month</span>
+                  {plan.price === 0 ? (
+                    <span className="text-3xl font-bold">Free Trial</span>
+                  ) : (
+                    <>
+                      <span className="text-3xl font-bold">${plan.price}</span>
+                      <span className="text-gray-500 ml-1">/month</span>
+                    </>
+                  )}
                 </div>
                 <p className="text-gray-600 mb-6">{plan.description}</p>
                 <ul className="space-y-3 mb-8">
