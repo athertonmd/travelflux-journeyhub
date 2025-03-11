@@ -68,15 +68,11 @@ const SignUp = () => {
     setIsLoading(true);
     try {
       console.log('Attempting signup with:', name, email, agencyName);
-      const signupResult = await signup(name, email, password, agencyName);
+      await signup(name, email, password, agencyName);
       
-      // Check if we have a valid result with a user ID
-      if (signupResult && signupResult.data && signupResult.data.user && signupResult.data.user.id) {
-        console.log('Signup successful, verifying user configuration...');
-        await verifyUserConfiguration(signupResult.data.user.id);
-      }
-
-      console.log('Signup process completed, redirecting soon...');
+      // After signup, the user should be set in the AuthContext
+      // We'll check if the user exists in AuthContext in the useEffect
+      console.log('Signup process completed, user will be redirected by useEffect if authenticated');
     } catch (error) {
       console.error('Signup error:', error);
       throw error;
