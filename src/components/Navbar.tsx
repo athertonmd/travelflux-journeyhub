@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -79,8 +78,7 @@ const Navbar = () => {
     section: 'pricing'
   }, {
     name: 'Contact',
-    path: '/#contact',
-    section: 'contact'
+    path: '/contact'
   }];
 
   return <nav className={`fixed w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/90 backdrop-blur-md shadow-sm' : 'bg-transparent'}`}>
