@@ -38,7 +38,7 @@ export const useAuthState = () => {
               .eq('user_id', userData.id)
               .maybeSingle();
             
-            if (configError && configError.code !== 'PGRST116') {
+            if (configError) {
               console.error('Error fetching config:', configError);
             }
             
@@ -60,7 +60,6 @@ export const useAuthState = () => {
                   ...userData,
                   setupCompleted: false
                 });
-                setIsLoading(false); // Make sure to set loading state to false
               }
             } else {
               console.log("useAuthState: Config found, setup completed:", configData.setup_completed);
@@ -69,7 +68,6 @@ export const useAuthState = () => {
                   ...userData,
                   setupCompleted: configData?.setup_completed || false
                 });
-                setIsLoading(false); // Make sure to set loading state to false
               }
             }
           } catch (configError) {
@@ -80,19 +78,23 @@ export const useAuthState = () => {
                 ...userData,
                 setupCompleted: false
               });
-              setIsLoading(false); // Make sure to set loading state to false
+            }
+          } finally {
+            if (mounted) {
+              console.log("useAuthState: Setting isLoading to false after session check");
+              setIsLoading(false);
             }
           }
         } else {
           console.log("useAuthState: No session found");
           if (mounted) {
             setUser(null);
-            setIsLoading(false); // Make sure to set loading state to false
+            setIsLoading(false);
           }
         }
       } catch (error) {
         console.error('Auth check error:', error);
-        if (mounted) setIsLoading(false); // Make sure to set loading state to false
+        if (mounted) setIsLoading(false);
       }
     };
 
@@ -118,36 +120,15 @@ export const useAuthState = () => {
             .eq('user_id', userData.id)
             .maybeSingle();
           
-          if (configError && configError.code !== 'PGRST116') {
+          if (configError) {
             console.error('Error fetching config:', configError);
           }
           
-          if (!configData) {
-            console.log('Creating new configuration for user:', userData.id);
-            const { error: insertError } = await supabase
-              .from('agency_configurations')
-              .insert({
-                user_id: userData.id,
-                setup_completed: false
-              });
-            
-            if (insertError) {
-              console.error('Error creating configuration:', insertError);
-            }
-            
-            if (mounted) {
-              setUser({
-                ...userData,
-                setupCompleted: false
-              });
-            }
-          } else {
-            if (mounted) {
-              setUser({
-                ...userData,
-                setupCompleted: configData?.setup_completed || false
-              });
-            }
+          if (mounted) {
+            setUser({
+              ...userData,
+              setupCompleted: configData?.setup_completed || false
+            });
           }
         } catch (error) {
           console.error('Error during sign in configuration:', error);
@@ -161,7 +142,7 @@ export const useAuthState = () => {
         } finally {
           if (mounted) {
             console.log("useAuthState: Setting isLoading to false after sign in");
-            setIsLoading(false); // Ensure loading is set to false after handling sign in
+            setIsLoading(false); // Always set loading to false after auth changes
           }
         }
       } else if (event === 'SIGNED_OUT') {

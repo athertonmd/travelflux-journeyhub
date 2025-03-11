@@ -41,9 +41,14 @@ const Login = () => {
     
     try {
       console.log('Attempting login with:', email);
-      await login(email, password);
-      // Navigation will be handled by the useEffect
-      console.log('Login successful, redirection will occur via useEffect');
+      const success = await login(email, password);
+      
+      // If login was not successful but didn't throw an error, reset state
+      if (!success) {
+        setIsLoading(false);
+        setLoginAttempted(false);
+      }
+      // If successful, navigation will be handled by the useEffect
     } catch (error: any) {
       console.error('Login error:', error);
       setLoginAttempted(false);
@@ -65,8 +70,9 @@ const Login = () => {
         if (isLoading) {
           console.log('Login timeout reached, resetting loading state');
           setIsLoading(false);
+          setLoginAttempted(false);
         }
-      }, 10000); // 10 seconds timeout
+      }, 8000); // 8 seconds timeout
     }
     
     return () => {

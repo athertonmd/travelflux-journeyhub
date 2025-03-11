@@ -17,9 +17,14 @@ export const useLogin = (
         password
       });
       
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
       
       console.log('Login successful, user data:', data.user);
+      
+      // Don't set isLoading to false here - this will be handled after redirect
+      // by the Login component to prevent flash
       
       if (data.user) {
         const userData = {
@@ -29,6 +34,7 @@ export const useLogin = (
           agencyName: data.user.user_metadata?.agencyName
         };
         
+        // Check user's setup status
         try {
           const { data: configData, error: configError } = await supabase
             .from('agency_configurations')
@@ -36,39 +42,22 @@ export const useLogin = (
             .eq('user_id', userData.id)
             .maybeSingle();
           
-          if (configError && configError.code !== 'PGRST116') {
+          if (configError) {
             console.error('Error fetching config:', configError);
+            // Don't throw here, still set user data
           }
           
-          if (!configData) {
-            console.log('No configuration found, creating one...');
-            const { error: insertError } = await supabase
-              .from('agency_configurations')
-              .insert({
-                user_id: userData.id,
-                setup_completed: false
-              });
-            
-            if (insertError) {
-              console.error('Error creating configuration:', insertError);
-            }
-            
-            setUser({
-              ...userData,
-              setupCompleted: false
-            });
-          } else {
-            console.log('Configuration found:', configData);
-            setUser({
-              ...userData,
-              setupCompleted: configData?.setup_completed || false
-            });
-          }
+          setUser({
+            ...userData,
+            setupCompleted: configData?.setup_completed || false
+          });
           
           toast({
             title: "Login successful",
             description: "Welcome back to Tripscape!",
           });
+          
+          return true; // Indicate successful login
         } catch (configError) {
           console.error('Error processing configuration:', configError);
           // Even if there's a config error, still set the user to prevent login issues
@@ -76,8 +65,10 @@ export const useLogin = (
             ...userData,
             setupCompleted: false
           });
+          return true; // Still indicate successful login
         }
       }
+      return false; // Indicate unsuccessful login
     } catch (error) {
       console.error('Login error:', error);
       setIsLoading(false); // Make sure loading state is reset on error
@@ -86,11 +77,7 @@ export const useLogin = (
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
-      throw error;
-    } finally {
-      // We intentionally don't set isLoading to false here
-      // This will be handled after redirect in the Login component
-      // to prevent flashing of the login form before navigation
+      return false; // Indicate unsuccessful login
     }
   };
 
