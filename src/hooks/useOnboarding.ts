@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -38,7 +39,6 @@ export const useOnboarding = () => {
     currentStep,
     handleNext,
     handleBack,
-    navigateToDashboard
   } = useOnboardingNavigation(
     (data) => saveConfiguration(data),
     formData
@@ -51,7 +51,17 @@ export const useOnboarding = () => {
   }, [user, navigate, isLoading]);
 
   const handleComplete = async (): Promise<boolean> => {
-    return await completeSetup(formData, updateSetupStatus);
+    try {
+      const success = await completeSetup(formData);
+      if (success) {
+        await updateSetupStatus(true);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error completing setup:', error);
+      return false;
+    }
   };
 
   return {

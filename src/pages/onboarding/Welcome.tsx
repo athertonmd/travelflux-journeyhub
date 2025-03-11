@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardFooter } from '@/components/ui/card';
 import StepIndicator, { Step } from '@/components/onboarding/StepIndicator';
 import StepController from '@/components/onboarding/StepController';
@@ -17,6 +18,7 @@ const steps: Step[] = [
 ];
 
 const Welcome = () => {
+  const navigate = useNavigate();
   const {
     user,
     currentStep,
@@ -36,6 +38,13 @@ const Welcome = () => {
       </div>
     );
   }
+
+  const onComplete = async () => {
+    const success = await handleComplete();
+    if (success) {
+      navigate('/dashboard');
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -63,7 +72,7 @@ const Welcome = () => {
                 steps={steps}
                 handleBack={handleBack}
                 handleNext={handleNext}
-                handleComplete={handleComplete}
+                handleComplete={onComplete}
               />
             </CardFooter>
           </Card>
