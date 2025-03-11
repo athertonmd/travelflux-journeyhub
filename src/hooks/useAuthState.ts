@@ -160,7 +160,7 @@ export const useAuthState = () => {
         console.log("useAuthState: Safety timeout triggered - forcing loading state to false");
         setIsLoading(false);
       }
-    }, 5000); // 5 second timeout
+    }, 3000); // Reduced to 3 second timeout for faster feedback
 
     return () => {
       mounted = false;

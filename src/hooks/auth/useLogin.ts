@@ -12,6 +12,36 @@ export const useLogin = (
     try {
       console.log('Attempting login with:', email);
       
+      // Check if user is already logged in to prevent duplicate login attempts
+      const { data: currentSession } = await supabase.auth.getSession();
+      if (currentSession.session) {
+        console.log('User already has active session, skipping login attempt');
+        
+        // Get user data from the current session
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData.user) {
+          // Get user configuration
+          const { data: configData } = await supabase
+            .from('agency_configurations')
+            .select('setup_completed')
+            .eq('user_id', userData.user.id)
+            .maybeSingle();
+            
+          const user = {
+            id: userData.user.id,
+            email: userData.user.email || '',
+            name: userData.user.user_metadata?.name || userData.user.email?.split('@')[0] || '',
+            agencyName: userData.user.user_metadata?.agencyName,
+            setupCompleted: configData?.setup_completed || false
+          };
+          
+          setUser(user);
+          setIsLoading(false);
+          return true;
+        }
+      }
+      
+      // Proceed with login if no active session
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -22,9 +52,6 @@ export const useLogin = (
       }
       
       console.log('Login successful, user data:', data.user);
-      
-      // Don't set isLoading to false here - this will be handled after redirect
-      // by the Login component to prevent flash
       
       if (data.user) {
         const userData = {
@@ -57,6 +84,7 @@ export const useLogin = (
             description: "Welcome back to Tripscape!",
           });
           
+          setIsLoading(false);
           return true; // Indicate successful login
         } catch (configError) {
           console.error('Error processing configuration:', configError);
@@ -65,9 +93,11 @@ export const useLogin = (
             ...userData,
             setupCompleted: false
           });
+          setIsLoading(false);
           return true; // Still indicate successful login
         }
       }
+      setIsLoading(false);
       return false; // Indicate unsuccessful login
     } catch (error) {
       console.error('Login error:', error);

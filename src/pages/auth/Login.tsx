@@ -20,22 +20,30 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [loginAttempted, setLoginAttempted] = useState(false);
   
-  // Redirect if already logged in
+  // Check if user is already logged in and redirect them
   useEffect(() => {
     if (user) {
-      console.log('User is authenticated, checking setup status:', user);
+      console.log('User is already authenticated, redirecting:', user);
       if (!user.setupCompleted) {
         navigate('/welcome');
       } else {
         navigate('/');
       }
-    } else if (loginAttempted && !isLoading && !authLoading) {
-      // Reset login attempted state if login fails
-      setLoginAttempted(false);
     }
-  }, [user, navigate, loginAttempted, isLoading, authLoading]);
+  }, [user, navigate]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
+    // If user is already authenticated, prevent login attempt
+    if (user) {
+      console.log('User is already logged in, redirecting instead of attempting login');
+      if (!user.setupCompleted) {
+        navigate('/welcome');
+      } else {
+        navigate('/');
+      }
+      return;
+    }
+    
     setIsLoading(true);
     setLoginAttempted(true);
     
@@ -72,7 +80,7 @@ const Login = () => {
           setIsLoading(false);
           setLoginAttempted(false);
         }
-      }, 8000); // 8 seconds timeout
+      }, 5000); // Reduced to 5 seconds timeout for faster feedback
     }
     
     return () => {
@@ -80,7 +88,14 @@ const Login = () => {
     };
   }, [isLoading, authLoading]);
   
+  // Show loading spinner only during initial auth check, not during login attempts
   if (authLoading && !loginAttempted) {
+    return <LoadingSpinner />;
+  }
+  
+  // If user is authenticated, we'll redirect in the useEffect
+  // but as a safety measure, don't render the login form
+  if (user) {
     return <LoadingSpinner />;
   }
   
