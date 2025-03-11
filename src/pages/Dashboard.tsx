@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,29 +20,39 @@ import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 
 const Dashboard = () => {
+  console.log('Dashboard component rendering');
   const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const { creditInfo, isLoading: isCreditsLoading, purchaseCredits } = useCredits();
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
 
+  console.log('Auth state:', { user, isAuthLoading });
+  console.log('Credits state:', { creditInfo, isCreditsLoading });
+
   useEffect(() => {
+    console.log('Dashboard useEffect - checking auth state');
     if (!isAuthLoading && !user) {
+      console.log('No user found, redirecting to login');
       navigate('/login');
     } else if (!isAuthLoading && user && !user.setupCompleted) {
+      console.log('Setup not completed, redirecting to welcome');
       navigate('/welcome');
     }
   }, [user, isAuthLoading, navigate]);
 
-  // Show loading state while auth is being checked
+  // If we're still loading auth, show loading spinner
   if (isAuthLoading) {
+    console.log('Auth is still loading, showing spinner');
     return <LoadingSpinner />;
   }
 
-  // If we're past authentication loading and there's no user, redirect will happen
+  // If no user and not loading, redirect (the useEffect will handle this)
   if (!user) {
-    return <LoadingSpinner />;
+    console.log('No user found and not loading');
+    return null;
   }
 
+  // Now we know we have a user and auth is not loading
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border bg-card">
@@ -87,12 +96,8 @@ const Dashboard = () => {
           ) : (
             <DashboardCard 
               title="Credit Balance" 
-              value="Unavailable" 
+              value="Error loading credits" 
               icon={<Wallet className="h-8 w-8 text-primary" />}
-              trend={{
-                value: 0,
-                isPositive: true
-              }}
             />
           )}
           

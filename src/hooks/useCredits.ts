@@ -19,14 +19,16 @@ export const useCredits = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchCreditInfo = async () => {
+    console.log('Fetching credit info, user:', user?.id);
     if (!user) {
+      console.log('No user, skipping credit fetch');
       setIsLoading(false);
       return;
     }
     
     setIsLoading(true);
     try {
-      console.log('Fetching credit info for user:', user.id);
+      console.log('Making Supabase query for credits');
       const { data, error } = await supabase
         .from('credits')
         .select('*')
@@ -38,8 +40,8 @@ export const useCredits = () => {
         throw error;
       }
       
+      console.log('Credit data received:', data);
       if (data) {
-        console.log('Credit data received:', data);
         const remaining = Math.max(0, data.total_credits - data.used_credits);
         const percentage = data.total_credits > 0 
           ? Math.min(Math.round((data.used_credits / data.total_credits) * 100), 100)
@@ -54,7 +56,7 @@ export const useCredits = () => {
           usagePercentage: percentage
         });
       } else {
-        console.log('No credit data found, initializing credits for user:', user.id);
+        console.log('No credit data found, checking if user exists:', user.id);
         // If no credit record exists (which shouldn't happen with our triggers, but just in case)
         const { data: newCreditData, error: insertError } = await supabase
           .from('credits')
@@ -144,6 +146,7 @@ export const useCredits = () => {
   };
 
   useEffect(() => {
+    console.log('useCredits useEffect triggered');
     if (user) {
       fetchCreditInfo();
     } else {
