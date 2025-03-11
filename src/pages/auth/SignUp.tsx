@@ -22,7 +22,8 @@ const SignUp = () => {
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   useEffect(() => {
-    if (user) {
+    // If user is authenticated and we're not in the middle of signup process, redirect
+    if (user && !isLoading) {
       console.log('User authenticated, redirecting:', user);
       setIsRedirecting(true);
       
@@ -36,7 +37,7 @@ const SignUp = () => {
       
       return () => clearTimeout(redirectTimer);
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoading]);
 
   const handleSignUp = async (name: string, email: string, password: string, agencyName: string) => {
     if (isLoading || authLoading || isRedirecting) {
@@ -49,10 +50,10 @@ const SignUp = () => {
       console.log('Attempting signup with:', { name, email, agencyName });
       const success = await signup(name, email, password, agencyName);
       
-      // No need to navigate here, the useEffect will handle it when user is set
       if (!success) {
         setIsLoading(false);
       }
+      // If successful, the useEffect will handle redirection once user state updates
     } catch (error: any) {
       console.error('Signup error:', error);
       toast({
@@ -64,7 +65,13 @@ const SignUp = () => {
     }
   };
 
-  if (authLoading || isRedirecting) {
+  // Show loading spinner when redirecting after successful signup
+  if (isRedirecting) {
+    return <LoadingSpinner />;
+  }
+
+  // Show loading spinner during initial auth check
+  if (authLoading && !isLoading) {
     return <LoadingSpinner />;
   }
 
