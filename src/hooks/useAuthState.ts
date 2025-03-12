@@ -115,17 +115,35 @@ export const useAuthState = () => {
           setUser(null);
           setIsLoading(false);
         }
+      } else if (event === 'TOKEN_REFRESHED') {
+        console.log("useAuthState: Token refreshed");
+        // Do nothing special, just log
       } else {
         // For any other events, ensure loading state is eventually reset
+        console.log("useAuthState: Handling event:", event);
         if (mounted && isLoading) {
           console.log("useAuthState: Resetting loading state for event:", event);
-          setIsLoading(false);
+          // Add a small delay to allow other operations to complete
+          setTimeout(() => {
+            if (mounted && isLoading) {
+              setIsLoading(false);
+            }
+          }, 1000);
         }
       }
     });
 
+    // Safety timeout to ensure loading state is reset after a maximum time
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.log("useAuthState: Safety timeout triggered - resetting loading state");
+        setIsLoading(false);
+      }
+    }, 8000);
+
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);

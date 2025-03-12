@@ -25,7 +25,6 @@ export const useLogin = (
           variant: "destructive",
         });
         
-        setIsLoading(false);
         return false;
       }
       
@@ -38,12 +37,11 @@ export const useLogin = (
           variant: "destructive",
         });
         
-        setIsLoading(false);
         return false;
       }
       
       console.log('Login successful, user ID:', data.user.id);
-      // Don't set isLoading to false here - the auth listener will handle it
+      // Note: We don't set isLoading to false here since the auth listener will handle it
       return true;
     } catch (error) {
       console.error('Login error:', error);

@@ -14,6 +14,11 @@ const Login = () => {
   const { user, isLoading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
+  // Debug logging
+  useEffect(() => {
+    console.log('Login component state:', { isLoading, authLoading, user: !!user });
+  }, [isLoading, authLoading, user]);
+  
   // This effect handles redirection when user auth state changes
   useEffect(() => {
     if (user && !authLoading) {
@@ -44,7 +49,7 @@ const Login = () => {
         description: "Please try again",
         variant: "destructive",
       });
-    }, 10000); // 10 seconds timeout
+    }, 15000); // 15 seconds timeout
     
     return () => clearTimeout(safetyTimeout);
   }, [isLoading]);
@@ -59,7 +64,15 @@ const Login = () => {
       setIsLoading(true);
       console.log('Form submitted, attempting login...');
       
-      return await login(email, password);
+      const success = await login(email, password);
+      
+      // If login was unsuccessful, reset loading state immediately
+      if (!success) {
+        console.log('Login unsuccessful, resetting loading state');
+        setIsLoading(false);
+      }
+      
+      return success;
     } catch (error) {
       console.error('Login handler error:', error);
       toast({
@@ -72,7 +85,17 @@ const Login = () => {
     }
   };
   
-  if (isLoading || authLoading) {
+  // Reset local loading state when auth loading finishes
+  useEffect(() => {
+    if (!authLoading && isLoading) {
+      console.log('Auth loading finished, resetting local loading state');
+      setIsLoading(false);
+    }
+  }, [authLoading, isLoading]);
+  
+  const showSpinner = isLoading || (authLoading && user === null);
+  
+  if (showSpinner) {
     return <LoadingSpinner />;
   }
   
