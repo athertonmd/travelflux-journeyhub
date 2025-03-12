@@ -1,12 +1,15 @@
 
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSupabaseVideo } from '@/hooks/useSupabaseVideo';
+import { useToast } from '@/hooks/use-toast';
 
 const HeroSection = () => {
-  const { videoUrl, isLoading } = useSupabaseVideo();
+  const { videoUrl, isLoading, error, hasVideo } = useSupabaseVideo();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const { toast } = useToast();
 
   const scrollToPricing = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -16,19 +19,64 @@ const HeroSection = () => {
     }
   };
 
+  // Handle video loading errors
   useEffect(() => {
-    // Ensure the video starts playing once it's loaded and visible
-    if (videoRef.current && videoUrl && !isLoading) {
-      videoRef.current.load();
-      const playPromise = videoRef.current.play();
-      
-      if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.log('Autoplay prevented:', error);
-        });
-      }
+    if (error) {
+      console.error('Video loading error:', error);
+      toast({
+        title: "Video Error",
+        description: "There was a problem loading the demo video.",
+        variant: "destructive",
+      });
     }
-  }, [videoUrl, isLoading]);
+  }, [error, toast]);
+
+  // Handle video element events
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !videoUrl) return;
+
+    const handleLoaded = () => {
+      console.log('Video loaded and ready to play');
+      setVideoLoaded(true);
+      
+      // Attempt to play the video
+      try {
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.log('Autoplay prevented:', err);
+            // We don't need to show an error as this is expected on some browsers
+          });
+        }
+      } catch (e) {
+        console.error('Error playing video:', e);
+      }
+    };
+
+    const handleError = (e: Event) => {
+      console.error('Video error event:', e);
+      setVideoLoaded(false);
+      toast({
+        title: "Video Playback Error",
+        description: "There was a problem playing the demo video.",
+        variant: "destructive",
+      });
+    };
+
+    // Add event listeners
+    video.addEventListener('loadeddata', handleLoaded);
+    video.addEventListener('error', handleError);
+
+    // Preload the video
+    video.load();
+
+    // Clean up event listeners
+    return () => {
+      video.removeEventListener('loadeddata', handleLoaded);
+      video.removeEventListener('error', handleError);
+    };
+  }, [videoUrl, toast]);
 
   return (
     <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-4">
@@ -55,24 +103,33 @@ const HeroSection = () => {
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                {!isLoading && videoUrl ? (
+                {isLoading && (
+                  <div className="w-full h-full bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+                    <span className="text-gray-400">Loading demo video...</span>
+                  </div>
+                )}
+                
+                {!isLoading && videoUrl && (
                   <video 
                     ref={videoRef}
-                    className="w-full h-full object-cover"
-                    controls
+                    className={`w-full h-full object-cover ${videoLoaded ? 'opacity-100' : 'opacity-0'}`}
                     autoPlay
                     loop
                     muted
                     playsInline
-                    preload="auto"
+                    controls
                     poster="/placeholder.svg"
+                    preload="auto"
+                    style={{ transition: 'opacity 0.3s ease-in-out' }}
                   >
                     <source src={videoUrl} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
-                    <span className="text-gray-400">Loading demo video...</span>
+                )}
+                
+                {!isLoading && !videoUrl && (
+                  <div className="w-full h-full bg-gradient-to-r from-gray-200 to-gray-300 flex items-center justify-center">
+                    <span className="text-gray-500">No demo video available</span>
                   </div>
                 )}
               </div>
