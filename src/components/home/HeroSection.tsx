@@ -37,7 +37,7 @@ const HeroSection = () => {
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                {/* YouTube video embed */}
+                {/* YouTube video embed with parameters to disable related videos */}
                 <iframe 
                   src="https://www.youtube.com/embed/9-oeXSgKtfE?rel=0"
                   title="Tripscape SaaS Demo"
