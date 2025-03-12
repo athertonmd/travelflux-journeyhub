@@ -15,11 +15,30 @@ export const useSupabaseVideo = () => {
           .getPublicUrl('demo-video.mp4');
 
         if (data?.publicUrl) {
-          setVideoUrl(data.publicUrl);
+          // Create a new Image object to preload the video thumbnail
+          const videoElement = document.createElement('video');
+          videoElement.src = data.publicUrl;
+          videoElement.onloadeddata = () => {
+            setVideoUrl(data.publicUrl);
+            setIsLoading(false);
+          };
+          videoElement.onerror = () => {
+            setError(new Error('Failed to load video'));
+            setIsLoading(false);
+          };
+          
+          // Set a timeout to ensure we don't wait forever
+          setTimeout(() => {
+            if (isLoading) {
+              setVideoUrl(data.publicUrl);
+              setIsLoading(false);
+            }
+          }, 3000);
+        } else {
+          setIsLoading(false);
         }
       } catch (err) {
         setError(err instanceof Error ? err : new Error('Failed to fetch video'));
-      } finally {
         setIsLoading(false);
       }
     };

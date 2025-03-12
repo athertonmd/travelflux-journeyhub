@@ -1,10 +1,12 @@
-import React from 'react';
+
+import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSupabaseVideo } from '@/hooks/useSupabaseVideo';
 
 const HeroSection = () => {
   const { videoUrl, isLoading } = useSupabaseVideo();
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const scrollToPricing = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -13,6 +15,20 @@ const HeroSection = () => {
       pricingSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  useEffect(() => {
+    // Ensure the video starts playing once it's loaded and visible
+    if (videoRef.current && videoUrl && !isLoading) {
+      videoRef.current.load();
+      const playPromise = videoRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log('Autoplay prevented:', error);
+        });
+      }
+    }
+  }, [videoUrl, isLoading]);
 
   return (
     <section className="pt-24 md:pt-32 pb-16 md:pb-24 px-4">
@@ -39,19 +55,25 @@ const HeroSection = () => {
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                {!isLoading && videoUrl && (
+                {!isLoading && videoUrl ? (
                   <video 
+                    ref={videoRef}
                     className="w-full h-full object-cover"
                     controls
                     autoPlay
                     loop
                     muted
                     playsInline
+                    preload="auto"
                     poster="/placeholder.svg"
                   >
                     <source src={videoUrl} type="video/mp4" />
                     Your browser does not support the video tag.
                   </video>
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-r from-gray-100 to-gray-200 animate-pulse flex items-center justify-center">
+                    <span className="text-gray-400">Loading demo video...</span>
+                  </div>
                 )}
               </div>
             </CardContent>
