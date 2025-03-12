@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -12,62 +13,40 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import SignUpForm from '@/components/auth/SignUpForm';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
-import { toast } from '@/hooks/use-toast';
 
 const SignUp = () => {
   const navigate = useNavigate();
   const { signup, user, isLoading: authLoading } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
+  // Redirect if user is already logged in
   useEffect(() => {
-    if (user && !authLoading) {
-      console.log('User already authenticated, redirecting to appropriate page');
+    if (user && !isSubmitting) {
+      console.log('User already authenticated, redirecting to:', 
+        user.setupCompleted ? '/dashboard' : '/welcome');
       navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
-  }, [user, navigate, authLoading]);
-  
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (isLoading) {
-        console.log('Signup safety timeout triggered - resetting loading state');
-        setIsLoading(false);
-        toast({
-          title: "Account creation taking too long",
-          description: "Please try again or check your email for confirmation",
-          variant: "destructive"
-        });
-      }
-    }, 8000); // 8 second timeout
-    
-    return () => clearTimeout(timeoutId);
-  }, [isLoading]);
+  }, [user, navigate, isSubmitting]);
   
   const handleSignUp = async (name: string, email: string, password: string, agencyName: string) => {
-    if (isLoading || authLoading) {
-      console.log('Skipping signup attempt: already processing');
+    if (isSubmitting || authLoading) {
+      console.log('Already processing signup, skipping');
       return;
     }
     
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
       console.log('Attempting signup with:', { name, email, agencyName });
-      const success = await signup(name, email, password, agencyName);
-      
-      if (!success) {
-        setIsLoading(false);
-      }
-    } catch (error: any) {
-      console.error('Signup error:', error);
-      toast({
-        title: "Signup Failed",
-        description: error?.message || "Failed to create account. Please try again.",
-        variant: "destructive"
-      });
-      setIsLoading(false);
+      await signup(name, email, password, agencyName);
+      // Don't reset isSubmitting - let the auth state change handle redirection
+    } catch (error) {
+      console.error('Signup handler error:', error);
+      setIsSubmitting(false);
     }
   };
   
-  if ((authLoading && !isLoading) || (isLoading && user)) {
+  // Show spinner only when actively submitting
+  if (isSubmitting) {
     return <LoadingSpinner />;
   }
   
@@ -87,7 +66,7 @@ const SignUp = () => {
             </CardHeader>
             
             <SignUpForm 
-              isLoading={isLoading} 
+              isLoading={isSubmitting || authLoading} 
               onSignUp={handleSignUp}
             />
 

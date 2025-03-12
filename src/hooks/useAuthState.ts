@@ -11,118 +11,106 @@ export const useAuthState = () => {
     console.log("useAuthState: Initializing auth state");
     let mounted = true;
 
-    const fetchUserConfig = async (userId: string, userData: Partial<User>) => {
+    const fetchUserConfig = async (userId: string, userEmail: string, userName: string, agencyName?: string) => {
       try {
-        console.log("useAuthState: Fetching user configuration for:", userId);
+        console.log("Fetching config for user:", userId);
+        
         const { data: configData, error: configError } = await supabase
           .from('agency_configurations')
           .select('setup_completed')
           .eq('user_id', userId)
           .single();
         
-        if (configError) {
-          console.error('Error fetching config:', configError);
-          if (mounted) {
-            const userWithConfig = {
-              ...userData as User,
-              setupCompleted: false
-            };
-            console.log("useAuthState: Setting user with default config:", userWithConfig);
-            setUser(userWithConfig);
-            setIsLoading(false);
-          }
-          return;
+        if (configError && configError.code !== 'PGRST116') {
+          console.error('Error fetching user config:', configError);
         }
         
         if (mounted) {
-          const userWithConfig = {
-            ...userData as User,
+          const userWithConfig: User = {
+            id: userId,
+            email: userEmail,
+            name: userName || userEmail.split('@')[0],
+            agencyName: agencyName,
             setupCompleted: configData?.setup_completed ?? false
           };
-          console.log("useAuthState: Setting user with config:", userWithConfig);
+          
+          console.log("Setting authenticated user:", userWithConfig);
           setUser(userWithConfig);
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('Error in fetchUserConfig:', error);
+        console.error('Error processing user config:', error);
         if (mounted) {
-          setUser(null);
           setIsLoading(false);
         }
       }
     };
 
-    const checkAuth = async () => {
+    const handleAuthChange = async (event: string, session: any) => {
+      console.log('Auth state changed:', event);
+      
+      if (!session || !session.user) {
+        if (mounted) {
+          console.log('No active session, setting user to null');
+          setUser(null);
+          setIsLoading(false);
+        }
+        return;
+      }
+      
+      const { user: authUser } = session;
+      
+      // Extract user data from session
+      const userData = {
+        id: authUser.id,
+        email: authUser.email || '',
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
+        agencyName: authUser.user_metadata?.agencyName
+      };
+      
+      console.log('User authenticated:', userData.id);
+      
+      // Fetch additional configuration
+      await fetchUserConfig(userData.id, userData.email, userData.name, userData.agencyName);
+    };
+
+    // Initial session check
+    const checkCurrentSession = async () => {
       try {
-        console.log("useAuthState: Checking current session");
-        const { data: { session }, error } = await supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error("Session error:", error);
+          console.error('Session retrieval error:', error);
           if (mounted) {
-            setUser(null);
             setIsLoading(false);
           }
           return;
         }
         
-        if (!session?.user) {
-          console.log("useAuthState: No session found");
+        if (data.session) {
+          await handleAuthChange('INITIAL', data.session);
+        } else {
+          console.log('No active session found');
           if (mounted) {
-            setUser(null);
             setIsLoading(false);
           }
-          return;
         }
-
-        console.log("useAuthState: Session found for user:", session.user.id);
-        const userData = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-          agencyName: session.user.user_metadata?.agencyName
-        };
-        
-        await fetchUserConfig(userData.id, userData);
       } catch (error) {
-        console.error('Auth check error:', error);
+        console.error('Error checking session:', error);
         if (mounted) {
-          setUser(null);
           setIsLoading(false);
         }
       }
     };
 
-    // Initial auth check
-    checkAuth();
-
-    // Set up auth listener
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.id);
-      
-      if (event === 'SIGNED_IN' && session?.user) {
-        console.log("useAuthState: Sign in detected, updating user data");
-        const userData = {
-          id: session.user.id,
-          email: session.user.email || '',
-          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
-          agencyName: session.user.user_metadata?.agencyName
-        };
-        await fetchUserConfig(userData.id, userData);
-      } else if (event === 'SIGNED_OUT') {
-        console.log("useAuthState: User signed out");
-        if (mounted) {
-          setUser(null);
-          setIsLoading(false);
-        }
-      } else {
-        console.log("useAuthState: Unhandled auth event:", event);
-        checkAuth();
-      }
-    });
+    // Set up auth state listener
+    const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
+    
+    // Check current session immediately
+    checkCurrentSession();
 
     return () => {
-      console.log("useAuthState: Cleaning up auth state");
+      console.log("Cleaning up auth state");
       mounted = false;
       authListener.subscription.unsubscribe();
     };

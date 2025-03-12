@@ -7,77 +7,47 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginForm from '@/components/auth/LoginForm';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
-import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, login } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Debug logging
+  // Redirect if user is already logged in
   useEffect(() => {
-    console.log('Login component state:', { 
-      isLoading, 
-      authLoading, 
-      user: !!user,
-      userData: user ? { id: user.id, setupCompleted: user.setupCompleted } : null
-    });
-  }, [isLoading, authLoading, user]);
-  
-  // Handle redirection when user auth state changes
-  useEffect(() => {
-    if (user) {
-      console.log('User is authenticated, redirecting to:', 
+    if (user && !isSubmitting) {
+      console.log('User already authenticated, redirecting to:', 
         user.setupCompleted ? '/dashboard' : '/welcome');
-      
-      toast({
-        title: "Login successful",
-        description: "Redirecting you to dashboard...",
-      });
-      
       navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
-  }, [user, navigate]);
+  }, [user, navigate, isSubmitting]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
-    if (isLoading || authLoading) {
-      console.log('Skipping login attempt: already processing');
+    if (isSubmitting || authLoading) {
+      console.log('Already processing login, skipping');
       return false;
     }
     
     try {
-      setIsLoading(true);
-      console.log('Form submitted, attempting login...');
+      setIsSubmitting(true);
+      console.log('Attempting login...');
       
       const success = await login(email, password);
       
       if (!success) {
-        setIsLoading(false);
+        setIsSubmitting(false);
       }
       
       return success;
     } catch (error) {
       console.error('Login handler error:', error);
-      toast({
-        title: "Login error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
-        variant: "destructive",
-      });
-      setIsLoading(false);
+      setIsSubmitting(false);
       return false;
     }
   };
   
-  // Reset local loading state when auth loading finishes
-  useEffect(() => {
-    if (!authLoading && isLoading) {
-      console.log('Auth loading finished, resetting local loading state');
-      setIsLoading(false);
-    }
-  }, [authLoading, isLoading]);
-  
-  // Show spinner when loading or when we're waiting for auth state to update
-  if (isLoading || (authLoading && user === null)) {
+  // Show spinner only when actively submitting
+  if (isSubmitting) {
     return <LoadingSpinner />;
   }
   
@@ -96,7 +66,7 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             <LoginForm 
-              isLoading={isLoading}
+              isLoading={isSubmitting || authLoading}
               onLogin={handleLogin}
             />
           </Card>
