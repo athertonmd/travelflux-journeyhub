@@ -1,14 +1,11 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { MessageSquare, Users, Calendar, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-
 const MicrosoftTeamsPage = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,7 +32,7 @@ const MicrosoftTeamsPage = () => {
                       <div className="mr-3 bg-[#444791]/10 rounded-full p-2">
                         <Users className="h-5 w-5 text-[#444791]" />
                       </div>
-                      <span>Book and manage travel within Teams channels</span>
+                      <span>View all your travel within Teams channels</span>
                     </li>
                     <li className="flex items-center">
                       <div className="mr-3 bg-[#444791]/10 rounded-full p-2">
@@ -52,11 +49,7 @@ const MicrosoftTeamsPage = () => {
                   </ul>
                 </div>
                 <div className="bg-white rounded-lg p-4 shadow-sm">
-                  <img 
-                    src="/placeholder.svg" 
-                    alt="Microsoft Teams integration" 
-                    className="w-full rounded"
-                  />
+                  <img src="/placeholder.svg" alt="Microsoft Teams integration" className="w-full rounded" />
                 </div>
               </div>
             </div>
@@ -106,8 +99,6 @@ const MicrosoftTeamsPage = () => {
         </div>
       </main>
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default MicrosoftTeamsPage;
