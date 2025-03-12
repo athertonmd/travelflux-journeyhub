@@ -21,8 +21,6 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     remember: false,
   });
   
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
     setFormData(prev => ({
@@ -34,11 +32,6 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Prevent multiple submissions
-    if (isSubmitting) {
-      return;
-    }
-    
     // Validate form
     if (!formData.email || !formData.password) {
       toast({
@@ -49,16 +42,8 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
       return;
     }
     
-    try {
-      setIsSubmitting(true);
-      await onLogin(formData.email, formData.password, formData.remember);
-    } finally {
-      setIsSubmitting(false);
-    }
+    await onLogin(formData.email, formData.password, formData.remember);
   };
-  
-  // Only disable inputs during actual form submission
-  const inputDisabled = isSubmitting;
   
   return (
     <>
@@ -74,7 +59,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               value={formData.email}
               onChange={handleChange}
               required
-              disabled={inputDisabled}
+              disabled={isLoading}
               className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
               autoComplete="email"
             />
@@ -98,7 +83,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               value={formData.password}
               onChange={handleChange}
               required
-              disabled={inputDisabled}
+              disabled={isLoading}
               className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
               autoComplete="current-password"
             />
@@ -112,13 +97,13 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               onCheckedChange={(checked) => 
                 setFormData(prev => ({ ...prev, remember: checked === true }))
               }
-              disabled={inputDisabled}
+              disabled={isLoading}
             />
             <Label htmlFor="remember" className="text-sm">Remember me</Label>
           </div>
           
           <SubmitButton 
-            isLoading={isSubmitting}
+            isLoading={isLoading}
             text="Sign in"
             loadingText="Signing in..."
           />

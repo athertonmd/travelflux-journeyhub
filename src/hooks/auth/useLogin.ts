@@ -4,12 +4,7 @@ import { toast } from "@/hooks/use-toast";
 
 export const useLogin = () => {
   const login = async (email: string, password: string) => {
-    console.log('Login attempt with:', email);
-    
     try {
-      // Clear existing session first to avoid conflicts
-      await supabase.auth.signOut();
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -35,8 +30,6 @@ export const useLogin = () => {
         return false;
       }
 
-      console.log('Login successful, user ID:', data.user.id);
-      
       toast({
         title: "Login successful",
         description: "Welcome back!",
