@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -21,21 +20,10 @@ const Login = () => {
   
   // Check if user is already logged in and redirect
   useEffect(() => {
-    console.log('Login page rendered, auth state:', { 
-      user, 
-      authLoading,
-      isLoading,
-      userExists: !!user,
-      setupStatus: user?.setupCompleted 
-    });
-    
     if (user && !authLoading) {
-      console.log('User is already authenticated, redirecting to:', user.setupCompleted ? 'dashboard' : 'welcome');
-      if (user.setupCompleted) {
-        navigate('/dashboard');
-      } else {
-        navigate('/welcome');
-      }
+      console.log('User is already authenticated, redirecting to:', 
+        user.setupCompleted ? 'dashboard' : 'welcome');
+      navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
   }, [user, navigate, authLoading]);
   
@@ -51,14 +39,12 @@ const Login = () => {
           variant: "destructive"
         });
       }
-    }, 10000); // 10 second timeout
+    }, 8000); // Reduce timeout to 8 seconds for better user experience
     
     return () => clearTimeout(timeoutId);
   }, [isLoading]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
-    console.log('Login handler called with:', email);
-    
     // Prevent login attempt if already processing
     if (isLoading || authLoading) {
       console.log('Skipping login attempt: already processing');
@@ -67,14 +53,12 @@ const Login = () => {
     
     try {
       setIsLoading(true);
-      
-      // Call the login function from AuthContext
       const success = await login(email, password);
-      console.log('Login result:', success ? 'Success' : 'Failed');
       
       if (!success) {
         setIsLoading(false);
       }
+      // If successful, keep loading state true until redirection happens
       
       return success;
     } catch (error) {
@@ -89,8 +73,8 @@ const Login = () => {
     }
   };
   
-  // Only show loading spinner during initial auth check
-  if (authLoading && !isLoading) {
+  // Show loading spinner when actively loading
+  if ((authLoading && !isLoading) || (isLoading && user)) {
     return <LoadingSpinner />;
   }
   

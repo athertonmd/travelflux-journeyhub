@@ -10,6 +10,68 @@ export const useAuthState = () => {
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
     let mounted = true;
+    let authTimeout: NodeJS.Timeout;
+
+    const fetchUserConfig = async (userId: string, userData: Partial<User>) => {
+      try {
+        // Fetch user configuration data
+        console.log("useAuthState: Fetching user configuration for:", userId);
+        const { data: configData, error: configError } = await supabase
+          .from('agency_configurations')
+          .select('setup_completed')
+          .eq('user_id', userId)
+          .maybeSingle();
+        
+        if (configError) {
+          console.error('Error fetching config:', configError);
+        }
+        
+        if (!configData) {
+          console.log("useAuthState: No config found, creating new one");
+          // Create configuration if it doesn't exist
+          const { error: insertError } = await supabase
+            .from('agency_configurations')
+            .insert({
+              user_id: userId,
+              setup_completed: false
+            });
+          
+          if (insertError) {
+            console.error('Error creating configuration:', insertError);
+          }
+          
+          if (mounted) {
+            console.log("useAuthState: Setting user with setupCompleted=false");
+            setUser({
+              ...userData as User,
+              setupCompleted: false
+            });
+            setIsLoading(false);
+          }
+        } else {
+          console.log("useAuthState: Config found, setup completed:", configData.setup_completed);
+          if (mounted) {
+            console.log("useAuthState: Setting user with config data");
+            setUser({
+              ...userData as User,
+              setupCompleted: configData?.setup_completed || false
+            });
+            setIsLoading(false);
+          }
+        }
+      } catch (configError) {
+        console.error('Error processing configuration:', configError);
+        // Even with config error, set the user to prevent blocking the UI
+        if (mounted) {
+          console.log("useAuthState: Setting user despite config error");
+          setUser({
+            ...userData as User,
+            setupCompleted: false
+          });
+          setIsLoading(false);
+        }
+      }
+    };
 
     const checkAuth = async () => {
       try {
@@ -31,66 +93,7 @@ export const useAuthState = () => {
             agencyName: data.session.user.user_metadata?.agencyName
           };
           
-          try {
-            // Fetch user configuration data
-            console.log("useAuthState: Fetching user configuration for:", userData.id);
-            const { data: configData, error: configError } = await supabase
-              .from('agency_configurations')
-              .select('setup_completed')
-              .eq('user_id', userData.id)
-              .maybeSingle();
-            
-            if (configError) {
-              console.error('Error fetching config:', configError);
-            }
-            
-            if (!configData) {
-              console.log("useAuthState: No config found, creating new one");
-              // Create configuration if it doesn't exist
-              const { error: insertError } = await supabase
-                .from('agency_configurations')
-                .insert({
-                  user_id: userData.id,
-                  setup_completed: false
-                });
-              
-              if (insertError) {
-                console.error('Error creating configuration:', insertError);
-              }
-              
-              if (mounted) {
-                console.log("useAuthState: Setting user with setupCompleted=false");
-                setUser({
-                  ...userData,
-                  setupCompleted: false
-                });
-              }
-            } else {
-              console.log("useAuthState: Config found, setup completed:", configData.setup_completed);
-              if (mounted) {
-                console.log("useAuthState: Setting user with config data");
-                setUser({
-                  ...userData,
-                  setupCompleted: configData?.setup_completed || false
-                });
-              }
-            }
-          } catch (configError) {
-            console.error('Error processing configuration:', configError);
-            // Even with config error, set the user to prevent blocking the UI
-            if (mounted) {
-              console.log("useAuthState: Setting user despite config error");
-              setUser({
-                ...userData,
-                setupCompleted: false
-              });
-            }
-          } finally {
-            if (mounted) {
-              console.log("useAuthState: Setting isLoading to false after session check");
-              setIsLoading(false);
-            }
-          }
+          await fetchUserConfig(userData.id, userData);
         } else {
           console.log("useAuthState: No session found");
           if (mounted) {
@@ -107,6 +110,14 @@ export const useAuthState = () => {
     // Initial auth check
     checkAuth();
 
+    // Safety timeout to prevent infinite loading
+    authTimeout = setTimeout(() => {
+      if (mounted && isLoading) {
+        console.log("useAuthState: Safety timeout triggered - forcing loading state to false");
+        setIsLoading(false);
+      }
+    }, 5000); // 5 second timeout for safety
+
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
@@ -122,66 +133,19 @@ export const useAuthState = () => {
           agencyName: session.user.user_metadata?.agencyName
         };
         
-        try {
-          console.log("useAuthState: Fetching config after sign in for:", userData.id);
-          const { data: configData, error: configError } = await supabase
-            .from('agency_configurations')
-            .select('setup_completed')
-            .eq('user_id', userData.id)
-            .maybeSingle();
-          
-          if (configError) {
-            console.error('Error fetching config:', configError);
-          }
-          
-          if (mounted) {
-            const setupCompleted = configData?.setup_completed || false;
-            console.log("useAuthState: User data updated after sign in, setup completed:", setupCompleted);
-            setUser({
-              ...userData,
-              setupCompleted
-            });
-            console.log("useAuthState: Setting isLoading to false after sign in processing");
-            setIsLoading(false);
-          }
-        } catch (error) {
-          console.error('Error during sign in configuration:', error);
-          // Even with config error, set the user to prevent blocking the UI
-          if (mounted) {
-            console.log("useAuthState: Setting user despite config error after sign in");
-            setUser({
-              ...userData,
-              setupCompleted: false
-            });
-            setIsLoading(false);
-          }
-        }
+        await fetchUserConfig(userData.id, userData);
       } else if (event === 'SIGNED_OUT') {
         console.log("useAuthState: User signed out");
         if (mounted) {
           setUser(null);
           setIsLoading(false);
         }
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log("useAuthState: Token refreshed, no user state change needed");
-      } else {
-        console.log(`useAuthState: Other auth event (${event}), checking if we need to update state`);
-        // For other events, we might still want to update our state
-        checkAuth();
       }
     });
 
-    // Safety timeout to prevent infinite loading
-    const timeoutId = setTimeout(() => {
-      if (mounted && isLoading) {
-        console.log("useAuthState: Safety timeout triggered - forcing loading state to false");
-        setIsLoading(false);
-      }
-    }, 5000); // 5 second timeout for safety
-
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
+      clearTimeout(authTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);

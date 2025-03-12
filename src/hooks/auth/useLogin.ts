@@ -42,10 +42,9 @@ export const useLogin = (
       
       console.log('Login successful, user data:', data.user.id);
       
-      toast({
-        title: "Login successful",
-        description: "Welcome back!",
-      });
+      // User will be set by the auth listener in useAuthState
+      // Skip the toast here to avoid duplicate notifications
+      // Let the redirect happen naturally when user state updates
       
       return true;
     } catch (error) {
