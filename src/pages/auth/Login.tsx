@@ -13,14 +13,23 @@ const Login = () => {
   const { user, isLoading: authLoading, login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  console.log('Login page rendering with auth state:', { user, authLoading, isSubmitting });
+  console.log('Login page rendering with auth state:', { 
+    user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
+    authLoading, 
+    isSubmitting 
+  });
   
   // Redirect if user is already logged in
   useEffect(() => {
+    // Only redirect if we have a user AND auth loading has finished
     if (user && !authLoading) {
       console.log('User authenticated, redirecting to:', 
         user.setupCompleted ? '/dashboard' : '/welcome');
-      navigate(user.setupCompleted ? '/dashboard' : '/welcome');
+      
+      // Small timeout to avoid race conditions
+      setTimeout(() => {
+        navigate(user.setupCompleted ? '/dashboard' : '/welcome');
+      }, 100);
     }
   }, [user, authLoading, navigate]);
   
@@ -48,8 +57,8 @@ const Login = () => {
     }
   };
   
-  // Show loading spinner when actively submitting a login or when auth is loading after successful login
-  if (isSubmitting || (authLoading && user)) {
+  // Show loading spinner when actively submitting a login
+  if (isSubmitting) {
     return <LoadingSpinner />;
   }
   
@@ -68,7 +77,7 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             <LoginForm 
-              isLoading={isSubmitting}
+              isLoading={isSubmitting || authLoading}
               onLogin={handleLogin}
             />
           </Card>

@@ -46,7 +46,11 @@ export const useAuthState = () => {
     // Function to handle auth state changes
     const handleAuthChange = async (event: string, session: any) => {
       console.log('Auth state changed:', event);
-      setIsLoading(true);
+
+      // Don't set loading again if we're about to clear the user
+      if (event !== 'SIGNED_OUT') {
+        setIsLoading(true);
+      }
       
       if (!session || !session.user) {
         if (isMounted.current) {
@@ -60,13 +64,15 @@ export const useAuthState = () => {
       try {
         const userWithConfig = await fetchUserConfig(session.user);
         
-        if (isMounted.current && userWithConfig) {
-          console.log("Setting authenticated user:", userWithConfig);
-          setUser(userWithConfig);
+        if (isMounted.current) {
+          if (userWithConfig) {
+            console.log("Setting authenticated user:", userWithConfig);
+            setUser(userWithConfig);
+          }
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Error fetching user config during auth change:', error);
-      } finally {
         if (isMounted.current) {
           setIsLoading(false);
         }

@@ -9,7 +9,7 @@ import { OnboardingStep, useOnboardingNavigation } from './useOnboardingNavigati
 export type { OnboardingFormData };
 
 export const useOnboarding = () => {
-  const { user, updateSetupStatus } = useAuth();
+  const { user, isLoading: authLoading, updateSetupStatus } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   
@@ -44,14 +44,20 @@ export const useOnboarding = () => {
     formData
   );
 
+  // Combine loading states
+  const combinedIsLoading = isLoading || authLoading;
+
   useEffect(() => {
-    if (!user && !isLoading) {
+    // Only redirect if auth is not loading and we have no user
+    if (!authLoading && !user) {
+      console.log('useOnboarding: No authenticated user, redirecting to login');
       navigate('/login');
     }
-  }, [user, navigate, isLoading]);
+  }, [user, authLoading, navigate]);
 
   const handleComplete = async (): Promise<boolean> => {
     try {
+      setIsLoading(true);
       const success = await completeSetup(formData);
       if (success) {
         await updateSetupStatus(true);
@@ -61,6 +67,8 @@ export const useOnboarding = () => {
     } catch (error) {
       console.error('Error completing setup:', error);
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -68,7 +76,7 @@ export const useOnboarding = () => {
     user,
     currentStep,
     formData,
-    isLoading,
+    isLoading: combinedIsLoading,
     updateFormData,
     handleNext,
     handleBack,

@@ -30,7 +30,11 @@ const Welcome = () => {
     handleComplete
   } = useOnboarding();
 
-  console.log('Welcome page rendering with state:', { user, isLoading, currentStep });
+  console.log('Welcome page rendering with state:', { 
+    user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
+    isLoading, 
+    currentStep 
+  });
 
   // If no user and not loading, redirect to login
   useEffect(() => {
