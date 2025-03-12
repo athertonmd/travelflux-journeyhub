@@ -18,8 +18,8 @@ export const useAuthActions = (
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       console.log('Login wrapper called for:', email);
-      const success = await loginFn(email, password);
-      return success;
+      const user = await loginFn(email, password);
+      return !!user; // Convert User object to boolean
     } catch (error) {
       console.error('Login wrapper error:', error);
       return false;
@@ -29,7 +29,8 @@ export const useAuthActions = (
   // Wrapper function for signup to manage global loading state
   const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<boolean> => {
     try {
-      return await signupFn(name, email, password, agencyName);
+      const user = await signupFn(name, email, password, agencyName);
+      return !!user; // Convert User object to boolean
     } catch (error) {
       console.error('Signup wrapper error:', error);
       return false;
