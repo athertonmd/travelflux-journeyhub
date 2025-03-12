@@ -23,30 +23,35 @@ export const useAuthState = () => {
         if (configError) {
           console.error('Error fetching config:', configError);
           if (mounted) {
-            setUser({
+            const userWithConfig = {
               ...userData as User,
               setupCompleted: false
-            });
+            };
+            console.log("useAuthState: Setting user with default config:", userWithConfig);
+            setUser(userWithConfig);
             setIsLoading(false);
           }
           return;
         }
         
         if (mounted) {
-          console.log("useAuthState: Setting user with config:", configData);
-          setUser({
+          const userWithConfig = {
             ...userData as User,
             setupCompleted: configData?.setup_completed ?? false
-          });
+          };
+          console.log("useAuthState: Setting user with config:", userWithConfig);
+          setUser(userWithConfig);
           setIsLoading(false);
         }
       } catch (error) {
         console.error('Error in fetchUserConfig:', error);
         if (mounted) {
-          setUser({
+          const userWithConfig = {
             ...userData as User,
             setupCompleted: false
-          });
+          };
+          console.log("useAuthState: Setting user with error config:", userWithConfig);
+          setUser(userWithConfig);
           setIsLoading(false);
         }
       }
@@ -117,7 +122,7 @@ export const useAuthState = () => {
         }
       } else if (event === 'TOKEN_REFRESHED') {
         console.log("useAuthState: Token refreshed");
-        // Do nothing special, just log
+        // No need to update state here
       } else {
         // For any other events, ensure loading state is eventually reset
         console.log("useAuthState: Handling event:", event);
@@ -142,6 +147,7 @@ export const useAuthState = () => {
     }, 8000);
 
     return () => {
+      console.log("useAuthState: Cleaning up auth state");
       mounted = false;
       clearTimeout(safetyTimeout);
       authListener.subscription.unsubscribe();

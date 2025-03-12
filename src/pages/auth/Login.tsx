@@ -13,11 +13,18 @@ const Login = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   
   // Debug logging
   useEffect(() => {
-    console.log('Login component state:', { isLoading, authLoading, user: !!user });
-  }, [isLoading, authLoading, user]);
+    console.log('Login component state:', { 
+      isLoading, 
+      authLoading, 
+      user: !!user,
+      loginSuccess,
+      userData: user ? { id: user.id, setupCompleted: user.setupCompleted } : null
+    });
+  }, [isLoading, authLoading, user, loginSuccess]);
   
   // This effect handles redirection when user auth state changes
   useEffect(() => {
@@ -33,7 +40,7 @@ const Login = () => {
       // Small delay before redirect to ensure toast is shown
       setTimeout(() => {
         navigate(user.setupCompleted ? '/dashboard' : '/welcome');
-      }, 300);
+      }, 500);
     }
   }, [user, navigate, authLoading]);
   
@@ -66,13 +73,17 @@ const Login = () => {
       
       const success = await login(email, password);
       
-      // If login was unsuccessful, reset loading state immediately
-      if (!success) {
-        console.log('Login unsuccessful, resetting loading state');
-        setIsLoading(false);
+      if (success) {
+        console.log('Login successful, waiting for auth state update');
+        setLoginSuccess(true);
+        // We'll let the auth state change effect handle the redirect
+        return true;
       }
       
-      return success;
+      // If login was unsuccessful, reset loading state immediately
+      console.log('Login unsuccessful, resetting loading state');
+      setIsLoading(false);
+      return false;
     } catch (error) {
       console.error('Login handler error:', error);
       toast({
@@ -93,7 +104,8 @@ const Login = () => {
     }
   }, [authLoading, isLoading]);
   
-  const showSpinner = isLoading || (authLoading && user === null);
+  // Show spinner when loading or when we're waiting for auth state to update after successful login
+  const showSpinner = isLoading || (authLoading && user === null) || loginSuccess;
   
   if (showSpinner) {
     return <LoadingSpinner />;
