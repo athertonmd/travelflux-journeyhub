@@ -1,9 +1,10 @@
 
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Settings, HelpCircle } from 'lucide-react';
+import { Settings, HelpCircle, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { User } from '@/types/auth.types';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface DashboardHeaderProps {
   user: User;
@@ -11,6 +12,12 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  
+  const handleLogout = async () => {
+    await logout();
+    navigate('/');
+  };
   
   return (
     <header className="border-b border-border bg-card">
@@ -30,6 +37,14 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
             size="icon"
           >
             <HelpCircle className="h-5 w-5" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleLogout}
+            title="Log out"
+          >
+            <LogOut className="h-5 w-5" />
           </Button>
         </div>
       </div>
