@@ -11,7 +11,6 @@ export const useLogin = (
     console.log('Login function called with email:', email);
     
     try {
-      // Don't rely on the context to set the user, as Supabase auth events will handle that
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -43,7 +42,11 @@ export const useLogin = (
       
       console.log('Login successful, user data:', data.user.id);
       
-      // Return true to indicate success - user data will be set by the auth listener
+      toast({
+        title: "Login successful",
+        description: "Welcome back!",
+      });
+      
       return true;
     } catch (error) {
       console.error('Login error:', error);
