@@ -42,8 +42,20 @@ export const useLogin = (
       
       console.log('Login successful, user ID:', data.user.id);
       
-      // We'll return true here to indicate login was successful
-      // The auth listener in useAuthState will handle updating the user state
+      // Ensure we have a session
+      const session = data.session;
+      if (!session) {
+        console.error('Login succeeded but no session returned');
+        
+        toast({
+          title: "Login error",
+          description: "Login succeeded but no session was created",
+          variant: "destructive",
+        });
+        
+        return false;
+      }
+      
       return true;
     } catch (error) {
       console.error('Login error:', error);

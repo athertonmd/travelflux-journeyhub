@@ -98,8 +98,10 @@ export const useAuthState = () => {
       }
     };
 
+    // Initial auth check
     checkAuth();
 
+    // Set up auth listener
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
       
@@ -123,6 +125,10 @@ export const useAuthState = () => {
       } else if (event === 'TOKEN_REFRESHED') {
         console.log("useAuthState: Token refreshed");
         // No need to update state here
+      } else if (event === 'USER_UPDATED') {
+        console.log("useAuthState: User updated, refreshing session");
+        // Refresh user data when user is updated
+        checkAuth();
       } else {
         // For any other events, ensure loading state is eventually reset
         console.log("useAuthState: Handling event:", event);

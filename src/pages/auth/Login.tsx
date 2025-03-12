@@ -40,7 +40,7 @@ const Login = () => {
       // Small delay before redirect to ensure toast is shown
       setTimeout(() => {
         navigate(user.setupCompleted ? '/dashboard' : '/welcome');
-      }, 500);
+      }, 1000); // Increased delay for more reliable redirection
     }
   }, [user, navigate, authLoading]);
   
@@ -51,12 +51,13 @@ const Login = () => {
     const safetyTimeout = setTimeout(() => {
       console.log('Login safety timeout triggered - resetting loading state');
       setIsLoading(false);
+      setLoginSuccess(false);
       toast({
         title: "Login taking too long",
         description: "Please try again",
         variant: "destructive",
       });
-    }, 15000); // 15 seconds timeout
+    }, 10000); // 10 seconds timeout
     
     return () => clearTimeout(safetyTimeout);
   }, [isLoading]);
@@ -76,7 +77,20 @@ const Login = () => {
       if (success) {
         console.log('Login successful, waiting for auth state update');
         setLoginSuccess(true);
-        // We'll let the auth state change effect handle the redirect
+        
+        // Add a safety timeout - if auth state doesn't update within 5 seconds
+        // we'll reset the loading state
+        const authUpdateTimeout = setTimeout(() => {
+          if (loginSuccess && !user) {
+            console.log('Auth state not updated after successful login - manually refreshing');
+            setIsLoading(false);
+            setLoginSuccess(false);
+            
+            // Force page refresh to recover from potential auth state inconsistency
+            window.location.reload();
+          }
+        }, 5000);
+        
         return true;
       }
       
@@ -92,6 +106,7 @@ const Login = () => {
         variant: "destructive",
       });
       setIsLoading(false);
+      setLoginSuccess(false);
       return false;
     }
   };
