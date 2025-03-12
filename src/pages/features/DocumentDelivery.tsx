@@ -69,7 +69,7 @@ const DocumentDeliveryPage = () => {
               </div>
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h3 className="font-bold mb-2">Integrated Invoice</h3>
-                <p className="text-gray-600">Customized guides with useful information about destinations.</p>
+                <p className="text-gray-600">The latest invoice information integrated with your itinerary</p>
               </div>
             </div>
           </div>
