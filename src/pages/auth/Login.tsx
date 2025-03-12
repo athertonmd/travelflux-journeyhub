@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,8 +15,6 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
-    setIsLoading(false);
-    
     if (user && !authLoading) {
       console.log('User is authenticated, redirecting to:', 
         user.setupCompleted ? '/dashboard' : '/welcome');
@@ -29,22 +28,6 @@ const Login = () => {
     }
   }, [user, navigate, authLoading]);
   
-  useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (isLoading) {
-        console.log('Login safety timeout triggered - resetting loading state');
-        setIsLoading(false);
-        toast({
-          title: "Login taking too long",
-          description: "Please try again",
-          variant: "destructive"
-        });
-      }
-    }, 8000);
-    
-    return () => clearTimeout(timeoutId);
-  }, [isLoading]);
-  
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     if (isLoading || authLoading) {
       console.log('Skipping login attempt: already processing');
@@ -56,8 +39,8 @@ const Login = () => {
       console.log('Form submitted, attempting login...');
       
       const success = await login(email, password);
-      
       if (!success) {
+        setIsLoading(false);
         return false;
       }
       
@@ -74,7 +57,7 @@ const Login = () => {
     }
   };
   
-  if (authLoading || isLoading) {
+  if (isLoading || authLoading) {
     return <LoadingSpinner />;
   }
   

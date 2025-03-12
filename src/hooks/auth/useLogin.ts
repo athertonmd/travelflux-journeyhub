@@ -43,9 +43,7 @@ export const useLogin = (
       }
       
       console.log('Login successful, user ID:', data.user.id);
-      
-      // The auth state listener in useAuthState will handle setting up the user
-      // Don't set isLoading to false here as we'll do it after redirection
+      setIsLoading(false);
       return true;
     } catch (error) {
       console.error('Login error:', error);

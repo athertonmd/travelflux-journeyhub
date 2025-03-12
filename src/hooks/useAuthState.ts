@@ -22,14 +22,11 @@ export const useAuthState = () => {
         
         if (configError) {
           console.error('Error fetching config:', configError);
-          // Even with error, set the user to prevent blocking
           if (mounted) {
             setUser({
               ...userData as User,
               setupCompleted: false
             });
-            
-            // Always set loading to false after user is set
             setIsLoading(false);
           }
           return;
@@ -41,8 +38,6 @@ export const useAuthState = () => {
             ...userData as User,
             setupCompleted: configData?.setup_completed ?? false
           });
-          
-          // Always set loading to false after user is set
           setIsLoading(false);
         }
       } catch (error) {
@@ -52,8 +47,6 @@ export const useAuthState = () => {
             ...userData as User,
             setupCompleted: false
           });
-          
-          // Always set loading to false after user is set
           setIsLoading(false);
         }
       }
@@ -100,10 +93,8 @@ export const useAuthState = () => {
       }
     };
 
-    // Initial auth check
     checkAuth();
 
-    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
       
