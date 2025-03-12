@@ -43,11 +43,6 @@ export const useLogin = (
       
       console.log('Login successful, user data:', data.user.id);
       
-      toast({
-        title: "Login successful",
-        description: "Welcome back to Tripscape!",
-      });
-      
       // Return true to indicate success - user data will be set by the auth listener
       return true;
     } catch (error) {

@@ -18,6 +18,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+  const [redirectAttempts, setRedirectAttempts] = useState(0);
   
   // Check if user is already logged in and redirect
   useEffect(() => {
@@ -28,22 +29,41 @@ const Login = () => {
       setupStatus: user?.setupCompleted 
     });
     
-    if (user && !authLoading) {
+    if (user && !authLoading && !isLoading) {
       console.log('User is already authenticated, redirecting to:', user.setupCompleted ? 'dashboard' : 'welcome');
       
-      toast({
-        title: "Already signed in",
-        description: "You're already logged in, redirecting...",
-      });
-      
-      // Redirect based on setup status
-      if (user.setupCompleted) {
-        navigate('/dashboard');
-      } else {
-        navigate('/welcome');
+      // Prevent multiple redirects
+      if (redirectAttempts === 0) {
+        setRedirectAttempts(prev => prev + 1);
+        
+        // Add a small delay to ensure auth state is fully updated
+        setTimeout(() => {
+          if (user.setupCompleted) {
+            navigate('/dashboard');
+          } else {
+            navigate('/welcome');
+          }
+        }, 100);
       }
     }
-  }, [user, navigate, authLoading]);
+  }, [user, navigate, authLoading, isLoading, redirectAttempts]);
+  
+  // Safety timeout to prevent infinite loading
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (isLoading || authLoading) {
+        console.log('Login safety timeout triggered');
+        setIsLoading(false);
+        toast({
+          title: "Login taking too long",
+          description: "Please try again",
+          variant: "destructive"
+        });
+      }
+    }, 10000); // 10 second timeout
+    
+    return () => clearTimeout(timeoutId);
+  }, [isLoading, authLoading]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     console.log('Login handler called with:', email);
@@ -61,7 +81,7 @@ const Login = () => {
       const success = await login(email, password);
       console.log('Login result:', success ? 'Success' : 'Failed');
       
-      // Always reset loading state, even on success
+      // Always reset loading state
       // The redirect will happen via the useEffect when the user state updates
       setIsLoading(false);
       
@@ -79,7 +99,7 @@ const Login = () => {
   };
   
   // If initial auth check is in progress, show a loading spinner
-  if (authLoading) {
+  if (authLoading && !isLoading) {
     return <LoadingSpinner />;
   }
   
