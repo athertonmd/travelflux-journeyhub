@@ -13,14 +13,16 @@ const Login = () => {
   const { user, isLoading: authLoading, login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  console.log('Login page rendering with auth state:', { user, authLoading, isSubmitting });
+  
   // Redirect if user is already logged in
   useEffect(() => {
-    if (user) {
+    if (user && !authLoading) {
       console.log('User authenticated, redirecting to:', 
         user.setupCompleted ? '/dashboard' : '/welcome');
       navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     if (isSubmitting) {
@@ -46,9 +48,8 @@ const Login = () => {
     }
   };
   
-  // Only show loading spinner when actively submitting a login
-  // and not authenticated yet
-  if (isSubmitting) {
+  // Show loading spinner when actively submitting a login or when auth is loading after successful login
+  if (isSubmitting || (authLoading && user)) {
     return <LoadingSpinner />;
   }
   

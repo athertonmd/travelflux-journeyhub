@@ -11,6 +11,7 @@ export const useAuthState = () => {
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
     isMounted.current = true;
+    setIsLoading(true);
 
     // Function to fetch user configuration from the database
     const fetchUserConfig = async (authUser: any) => {
@@ -45,6 +46,7 @@ export const useAuthState = () => {
     // Function to handle auth state changes
     const handleAuthChange = async (event: string, session: any) => {
       console.log('Auth state changed:', event);
+      setIsLoading(true);
       
       if (!session || !session.user) {
         if (isMounted.current) {
@@ -55,12 +57,19 @@ export const useAuthState = () => {
         return;
       }
       
-      const userWithConfig = await fetchUserConfig(session.user);
-      
-      if (isMounted.current && userWithConfig) {
-        console.log("Setting authenticated user:", userWithConfig);
-        setUser(userWithConfig);
-        setIsLoading(false);
+      try {
+        const userWithConfig = await fetchUserConfig(session.user);
+        
+        if (isMounted.current && userWithConfig) {
+          console.log("Setting authenticated user:", userWithConfig);
+          setUser(userWithConfig);
+        }
+      } catch (error) {
+        console.error('Error fetching user config during auth change:', error);
+      } finally {
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
       }
     };
 

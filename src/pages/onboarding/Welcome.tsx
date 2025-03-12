@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardFooter } from '@/components/ui/card';
 import StepIndicator, { Step } from '@/components/onboarding/StepIndicator';
@@ -30,8 +30,18 @@ const Welcome = () => {
     handleComplete
   } = useOnboarding();
 
+  console.log('Welcome page rendering with state:', { user, isLoading, currentStep });
+
+  // If no user and not loading, redirect to login
+  useEffect(() => {
+    if (!user && !isLoading) {
+      console.log('No user detected, redirecting to login');
+      navigate('/login');
+    }
+  }, [user, isLoading, navigate]);
+
   // If loading or no user, show loading spinner
-  if (!user || isLoading) {
+  if (isLoading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
