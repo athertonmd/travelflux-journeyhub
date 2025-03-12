@@ -1,9 +1,24 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/integrations/supabase/client';
 
 const HeroSection = () => {
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
+  
+  useEffect(() => {
+    // Default demo video path in Supabase storage
+    const videoPath = 'demo-video.mp4';
+    
+    // Get the public URL for the video
+    const { data } = supabase.storage.from('videos').getPublicUrl(videoPath);
+    
+    if (data?.publicUrl) {
+      setVideoUrl(data.publicUrl);
+    }
+  }, []);
+
   const scrollToPricing = (e: React.MouseEvent) => {
     e.preventDefault();
     const pricingSection = document.getElementById('pricing');
@@ -37,14 +52,23 @@ const HeroSection = () => {
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                {/* YouTube video embed with parameters to disable related videos */}
-                <iframe 
-                  src="https://www.youtube.com/embed/9-oeXSgKtfE?rel=0"
-                  title="Tripscape SaaS Demo"
-                  className="w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                ></iframe>
+                {videoUrl ? (
+                  <video 
+                    className="w-full h-full object-cover"
+                    controls
+                    autoPlay
+                    muted
+                    playsInline
+                    poster="/placeholder.svg"
+                  >
+                    <source src={videoUrl} type="video/mp4" />
+                    Your browser does not support the video tag.
+                  </video>
+                ) : (
+                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                    <p>Loading video...</p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
