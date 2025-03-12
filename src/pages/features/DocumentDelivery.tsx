@@ -42,7 +42,7 @@ const DocumentDeliveryPage = () => {
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-6 w-6 text-primary mr-2 flex-shrink-0" />
-                  <span>Custom templates for different types of travel</span>
+                  <span>Supports both active and passive segments and remarks</span>
                 </li>
                 <li className="flex items-start">
                   <CheckCircle className="h-6 w-6 text-primary mr-2 flex-shrink-0" />
