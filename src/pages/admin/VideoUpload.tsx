@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -68,20 +67,19 @@ const VideoUpload = () => {
       const fileName = `${Date.now()}-${videoFile.name}`;
       const filePath = fileName;
 
+      // Upload the file and manually update progress
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('videos')
         .upload(filePath, videoFile, {
           cacheControl: '3600',
-          upsert: false,
-          onUploadProgress: (progress) => {
-            const percent = Math.round((progress.loaded / progress.total) * 100);
-            setUploadProgress(percent);
-          },
+          upsert: false
         });
 
       if (uploadError) {
         throw uploadError;
       }
+
+      setUploadProgress(100); // Set to 100% when complete
 
       // 2. Get the public URL of the uploaded video
       const { data: urlData } = supabase.storage

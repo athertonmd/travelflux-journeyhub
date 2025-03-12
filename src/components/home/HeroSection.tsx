@@ -1,23 +1,11 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
 
 const HeroSection = () => {
-  const [videoUrl, setVideoUrl] = useState<string | null>(null);
-  
-  useEffect(() => {
-    // Default demo video path in Supabase storage
-    const videoPath = 'demo-video.mp4';
-    
-    // Get the public URL for the video
-    const { data } = supabase.storage.from('videos').getPublicUrl(videoPath);
-    
-    if (data?.publicUrl) {
-      setVideoUrl(data.publicUrl);
-    }
-  }, []);
+  // Direct URL to the Supabase video
+  const videoUrl = 'https://yiunhkcbqdbhxjrdwgaq.supabase.co/storage/v1/object/public/videos//Tripscape%20on%20Teams.mp4';
 
   const scrollToPricing = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -52,23 +40,17 @@ const HeroSection = () => {
           <Card className="glass-card border-primary/10 overflow-hidden shadow-xl">
             <CardContent className="p-0">
               <div className="relative w-full aspect-video rounded-lg overflow-hidden">
-                {videoUrl ? (
-                  <video 
-                    className="w-full h-full object-cover"
-                    controls
-                    autoPlay
-                    muted
-                    playsInline
-                    poster="/placeholder.svg"
-                  >
-                    <source src={videoUrl} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                ) : (
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                    <p>Loading video...</p>
-                  </div>
-                )}
+                <video 
+                  className="w-full h-full object-cover"
+                  controls
+                  autoPlay
+                  muted
+                  playsInline
+                  poster="/placeholder.svg"
+                >
+                  <source src={videoUrl} type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
             </CardContent>
           </Card>
