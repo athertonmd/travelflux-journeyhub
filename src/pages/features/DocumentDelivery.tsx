@@ -57,7 +57,7 @@ const DocumentDeliveryPage = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h3 className="font-bold mb-2">Itineraries</h3>
-                <p className="text-gray-600">Detailed day-by-day plans with all travel segments and activities.</p>
+                <p className="text-gray-600">Active and passive segments, remarks, quick links and optional ads</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-sm">
                 <h3 className="font-bold mb-2">E-Tickets</h3>
