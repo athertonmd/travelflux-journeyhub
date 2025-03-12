@@ -43,7 +43,7 @@ export const useLogin = (
       }
       
       console.log('Login successful, user ID:', data.user.id);
-      setIsLoading(false);
+      // Don't set isLoading to false here - the auth listener will handle it
       return true;
     } catch (error) {
       console.error('Login error:', error);

@@ -14,6 +14,7 @@ const Login = () => {
   const { user, isLoading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
+  // This effect handles redirection when user auth state changes
   useEffect(() => {
     if (user && !authLoading) {
       console.log('User is authenticated, redirecting to:', 
@@ -24,9 +25,29 @@ const Login = () => {
         description: "Redirecting you to dashboard...",
       });
       
-      navigate(user.setupCompleted ? '/dashboard' : '/welcome');
+      // Small delay before redirect to ensure toast is shown
+      setTimeout(() => {
+        navigate(user.setupCompleted ? '/dashboard' : '/welcome');
+      }, 300);
     }
   }, [user, navigate, authLoading]);
+  
+  // Safety timeout to prevent infinite loading
+  useEffect(() => {
+    if (!isLoading) return;
+    
+    const safetyTimeout = setTimeout(() => {
+      console.log('Login safety timeout triggered - resetting loading state');
+      setIsLoading(false);
+      toast({
+        title: "Login taking too long",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }, 10000); // 10 seconds timeout
+    
+    return () => clearTimeout(safetyTimeout);
+  }, [isLoading]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     if (isLoading || authLoading) {
@@ -38,13 +59,7 @@ const Login = () => {
       setIsLoading(true);
       console.log('Form submitted, attempting login...');
       
-      const success = await login(email, password);
-      if (!success) {
-        setIsLoading(false);
-        return false;
-      }
-      
-      return true;
+      return await login(email, password);
     } catch (error) {
       console.error('Login handler error:', error);
       toast({

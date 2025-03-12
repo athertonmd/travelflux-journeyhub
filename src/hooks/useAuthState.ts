@@ -115,6 +115,12 @@ export const useAuthState = () => {
           setUser(null);
           setIsLoading(false);
         }
+      } else {
+        // For any other events, ensure loading state is eventually reset
+        if (mounted && isLoading) {
+          console.log("useAuthState: Resetting loading state for event:", event);
+          setIsLoading(false);
+        }
       }
     });
 
