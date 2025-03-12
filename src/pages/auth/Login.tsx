@@ -32,24 +32,23 @@ const Login = () => {
       setIsSubmitting(true);
       console.log('Attempting login for:', email);
       
-      // Wait for the login to complete
+      // Attempt login
       const success = await login(email, password);
       console.log('Login result:', success);
-      
-      // Reset submission state regardless of result
-      setIsSubmitting(false);
       
       return success;
     } catch (error) {
       console.error('Login handler error:', error);
-      setIsSubmitting(false);
       return false;
+    } finally {
+      // Always reset submission state
+      setIsSubmitting(false);
     }
   };
   
   // Only show loading spinner when actively submitting a login
   // and not authenticated yet
-  if (isSubmitting && !user) {
+  if (isSubmitting) {
     return <LoadingSpinner />;
   }
   

@@ -16,31 +16,33 @@ import LoadingSpinner from '@/components/auth/LoadingSpinner';
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { signup, user, isLoading: authLoading } = useAuth();
+  const { signup, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Redirect if user is already logged in
   useEffect(() => {
-    if (user && !isSubmitting) {
-      console.log('User already authenticated, redirecting to:', 
+    if (user) {
+      console.log('User authenticated, redirecting to:', 
         user.setupCompleted ? '/dashboard' : '/welcome');
       navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
-  }, [user, navigate, isSubmitting]);
+  }, [user, navigate]);
   
   const handleSignUp = async (name: string, email: string, password: string, agencyName: string) => {
-    if (isSubmitting || authLoading) {
+    if (isSubmitting) {
       console.log('Already processing signup, skipping');
       return;
     }
     
-    setIsSubmitting(true);
     try {
+      setIsSubmitting(true);
       console.log('Attempting signup with:', { name, email, agencyName });
+      
       await signup(name, email, password, agencyName);
-      // Don't reset isSubmitting - let the auth state change handle redirection
+      // Auth state change will handle redirection
     } catch (error) {
       console.error('Signup handler error:', error);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -66,7 +68,7 @@ const SignUp = () => {
             </CardHeader>
             
             <SignUpForm 
-              isLoading={isSubmitting || authLoading} 
+              isLoading={isSubmitting} 
               onSignUp={handleSignUp}
             />
 

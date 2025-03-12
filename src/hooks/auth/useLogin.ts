@@ -1,9 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
+import { User } from '@/types/auth.types';
 
 export const useLogin = () => {
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User | null> => {
     try {
       console.log('Login attempt for:', email);
       
@@ -19,7 +20,7 @@ export const useLogin = () => {
           description: error.message || "Please check your credentials and try again",
           variant: "destructive",
         });
-        return false;
+        return null;
       }
       
       if (!data?.user) {
@@ -29,7 +30,7 @@ export const useLogin = () => {
           description: "Login succeeded but no user data was returned",
           variant: "destructive",
         });
-        return false;
+        return null;
       }
 
       console.log('Login successful for user:', data.user.id);
@@ -39,7 +40,14 @@ export const useLogin = () => {
         description: "Welcome back!",
       });
       
-      return true;
+      // Return user object
+      return {
+        id: data.user.id,
+        email: data.user.email || '',
+        name: data.user.user_metadata?.name || data.user.email?.split('@')[0] || '',
+        agencyName: data.user.user_metadata?.agencyName,
+        setupCompleted: false // This will be updated by useAuthState
+      };
     } catch (error) {
       console.error('Unexpected login error:', error);
       toast({
@@ -47,7 +55,7 @@ export const useLogin = () => {
         description: error instanceof Error ? error.message : "An unknown error occurred",
         variant: "destructive",
       });
-      return false;
+      return null;
     }
   };
 

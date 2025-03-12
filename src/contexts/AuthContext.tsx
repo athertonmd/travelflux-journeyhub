@@ -2,10 +2,14 @@
 import React, { createContext, useContext, useEffect } from 'react';
 import { AuthContextType } from '@/types/auth.types';
 import { useAuthState } from '@/hooks/useAuthState';
-import { useAuthActions } from '@/hooks/useAuthActions';
+import { useLogin } from '@/hooks/auth/useLogin';
+import { useSignup } from '@/hooks/auth/useSignup';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from "@/hooks/use-toast";
+import { useSetupStatus } from '@/hooks/auth/useSetupStatus';
 
-// Create context with a default value that matches the shape
-const defaultValue: AuthContextType = {
+// Create context with a default value
+const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
   login: async () => false,
@@ -13,9 +17,7 @@ const defaultValue: AuthContextType = {
   logout: async () => {},
   checkSetupStatus: async () => false,
   updateSetupStatus: async () => false
-};
-
-const AuthContext = createContext<AuthContextType>(defaultValue);
+});
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -27,7 +29,9 @@ export const useAuth = () => {
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { user, setUser, isLoading, setIsLoading } = useAuthState();
-  const { login, signup, logout, checkSetupStatus, updateSetupStatus } = useAuthActions(setUser, setIsLoading);
+  const loginFn = useLogin();
+  const signupFn = useSignup();
+  const { checkSetupStatus, updateSetupStatus } = useSetupStatus(setUser);
 
   // Add debug logging to help diagnose auth state issues
   useEffect(() => {
@@ -42,6 +46,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } : null
     });
   }, [user, isLoading]);
+
+  // Login function
+  const login = async (email: string, password: string): Promise<boolean> => {
+    try {
+      const user = await loginFn(email, password);
+      return !!user;
+    } catch (error) {
+      console.error('Login error in context:', error);
+      return false;
+    }
+  };
+
+  // Signup function
+  const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<boolean> => {
+    try {
+      const user = await signupFn(name, email, password, agencyName);
+      return !!user;
+    } catch (error) {
+      console.error('Signup error in context:', error);
+      return false;
+    }
+  };
+
+  // Logout function
+  const logout = async (): Promise<void> => {
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Logout failed",
+        description: "An error occurred during logout.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const value: AuthContextType = {
     user,

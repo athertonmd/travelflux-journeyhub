@@ -1,9 +1,10 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
+import { User } from '@/types/auth.types';
 
 export const useSignup = () => {
-  const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<boolean> => {
+  const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<User | null> => {
     try {
       console.log('Creating user with:', { name, email, agencyName });
       
@@ -33,10 +34,16 @@ export const useSignup = () => {
           description: "Welcome to Tripscape!",
         });
         
-        return true;
+        return {
+          id: data.user.id,
+          email: data.user.email || '',
+          name: name || data.user.email?.split('@')[0] || '',
+          agencyName,
+          setupCompleted: false
+        };
       }
       
-      return false;
+      return null;
     } catch (error: any) {
       console.error('Signup error:', error);
       
@@ -55,7 +62,7 @@ export const useSignup = () => {
         });
       }
       
-      return false;
+      return null;
     }
   };
 
