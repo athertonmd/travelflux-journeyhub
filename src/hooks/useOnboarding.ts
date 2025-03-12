@@ -12,13 +12,26 @@ export const useOnboarding = () => {
   const { user, isLoading: authLoading, updateSetupStatus } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [formLoadAttempted, setFormLoadAttempted] = useState(false);
+  
+  // Don't try to load form data if we don't have a user yet
+  const userId = user?.id;
   
   const {
     formData,
     updateFormData,
-    setIsLoading: setFormLoading
-  } = useOnboardingForm(user?.id);
+    setIsLoading: setFormLoading,
+    isLoading: formIsLoading
+  } = useOnboardingForm(userId);
 
+  // Set form load attempted after first data load attempt with valid userId
+  useEffect(() => {
+    if (userId && !formLoadAttempted) {
+      setFormLoadAttempted(true);
+    }
+  }, [userId, formLoadAttempted]);
+
+  // Pre-fill username from email if available
   useEffect(() => {
     if (user && user.email && !formData.userName) {
       const userName = user.email.split('@')[0];
@@ -30,7 +43,7 @@ export const useOnboarding = () => {
   const {
     saveConfiguration,
     completeSetup
-  } = useOnboardingSave(user?.id, (loading) => {
+  } = useOnboardingSave(userId, (loading) => {
     setIsLoading(loading);
     setFormLoading(loading);
   });
@@ -44,16 +57,8 @@ export const useOnboarding = () => {
     formData
   );
 
-  // Combine loading states
-  const combinedIsLoading = isLoading || authLoading;
-
-  useEffect(() => {
-    // Only redirect if auth is not loading and we have no user
-    if (!authLoading && !user) {
-      console.log('useOnboarding: No authenticated user, redirecting to login');
-      navigate('/login');
-    }
-  }, [user, authLoading, navigate]);
+  // Combine loading states - ensure we wait for auth and initial form load
+  const combinedIsLoading = isLoading || authLoading || (formIsLoading && !formLoadAttempted);
 
   const handleComplete = async (): Promise<boolean> => {
     try {

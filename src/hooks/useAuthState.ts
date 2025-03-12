@@ -7,6 +7,7 @@ export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const isMounted = useRef(true);
+  const initialSessionChecked = useRef(false);
 
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
@@ -92,6 +93,7 @@ export const useAuthState = () => {
       try {
         console.log("Checking current session");
         const { data, error } = await supabase.auth.getSession();
+        initialSessionChecked.current = true;
         
         if (error) {
           console.error('Session retrieval error:', error);
@@ -134,5 +136,69 @@ export const useAuthState = () => {
     };
   }, []);
 
-  return { user, setUser, isLoading, setIsLoading };
+  // Direct check session method that can be called for forced refresh
+  const refreshSession = async () => {
+    try {
+      console.log("Manually refreshing session");
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error || !data.session) {
+        console.log("No active session found during refresh");
+        setUser(null);
+        setIsLoading(false);
+        return null;
+      }
+      
+      const userWithConfig = await fetchUserConfig(data.session.user);
+      if (userWithConfig) {
+        console.log("Setting refreshed user data:", userWithConfig);
+        setUser(userWithConfig);
+      } else {
+        setUser(null);
+      }
+      setIsLoading(false);
+      return userWithConfig;
+    } catch (error) {
+      console.error("Error refreshing session:", error);
+      setUser(null);
+      setIsLoading(false);
+      return null;
+    }
+  };
+
+  // Helper function to fetch user config
+  const fetchUserConfig = async (authUser: any) => {
+    if (!authUser || !authUser.id) return null;
+    
+    try {
+      console.log("Fetching config for user:", authUser.id);
+      
+      const { data: configData, error: configError } = await supabase
+        .from('agency_configurations')
+        .select('setup_completed')
+        .eq('user_id', authUser.id)
+        .maybeSingle();
+      
+      if (configError) {
+        console.error('Error fetching user config:', configError);
+        return null;
+      }
+      
+      console.log("User config data:", configData);
+      
+      return {
+        id: authUser.id,
+        email: authUser.email || '',
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
+        agencyName: authUser.user_metadata?.agencyName,
+        setupCompleted: configData?.setup_completed ?? false
+      };
+    } catch (error) {
+      console.error('Error processing user config:', error);
+      return null;
+    }
+  };
+
+  return { user, setUser, isLoading, setIsLoading, refreshSession };
 };

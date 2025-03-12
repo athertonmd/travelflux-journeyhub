@@ -1,11 +1,12 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardFooter } from '@/components/ui/card';
 import StepIndicator, { Step } from '@/components/onboarding/StepIndicator';
 import StepController from '@/components/onboarding/StepController';
 import FooterButtons from '@/components/onboarding/FooterButtons';
 import { useOnboarding } from '@/hooks/useOnboarding';
+import LoadingSpinner from '@/components/auth/LoadingSpinner';
 
 const steps: Step[] = [
   { id: 'welcome', title: 'Welcome' },
@@ -19,6 +20,7 @@ const steps: Step[] = [
 
 const Welcome = () => {
   const navigate = useNavigate();
+  const [initialAuthCheck, setInitialAuthCheck] = useState(false);
   const {
     user,
     currentStep,
@@ -33,24 +35,34 @@ const Welcome = () => {
   console.log('Welcome page rendering with state:', { 
     user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
     isLoading, 
+    initialAuthCheck,
     currentStep 
   });
 
   // If no user and not loading, redirect to login
   useEffect(() => {
-    if (!user && !isLoading) {
-      console.log('No user detected, redirecting to login');
-      navigate('/login');
+    // Only redirect after initial auth check is complete
+    if (!isLoading) {
+      setInitialAuthCheck(true);
+      
+      if (!user) {
+        console.log('Welcome: No user detected after loading, redirecting to login');
+        navigate('/login');
+      } else if (user.setupCompleted) {
+        console.log('Welcome: User setup already completed, redirecting to dashboard');
+        navigate('/dashboard');
+      }
     }
   }, [user, isLoading, navigate]);
 
   // If loading or no user, show loading spinner
-  if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
-    );
+  if (isLoading || !initialAuthCheck) {
+    return <LoadingSpinner />;
+  }
+
+  // If auth check is complete and no user, redirect will happen via the useEffect
+  if (!user) {
+    return <LoadingSpinner />;
   }
 
   const onComplete = async () => {

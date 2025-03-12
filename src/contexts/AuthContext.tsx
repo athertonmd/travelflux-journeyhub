@@ -16,7 +16,8 @@ const AuthContext = createContext<AuthContextType>({
   signup: async () => false,
   logout: async () => {},
   checkSetupStatus: async () => false,
-  updateSetupStatus: async () => false
+  updateSetupStatus: async () => false,
+  refreshSession: async () => null
 });
 
 export const useAuth = () => {
@@ -28,7 +29,7 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { user, setUser, isLoading, setIsLoading } = useAuthState();
+  const { user, setUser, isLoading, setIsLoading, refreshSession } = useAuthState();
   const loginFn = useLogin();
   const signupFn = useSignup();
   const { checkSetupStatus, updateSetupStatus } = useSetupStatus(setUser);
@@ -51,6 +52,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const user = await loginFn(email, password);
+      
+      // If login appears to succeed but we don't get a user, try refreshing session
+      if (!user) {
+        console.log('Login succeeded but no user returned, trying to refresh session');
+        await refreshSession();
+      }
+      
       return !!user;
     } catch (error) {
       console.error('Login error in context:', error);
@@ -95,7 +103,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signup,
     logout,
     checkSetupStatus,
-    updateSetupStatus
+    updateSetupStatus,
+    refreshSession
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
