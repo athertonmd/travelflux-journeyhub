@@ -28,6 +28,7 @@ export const useSignup = (
       console.log('Signup response:', data);
       
       if (data.user) {
+        // Create initial user data
         const userData = {
           id: data.user.id,
           email: data.user.email || '',

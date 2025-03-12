@@ -20,6 +20,7 @@ const SignUp = () => {
   const { signup, user, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
+  const [redirectAttempts, setRedirectAttempts] = useState(0);
 
   useEffect(() => {
     // If user is authenticated and we're not in the middle of signup process, redirect
@@ -29,17 +30,54 @@ const SignUp = () => {
       
       // Force a short delay to ensure loading state shows and auth state is fully processed
       const redirectTimer = setTimeout(() => {
-        console.log('Redirecting user to:', user.setupCompleted ? '/' : '/welcome');
+        console.log('Redirecting user to:', user.setupCompleted ? '/dashboard' : '/welcome', 'User state:', user);
         if (!user.setupCompleted) {
           navigate('/welcome');
         } else {
-          navigate('/');
+          navigate('/dashboard');
         }
       }, 500);
       
       return () => clearTimeout(redirectTimer);
     }
   }, [user, navigate, isLoading]);
+
+  // Safety timeout to prevent infinite loading
+  useEffect(() => {
+    if (isRedirecting) {
+      const safetyTimeout = setTimeout(() => {
+        if (isRedirecting && redirectAttempts < 3) {
+          console.log('Redirect safety timeout triggered, retrying...');
+          setRedirectAttempts(prev => prev + 1);
+          
+          // Try to force navigation
+          if (user) {
+            navigate(user.setupCompleted ? '/dashboard' : '/welcome');
+          } else {
+            // If somehow user is not available, navigate to login
+            setIsRedirecting(false);
+            toast({
+              title: "Navigation issue",
+              description: "Please try logging in.",
+              variant: "destructive"
+            });
+            navigate('/login');
+          }
+        } else if (redirectAttempts >= 3) {
+          // After 3 attempts, stop trying and show an error
+          console.error('Failed to redirect after multiple attempts');
+          setIsRedirecting(false);
+          toast({
+            title: "Navigation failed",
+            description: "Please refresh the page and try again.",
+            variant: "destructive"
+          });
+        }
+      }, 3000); // 3 seconds timeout
+      
+      return () => clearTimeout(safetyTimeout);
+    }
+  }, [isRedirecting, redirectAttempts, user, navigate]);
 
   const handleSignUp = async (name: string, email: string, password: string, agencyName: string) => {
     if (isLoading || authLoading || isRedirecting) {
