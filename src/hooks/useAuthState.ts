@@ -46,12 +46,7 @@ export const useAuthState = () => {
       } catch (error) {
         console.error('Error in fetchUserConfig:', error);
         if (mounted) {
-          const userWithConfig = {
-            ...userData as User,
-            setupCompleted: false
-          };
-          console.log("useAuthState: Setting user with error config:", userWithConfig);
-          setUser(userWithConfig);
+          setUser(null);
           setIsLoading(false);
         }
       }
@@ -107,14 +102,12 @@ export const useAuthState = () => {
       
       if (event === 'SIGNED_IN' && session?.user) {
         console.log("useAuthState: Sign in detected, updating user data");
-        
         const userData = {
           id: session.user.id,
           email: session.user.email || '',
           name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
           agencyName: session.user.user_metadata?.agencyName
         };
-        
         await fetchUserConfig(userData.id, userData);
       } else if (event === 'SIGNED_OUT') {
         console.log("useAuthState: User signed out");
@@ -122,40 +115,15 @@ export const useAuthState = () => {
           setUser(null);
           setIsLoading(false);
         }
-      } else if (event === 'TOKEN_REFRESHED') {
-        console.log("useAuthState: Token refreshed");
-        // No need to update state here
-      } else if (event === 'USER_UPDATED') {
-        console.log("useAuthState: User updated, refreshing session");
-        // Refresh user data when user is updated
-        checkAuth();
       } else {
-        // For any other events, ensure loading state is eventually reset
-        console.log("useAuthState: Handling event:", event);
-        if (mounted && isLoading) {
-          console.log("useAuthState: Resetting loading state for event:", event);
-          // Add a small delay to allow other operations to complete
-          setTimeout(() => {
-            if (mounted && isLoading) {
-              setIsLoading(false);
-            }
-          }, 1000);
-        }
+        console.log("useAuthState: Unhandled auth event:", event);
+        checkAuth();
       }
     });
-
-    // Safety timeout to ensure loading state is reset after a maximum time
-    const safetyTimeout = setTimeout(() => {
-      if (mounted && isLoading) {
-        console.log("useAuthState: Safety timeout triggered - resetting loading state");
-        setIsLoading(false);
-      }
-    }, 8000);
 
     return () => {
       console.log("useAuthState: Cleaning up auth state");
       mounted = false;
-      clearTimeout(safetyTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);

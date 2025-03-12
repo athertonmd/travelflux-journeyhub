@@ -13,7 +13,6 @@ const Login = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   
   // Debug logging
   useEffect(() => {
@@ -21,14 +20,13 @@ const Login = () => {
       isLoading, 
       authLoading, 
       user: !!user,
-      loginSuccess,
       userData: user ? { id: user.id, setupCompleted: user.setupCompleted } : null
     });
-  }, [isLoading, authLoading, user, loginSuccess]);
+  }, [isLoading, authLoading, user]);
   
-  // This effect handles redirection when user auth state changes
+  // Handle redirection when user auth state changes
   useEffect(() => {
-    if (user && !authLoading) {
+    if (user) {
       console.log('User is authenticated, redirecting to:', 
         user.setupCompleted ? '/dashboard' : '/welcome');
       
@@ -37,30 +35,9 @@ const Login = () => {
         description: "Redirecting you to dashboard...",
       });
       
-      // Small delay before redirect to ensure toast is shown
-      setTimeout(() => {
-        navigate(user.setupCompleted ? '/dashboard' : '/welcome');
-      }, 1000); // Increased delay for more reliable redirection
+      navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
-  }, [user, navigate, authLoading]);
-  
-  // Safety timeout to prevent infinite loading
-  useEffect(() => {
-    if (!isLoading) return;
-    
-    const safetyTimeout = setTimeout(() => {
-      console.log('Login safety timeout triggered - resetting loading state');
-      setIsLoading(false);
-      setLoginSuccess(false);
-      toast({
-        title: "Login taking too long",
-        description: "Please try again",
-        variant: "destructive",
-      });
-    }, 10000); // 10 seconds timeout
-    
-    return () => clearTimeout(safetyTimeout);
-  }, [isLoading]);
+  }, [user, navigate]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     if (isLoading || authLoading) {
@@ -74,30 +51,11 @@ const Login = () => {
       
       const success = await login(email, password);
       
-      if (success) {
-        console.log('Login successful, waiting for auth state update');
-        setLoginSuccess(true);
-        
-        // Add a safety timeout - if auth state doesn't update within 5 seconds
-        // we'll reset the loading state
-        const authUpdateTimeout = setTimeout(() => {
-          if (loginSuccess && !user) {
-            console.log('Auth state not updated after successful login - manually refreshing');
-            setIsLoading(false);
-            setLoginSuccess(false);
-            
-            // Force page refresh to recover from potential auth state inconsistency
-            window.location.reload();
-          }
-        }, 5000);
-        
-        return true;
+      if (!success) {
+        setIsLoading(false);
       }
       
-      // If login was unsuccessful, reset loading state immediately
-      console.log('Login unsuccessful, resetting loading state');
-      setIsLoading(false);
-      return false;
+      return success;
     } catch (error) {
       console.error('Login handler error:', error);
       toast({
@@ -106,7 +64,6 @@ const Login = () => {
         variant: "destructive",
       });
       setIsLoading(false);
-      setLoginSuccess(false);
       return false;
     }
   };
@@ -119,10 +76,8 @@ const Login = () => {
     }
   }, [authLoading, isLoading]);
   
-  // Show spinner when loading or when we're waiting for auth state to update after successful login
-  const showSpinner = isLoading || (authLoading && user === null) || loginSuccess;
-  
-  if (showSpinner) {
+  // Show spinner when loading or when we're waiting for auth state to update
+  if (isLoading || (authLoading && user === null)) {
     return <LoadingSpinner />;
   }
   
