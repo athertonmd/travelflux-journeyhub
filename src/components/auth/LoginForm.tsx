@@ -47,7 +47,12 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
       return;
     }
     
-    await onLogin(formData.email, formData.password, formData.remember);
+    try {
+      // Call the parent's login handler and wait for it to complete
+      await onLogin(formData.email, formData.password, formData.remember);
+    } catch (error) {
+      console.error('Error in form submit:', error);
+    }
   };
   
   return (

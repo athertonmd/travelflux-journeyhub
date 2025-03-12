@@ -17,6 +17,7 @@ export const useAuthActions = (
   // Wrapper function for login to manage global loading state
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
+      console.log('Login wrapper called for:', email);
       const success = await loginFn(email, password);
       return success;
     } catch (error) {

@@ -32,10 +32,11 @@ const Login = () => {
       setIsSubmitting(true);
       console.log('Attempting login for:', email);
       
+      // Wait for the login to complete
       const success = await login(email, password);
       console.log('Login result:', success);
       
-      // Always reset submission state to avoid getting stuck
+      // Reset submission state regardless of result
       setIsSubmitting(false);
       
       return success;
