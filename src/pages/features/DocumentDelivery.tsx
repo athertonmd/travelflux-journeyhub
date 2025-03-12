@@ -1,14 +1,11 @@
-
 import React from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { FileText, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-
 const DocumentDeliveryPage = () => {
-  return (
-    <div className="min-h-screen flex flex-col">
+  return <div className="min-h-screen flex flex-col">
       <Navbar />
       <main className="flex-grow pt-24 pb-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -25,11 +22,7 @@ const DocumentDeliveryPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 mb-16">
             <div className="bg-gray-100 rounded-lg overflow-hidden">
               <div className="aspect-w-16 aspect-h-9 w-full h-full flex items-center justify-center">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Document delivery showcase" 
-                  className="object-cover"
-                />
+                <img src="/placeholder.svg" alt="Document delivery showcase" className="object-cover" />
               </div>
             </div>
             <div className="space-y-6">
@@ -75,7 +68,7 @@ const DocumentDeliveryPage = () => {
                 <p className="text-gray-600">Hotel, car rental, and activity booking confirmations.</p>
               </div>
               <div className="bg-white p-6 rounded-lg shadow-sm">
-                <h3 className="font-bold mb-2">Travel Guides</h3>
+                <h3 className="font-bold mb-2">Integrated Invoice</h3>
                 <p className="text-gray-600">Customized guides with useful information about destinations.</p>
               </div>
             </div>
@@ -89,8 +82,6 @@ const DocumentDeliveryPage = () => {
         </div>
       </main>
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default DocumentDeliveryPage;
