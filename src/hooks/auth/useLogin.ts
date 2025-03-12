@@ -42,10 +42,10 @@ export const useLogin = (
         return false;
       }
       
-      console.log('Login successful, user data:', data.user.id);
+      console.log('Login successful, user ID:', data.user.id);
       
-      // We don't need to set loading to false here
-      // It will be handled by useAuthState after configuration is loaded
+      // The auth state listener in useAuthState will handle setting up the user
+      // Don't set isLoading to false here as we'll do it after redirection
       return true;
     } catch (error) {
       console.error('Login error:', error);

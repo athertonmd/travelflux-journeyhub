@@ -28,6 +28,8 @@ export const useAuthState = () => {
               ...userData as User,
               setupCompleted: false
             });
+            
+            // Always set loading to false after user is set
             setIsLoading(false);
           }
           return;
@@ -39,6 +41,8 @@ export const useAuthState = () => {
             ...userData as User,
             setupCompleted: configData?.setup_completed ?? false
           });
+          
+          // Always set loading to false after user is set
           setIsLoading(false);
         }
       } catch (error) {
@@ -48,6 +52,8 @@ export const useAuthState = () => {
             ...userData as User,
             setupCompleted: false
           });
+          
+          // Always set loading to false after user is set
           setIsLoading(false);
         }
       }

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,14 +14,21 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   useEffect(() => {
+    setIsLoading(false);
+    
     if (user && !authLoading) {
       console.log('User is authenticated, redirecting to:', 
         user.setupCompleted ? '/dashboard' : '/welcome');
+      
+      toast({
+        title: "Login successful",
+        description: "Redirecting you to dashboard...",
+      });
+      
       navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
   }, [user, navigate, authLoading]);
   
-  // Reduce timeout to 5 seconds for better UX
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (isLoading) {
@@ -34,7 +40,7 @@ const Login = () => {
           variant: "destructive"
         });
       }
-    }, 5000);
+    }, 8000);
     
     return () => clearTimeout(timeoutId);
   }, [isLoading]);
@@ -47,17 +53,13 @@ const Login = () => {
     
     try {
       setIsLoading(true);
+      console.log('Form submitted, attempting login...');
+      
       const success = await login(email, password);
       
       if (!success) {
-        // Login hook will handle setting isLoading to false on failure
         return false;
       }
-      
-      toast({
-        title: "Login successful",
-        description: "Redirecting you to dashboard...",
-      });
       
       return true;
     } catch (error) {
@@ -72,8 +74,7 @@ const Login = () => {
     }
   };
   
-  // Show loading spinner only when actively loading and not showing error
-  if (authLoading || (isLoading && user)) {
+  if (authLoading || isLoading) {
     return <LoadingSpinner />;
   }
   
