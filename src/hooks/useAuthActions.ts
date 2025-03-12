@@ -4,7 +4,6 @@ import { useLogin } from './auth/useLogin';
 import { useSignup } from './auth/useSignup';
 import { useLogout } from './auth/useLogout';
 import { useSetupStatus } from './auth/useSetupStatus';
-import { useState } from 'react';
 
 export const useAuthActions = (
   setUser: React.Dispatch<React.SetStateAction<User | null>>,
@@ -19,12 +18,11 @@ export const useAuthActions = (
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const result = await loginFn(email, password);
-      // Let the auth state listener handle setting the user
-      return result;
+      return await loginFn(email, password);
     } finally {
-      // Don't set isLoading to false here - let the auth state change handle it
-      // This prevents race conditions with redirection
+      // We need to set loading to false here to allow retries
+      // The auth state listener will set it again if login succeeds
+      setIsLoading(false);
     }
   };
 
@@ -32,12 +30,11 @@ export const useAuthActions = (
   const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<boolean> => {
     setIsLoading(true);
     try {
-      const result = await signupFn(name, email, password, agencyName);
-      // Let the auth state listener handle setting the user
-      return result;
+      return await signupFn(name, email, password, agencyName);
     } finally {
-      // Don't set isLoading to false here - let the auth state change handle it
-      // This prevents race conditions with redirection
+      // We need to set loading to false here to allow retries
+      // The auth state listener will set it again if signup succeeds
+      setIsLoading(false);
     }
   };
 

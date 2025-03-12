@@ -1,15 +1,16 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
-    let mounted = true;
+    mountedRef.current = true;
 
     const fetchUserConfig = async (userId: string, userEmail: string, userName: string, agencyName?: string) => {
       try {
@@ -25,7 +26,7 @@ export const useAuthState = () => {
           console.error('Error fetching user config:', configError);
         }
         
-        if (mounted) {
+        if (mountedRef.current) {
           const userWithConfig: User = {
             id: userId,
             email: userEmail,
@@ -40,7 +41,7 @@ export const useAuthState = () => {
         }
       } catch (error) {
         console.error('Error processing user config:', error);
-        if (mounted) {
+        if (mountedRef.current) {
           setIsLoading(false);
         }
       }
@@ -50,7 +51,7 @@ export const useAuthState = () => {
       console.log('Auth state changed:', event);
       
       if (!session || !session.user) {
-        if (mounted) {
+        if (mountedRef.current) {
           console.log('No active session, setting user to null');
           setUser(null);
           setIsLoading(false);
@@ -81,7 +82,7 @@ export const useAuthState = () => {
         
         if (error) {
           console.error('Session retrieval error:', error);
-          if (mounted) {
+          if (mountedRef.current) {
             setIsLoading(false);
           }
           return;
@@ -91,13 +92,13 @@ export const useAuthState = () => {
           await handleAuthChange('INITIAL', data.session);
         } else {
           console.log('No active session found');
-          if (mounted) {
+          if (mountedRef.current) {
             setIsLoading(false);
           }
         }
       } catch (error) {
         console.error('Error checking session:', error);
-        if (mounted) {
+        if (mountedRef.current) {
           setIsLoading(false);
         }
       }
@@ -111,8 +112,10 @@ export const useAuthState = () => {
 
     return () => {
       console.log("Cleaning up auth state");
-      mounted = false;
-      authListener.subscription.unsubscribe();
+      mountedRef.current = false;
+      if (authListener && authListener.subscription) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, []);
 

@@ -23,18 +23,19 @@ const Login = () => {
   }, [user, navigate, isSubmitting]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
-    if (isSubmitting || authLoading) {
+    if (isSubmitting) {
       console.log('Already processing login, skipping');
       return false;
     }
     
     try {
       setIsSubmitting(true);
-      console.log('Attempting login...');
+      console.log('Attempting login for:', email);
       
       const success = await login(email, password);
       
       if (!success) {
+        console.log('Login failed, resetting submission state');
         setIsSubmitting(false);
       }
       
@@ -46,7 +47,7 @@ const Login = () => {
     }
   };
   
-  // Show spinner only when actively submitting
+  // Only show loading spinner when actively submitting a login
   if (isSubmitting) {
     return <LoadingSpinner />;
   }
