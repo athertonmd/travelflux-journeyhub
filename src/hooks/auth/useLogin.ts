@@ -25,6 +25,7 @@ export const useLogin = (
           variant: "destructive",
         });
         
+        setIsLoading(false);
         return false;
       }
       
@@ -37,15 +38,14 @@ export const useLogin = (
           variant: "destructive",
         });
         
+        setIsLoading(false);
         return false;
       }
       
       console.log('Login successful, user data:', data.user.id);
       
-      // User will be set by the auth listener in useAuthState
-      // Skip the toast here to avoid duplicate notifications
-      // Let the redirect happen naturally when user state updates
-      
+      // We don't need to set loading to false here
+      // It will be handled by useAuthState after configuration is loaded
       return true;
     } catch (error) {
       console.error('Login error:', error);
@@ -56,6 +56,7 @@ export const useLogin = (
         variant: "destructive",
       });
       
+      setIsLoading(false);
       return false;
     }
   };

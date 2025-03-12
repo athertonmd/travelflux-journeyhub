@@ -10,60 +10,40 @@ export const useAuthState = () => {
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
     let mounted = true;
-    let authTimeout: NodeJS.Timeout;
 
     const fetchUserConfig = async (userId: string, userData: Partial<User>) => {
       try {
-        // Fetch user configuration data
         console.log("useAuthState: Fetching user configuration for:", userId);
         const { data: configData, error: configError } = await supabase
           .from('agency_configurations')
           .select('setup_completed')
           .eq('user_id', userId)
-          .maybeSingle();
+          .single();
         
         if (configError) {
           console.error('Error fetching config:', configError);
-        }
-        
-        if (!configData) {
-          console.log("useAuthState: No config found, creating new one");
-          // Create configuration if it doesn't exist
-          const { error: insertError } = await supabase
-            .from('agency_configurations')
-            .insert({
-              user_id: userId,
-              setup_completed: false
-            });
-          
-          if (insertError) {
-            console.error('Error creating configuration:', insertError);
-          }
-          
+          // Even with error, set the user to prevent blocking
           if (mounted) {
-            console.log("useAuthState: Setting user with setupCompleted=false");
             setUser({
               ...userData as User,
               setupCompleted: false
             });
             setIsLoading(false);
           }
-        } else {
-          console.log("useAuthState: Config found, setup completed:", configData.setup_completed);
-          if (mounted) {
-            console.log("useAuthState: Setting user with config data");
-            setUser({
-              ...userData as User,
-              setupCompleted: configData?.setup_completed || false
-            });
-            setIsLoading(false);
-          }
+          return;
         }
-      } catch (configError) {
-        console.error('Error processing configuration:', configError);
-        // Even with config error, set the user to prevent blocking the UI
+        
         if (mounted) {
-          console.log("useAuthState: Setting user despite config error");
+          console.log("useAuthState: Setting user with config:", configData);
+          setUser({
+            ...userData as User,
+            setupCompleted: configData?.setup_completed ?? false
+          });
+          setIsLoading(false);
+        }
+      } catch (error) {
+        console.error('Error in fetchUserConfig:', error);
+        if (mounted) {
           setUser({
             ...userData as User,
             setupCompleted: false
@@ -76,55 +56,53 @@ export const useAuthState = () => {
     const checkAuth = async () => {
       try {
         console.log("useAuthState: Checking current session");
-        const { data, error } = await supabase.auth.getSession();
+        const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
           console.error("Session error:", error);
-          if (mounted) setIsLoading(false);
+          if (mounted) {
+            setUser(null);
+            setIsLoading(false);
+          }
           return;
         }
         
-        if (data.session?.user) {
-          console.log("useAuthState: Session found for user:", data.session.user.id);
-          const userData = {
-            id: data.session.user.id,
-            email: data.session.user.email || '',
-            name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || '',
-            agencyName: data.session.user.user_metadata?.agencyName
-          };
-          
-          await fetchUserConfig(userData.id, userData);
-        } else {
+        if (!session?.user) {
           console.log("useAuthState: No session found");
           if (mounted) {
             setUser(null);
             setIsLoading(false);
           }
+          return;
         }
+
+        console.log("useAuthState: Session found for user:", session.user.id);
+        const userData = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+          agencyName: session.user.user_metadata?.agencyName
+        };
+        
+        await fetchUserConfig(userData.id, userData);
       } catch (error) {
         console.error('Auth check error:', error);
-        if (mounted) setIsLoading(false);
+        if (mounted) {
+          setUser(null);
+          setIsLoading(false);
+        }
       }
     };
 
     // Initial auth check
     checkAuth();
 
-    // Safety timeout to prevent infinite loading
-    authTimeout = setTimeout(() => {
-      if (mounted && isLoading) {
-        console.log("useAuthState: Safety timeout triggered - forcing loading state to false");
-        setIsLoading(false);
-      }
-    }, 5000); // 5 second timeout for safety
-
     // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.id);
       
-      if (event === 'SIGNED_IN' && session) {
+      if (event === 'SIGNED_IN' && session?.user) {
         console.log("useAuthState: Sign in detected, updating user data");
-        if (mounted) setIsLoading(true); // Set loading to true when auth state changes
         
         const userData = {
           id: session.user.id,
@@ -145,7 +123,6 @@ export const useAuthState = () => {
 
     return () => {
       mounted = false;
-      clearTimeout(authTimeout);
       authListener.subscription.unsubscribe();
     };
   }, []);

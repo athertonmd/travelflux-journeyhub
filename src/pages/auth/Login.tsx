@@ -1,11 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Card, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
@@ -18,16 +14,15 @@ const Login = () => {
   const { user, isLoading: authLoading, login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   
-  // Check if user is already logged in and redirect
   useEffect(() => {
     if (user && !authLoading) {
-      console.log('User is already authenticated, redirecting to:', 
-        user.setupCompleted ? 'dashboard' : 'welcome');
+      console.log('User is authenticated, redirecting to:', 
+        user.setupCompleted ? '/dashboard' : '/welcome');
       navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
   }, [user, navigate, authLoading]);
   
-  // Safety timeout to prevent infinite loading
+  // Reduce timeout to 5 seconds for better UX
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (isLoading) {
@@ -39,13 +34,12 @@ const Login = () => {
           variant: "destructive"
         });
       }
-    }, 8000); // Reduce timeout to 8 seconds for better user experience
+    }, 5000);
     
     return () => clearTimeout(timeoutId);
   }, [isLoading]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
-    // Prevent login attempt if already processing
     if (isLoading || authLoading) {
       console.log('Skipping login attempt: already processing');
       return false;
@@ -56,11 +50,16 @@ const Login = () => {
       const success = await login(email, password);
       
       if (!success) {
-        setIsLoading(false);
+        // Login hook will handle setting isLoading to false on failure
+        return false;
       }
-      // If successful, keep loading state true until redirection happens
       
-      return success;
+      toast({
+        title: "Login successful",
+        description: "Redirecting you to dashboard...",
+      });
+      
+      return true;
     } catch (error) {
       console.error('Login handler error:', error);
       toast({
@@ -73,8 +72,8 @@ const Login = () => {
     }
   };
   
-  // Show loading spinner when actively loading
-  if ((authLoading && !isLoading) || (isLoading && user)) {
+  // Show loading spinner only when actively loading and not showing error
+  if (authLoading || (isLoading && user)) {
     return <LoadingSpinner />;
   }
   
