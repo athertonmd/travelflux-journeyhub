@@ -22,8 +22,8 @@ export const useLogin = () => {
         return false;
       }
       
-      if (!data?.user || !data?.session) {
-        console.error('Login succeeded but no user/session returned');
+      if (!data?.user) {
+        console.error('Login succeeded but no user returned');
         toast({
           title: "Login error", 
           description: "Login succeeded but no user data was returned",

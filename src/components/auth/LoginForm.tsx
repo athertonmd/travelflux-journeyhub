@@ -32,6 +32,11 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (isLoading) {
+      console.log('Form submission blocked - already processing');
+      return;
+    }
+    
     // Validate form
     if (!formData.email || !formData.password) {
       toast({

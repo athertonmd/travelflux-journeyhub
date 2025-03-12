@@ -16,25 +16,22 @@ export const useAuthActions = (
 
   // Wrapper function for login to manage global loading state
   const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
     try {
-      return await loginFn(email, password);
-    } finally {
-      // We need to set loading to false here to allow retries
-      // The auth state listener will set it again if login succeeds
-      setIsLoading(false);
+      const success = await loginFn(email, password);
+      return success;
+    } catch (error) {
+      console.error('Login wrapper error:', error);
+      return false;
     }
   };
 
   // Wrapper function for signup to manage global loading state
   const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<boolean> => {
-    setIsLoading(true);
     try {
       return await signupFn(name, email, password, agencyName);
-    } finally {
-      // We need to set loading to false here to allow retries
-      // The auth state listener will set it again if signup succeeds
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Signup wrapper error:', error);
+      return false;
     }
   };
 

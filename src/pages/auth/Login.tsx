@@ -15,12 +15,12 @@ const Login = () => {
   
   // Redirect if user is already logged in
   useEffect(() => {
-    if (user && !isSubmitting) {
-      console.log('User already authenticated, redirecting to:', 
+    if (user) {
+      console.log('User authenticated, redirecting to:', 
         user.setupCompleted ? '/dashboard' : '/welcome');
       navigate(user.setupCompleted ? '/dashboard' : '/welcome');
     }
-  }, [user, navigate, isSubmitting]);
+  }, [user, navigate]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     if (isSubmitting) {
@@ -33,11 +33,10 @@ const Login = () => {
       console.log('Attempting login for:', email);
       
       const success = await login(email, password);
+      console.log('Login result:', success);
       
-      if (!success) {
-        console.log('Login failed, resetting submission state');
-        setIsSubmitting(false);
-      }
+      // Always reset submission state to avoid getting stuck
+      setIsSubmitting(false);
       
       return success;
     } catch (error) {
@@ -48,7 +47,8 @@ const Login = () => {
   };
   
   // Only show loading spinner when actively submitting a login
-  if (isSubmitting) {
+  // and not authenticated yet
+  if (isSubmitting && !user) {
     return <LoadingSpinner />;
   }
   
@@ -67,7 +67,7 @@ const Login = () => {
               </CardDescription>
             </CardHeader>
             <LoginForm 
-              isLoading={isSubmitting || authLoading}
+              isLoading={isSubmitting}
               onLogin={handleLogin}
             />
           </Card>
