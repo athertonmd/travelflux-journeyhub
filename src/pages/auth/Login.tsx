@@ -12,26 +12,30 @@ const Login = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, login } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   
   console.log('Login page rendering with auth state:', { 
     user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
     authLoading, 
-    isSubmitting 
+    isSubmitting,
+    redirecting
   });
   
   // Redirect if user is already logged in
   useEffect(() => {
     // Only redirect if we have a user AND auth loading has finished
-    if (user && !authLoading) {
-      console.log('User authenticated, redirecting to:', 
-        user.setupCompleted ? '/dashboard' : '/welcome');
+    if (user && !authLoading && !redirecting) {
+      const destination = user.setupCompleted ? '/dashboard' : '/welcome';
+      console.log(`User authenticated (setupCompleted: ${user.setupCompleted}), redirecting to: ${destination}`);
+      
+      setRedirecting(true);
       
       // Small timeout to avoid race conditions
       setTimeout(() => {
-        navigate(user.setupCompleted ? '/dashboard' : '/welcome');
-      }, 100);
+        navigate(destination);
+      }, 200);
     }
-  }, [user, authLoading, navigate]);
+  }, [user, authLoading, navigate, redirecting]);
   
   const handleLogin = async (email: string, password: string, remember: boolean) => {
     if (isSubmitting) {
@@ -53,12 +57,14 @@ const Login = () => {
       return false;
     } finally {
       // Always reset submission state
-      setIsSubmitting(false);
+      setTimeout(() => {
+        setIsSubmitting(false);
+      }, 300); // Give time for auth state to update
     }
   };
   
-  // Show loading spinner when actively submitting a login
-  if (isSubmitting) {
+  // Show loading spinner when actively submitting a login or when redirecting
+  if (isSubmitting || redirecting) {
     return <LoadingSpinner />;
   }
   

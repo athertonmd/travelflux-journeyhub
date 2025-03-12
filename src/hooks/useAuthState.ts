@@ -24,11 +24,14 @@ export const useAuthState = () => {
           .from('agency_configurations')
           .select('setup_completed')
           .eq('user_id', authUser.id)
-          .single();
+          .maybeSingle(); // Use maybeSingle instead of single to handle no results case
         
-        if (configError && configError.code !== 'PGRST116') {
+        if (configError) {
           console.error('Error fetching user config:', configError);
+          return null;
         }
+        
+        console.log("User config data:", configData);
         
         return {
           id: authUser.id,
@@ -45,7 +48,7 @@ export const useAuthState = () => {
 
     // Function to handle auth state changes
     const handleAuthChange = async (event: string, session: any) => {
-      console.log('Auth state changed:', event);
+      console.log('Auth state changed:', event, session ? 'with session' : 'no session');
 
       // Don't set loading again if we're about to clear the user
       if (event !== 'SIGNED_OUT') {
@@ -68,12 +71,17 @@ export const useAuthState = () => {
           if (userWithConfig) {
             console.log("Setting authenticated user:", userWithConfig);
             setUser(userWithConfig);
+          } else {
+            console.warn("Failed to fetch user config, user will remain null");
+            setUser(null);
           }
+          console.log("Setting isLoading to false after processing auth change");
           setIsLoading(false);
         }
       } catch (error) {
         console.error('Error fetching user config during auth change:', error);
         if (isMounted.current) {
+          setUser(null);
           setIsLoading(false);
         }
       }
@@ -82,6 +90,7 @@ export const useAuthState = () => {
     // Check for existing session on mount
     const checkCurrentSession = async () => {
       try {
+        console.log("Checking current session");
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -93,6 +102,7 @@ export const useAuthState = () => {
         }
         
         if (data.session) {
+          console.log("Found existing session, handling auth state");
           await handleAuthChange('INITIAL', data.session);
         } else {
           console.log('No active session found');
