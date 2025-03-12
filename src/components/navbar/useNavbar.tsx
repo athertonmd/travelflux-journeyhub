@@ -1,9 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { FileText, MessageSquare, ShieldAlert, Smartphone } from 'lucide-react';
-import { FeatureSubItem, NavLink } from './types';
+import { FeatureSubItem, NavLink } from './types.tsx';
 
 export const useNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -12,10 +11,8 @@ export const useNavbar = () => {
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
-  // Determine if user is authenticated
   const isAuthenticated = !!user;
 
-  // Feature submenu items
   const featureSubItems: FeatureSubItem[] = [
     {
       name: 'Mobile',
@@ -48,7 +45,6 @@ export const useNavbar = () => {
   }, []);
 
   useEffect(() => {
-    // Close mobile menu when changing routes
     setIsMobileMenuOpen(false);
   }, [location]);
 
@@ -60,7 +56,6 @@ export const useNavbar = () => {
     if (location.pathname === '/') {
       e.preventDefault();
       if (sectionId === 'home') {
-        // Scroll to top of the page smoothly
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         const element = document.getElementById(sectionId);

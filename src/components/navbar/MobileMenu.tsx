@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, User } from 'lucide-react';
-import { FeatureSubItem } from './types';
+import { FeatureSubItem } from './types.tsx';
 
 interface MobileMenuProps {
   isOpen: boolean;

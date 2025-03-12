@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { Menu, X } from 'lucide-react';
 import DesktopNav from './navbar/DesktopNav';
 import MobileMenu from './navbar/MobileMenu';
-import { useNavbar } from './navbar/useNavbar';
+import { useNavbar } from './navbar/useNavbar.tsx';
 
 const Navbar = () => {
   const {
