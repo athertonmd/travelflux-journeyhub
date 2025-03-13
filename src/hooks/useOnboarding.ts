@@ -14,6 +14,7 @@ export const useOnboarding = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
+  const [authTimeoutExceeded, setAuthTimeoutExceeded] = useState(false);
   
   // Don't try to load form data if we don't have a user yet
   const userId = user?.id;
@@ -33,25 +34,30 @@ export const useOnboarding = () => {
     }
   }, [authLoading, authCheckComplete, user]);
 
-  // Force refresh session if auth seems stuck
+  // Force refresh session if auth seems stuck or takes too long
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     
-    if (authLoading) {
-      timeout = setTimeout(async () => {
-        console.log('Auth loading timeout reached, attempting to refresh session');
+    // Set a shorter timeout to handle potential hangs
+    timeout = setTimeout(async () => {
+      if (authLoading || (!authCheckComplete && !authTimeoutExceeded)) {
+        console.log('Auth timeout reached, attempting to refresh session');
+        setAuthTimeoutExceeded(true);
         try {
           await refreshSession();
+          // Regardless of result, mark auth check as complete to prevent hanging
+          setAuthCheckComplete(true);
         } catch (error) {
           console.error('Failed to refresh session:', error);
+          setAuthCheckComplete(true);
         }
-      }, 5000);
-    }
+      }
+    }, 3000); // Reduce timeout to 3 seconds
     
     return () => {
       if (timeout) clearTimeout(timeout);
     };
-  }, [authLoading, refreshSession]);
+  }, [authLoading, refreshSession, authCheckComplete, authTimeoutExceeded]);
 
   // Pre-fill username from email if available
   useEffect(() => {
@@ -93,8 +99,8 @@ export const useOnboarding = () => {
     formData
   );
 
-  // Combine loading states
-  const combinedIsLoading = isLoading || authLoading || formIsLoading;
+  // Combine loading states but prevent infinite loading
+  const combinedIsLoading = isLoading || (authLoading && !authTimeoutExceeded) || formIsLoading;
 
   const handleComplete = useCallback(async (): Promise<boolean> => {
     try {
@@ -132,7 +138,7 @@ export const useOnboarding = () => {
     currentStep,
     formData,
     isLoading: combinedIsLoading,
-    authCheckComplete,
+    authCheckComplete: authCheckComplete || authTimeoutExceeded, // Consider auth check complete if timeout exceeded
     updateFormData,
     handleNext,
     handleBack,

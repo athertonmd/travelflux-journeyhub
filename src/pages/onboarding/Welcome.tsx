@@ -65,14 +65,14 @@ const Welcome = () => {
     }
   }, [user, authCheckComplete, navigate, initialAuthCheck]);
 
-  // Force timeout to prevent infinite loading
+  // Shorter timeout to prevent infinite loading
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (isLoading) {
         console.log('Loading timeout reached, setting timeout state');
         setLoadingTimeoutReached(true);
       }
-    }, 8000); // 8 seconds timeout
+    }, 5000); // Reduced from 8 to 5 seconds
     
     return () => clearTimeout(timeout);
   }, [isLoading]);
@@ -99,7 +99,7 @@ const Welcome = () => {
   }
 
   // If loading and not timed out, show loading spinner
-  if (isLoading) {
+  if (isLoading && !loadingTimeoutReached) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <LoadingSpinner />
@@ -109,7 +109,7 @@ const Welcome = () => {
   }
 
   // If auth check is complete and no user, redirect will happen via the useEffect
-  if (!user && initialAuthCheck) {
+  if (!user && authCheckComplete) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Redirecting to login...</p>
