@@ -9,7 +9,7 @@ export const useNavbar = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logOut } = useAuth();
 
   const isAuthenticated = !!user;
 
@@ -67,7 +67,7 @@ export const useNavbar = () => {
   };
 
   const handleLogout = () => {
-    logout();
+    logOut();
     navigate('/');
   };
 

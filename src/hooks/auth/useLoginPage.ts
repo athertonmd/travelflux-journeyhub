@@ -1,176 +1,97 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useSessionManager } from '@/hooks/auth/useSessionManager';
-import { toast } from '@/hooks/use-toast';
 
 export const useLoginPage = () => {
+  const { user, isLoading: authLoading, logIn, refreshSession } = useAuth();
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, login, refreshSession: contextRefreshSession } = useAuth();
-  const { resetSessionState } = useSessionManager();
+  const { toast } = useToast();
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
   const [authStuck, setAuthStuck] = useState(false);
   const [refreshingSession, setRefreshingSession] = useState(false);
-  const [refreshAttemptCount, setRefreshAttemptCount] = useState(0);
-  
-  console.log('Login page hook with auth state:', { 
-    user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
-    authLoading, 
-    isSubmitting,
-    redirecting,
-    loginAttemptFailed,
-    refreshingSession,
-    refreshAttemptCount
-  });
-  
-  // Timeout to detect if auth is stuck - shorter timeout than the core auth system
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    
-    if (authLoading && !authStuck && !refreshingSession) {
-      timeout = setTimeout(() => {
-        console.log('Auth loading timeout reached, might be stuck');
-        setAuthStuck(true);
-      }, 3000); // 3 seconds timeout (shorter than the auth core timeout)
-    }
-    
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [authLoading, authStuck, refreshingSession]);
-  
-  // Auto-refresh if auth gets stuck for too long
-  useEffect(() => {
-    let autoRefreshTimeout: NodeJS.Timeout;
-    
-    if (authStuck && !refreshingSession && refreshAttemptCount === 0) {
-      autoRefreshTimeout = setTimeout(() => {
-        console.log('Auto-triggering session refresh after auth stuck timeout');
-        handleRefreshSession();
-      }, 2000); // Auto-refresh after 2 seconds of being stuck
-    }
-    
-    return () => {
-      if (autoRefreshTimeout) clearTimeout(autoRefreshTimeout);
-    };
-  }, [authStuck, refreshingSession, refreshAttemptCount]);
   
   // Redirect if user is already logged in
   useEffect(() => {
-    // Only redirect if we have a user AND auth loading has finished
-    if (user && !authLoading && !redirecting) {
-      const destination = user.setupCompleted ? '/dashboard' : '/welcome';
-      console.log(`User authenticated (setupCompleted: ${user.setupCompleted}), redirecting to: ${destination}`);
-      
+    if (user) {
       setRedirecting(true);
-      
-      // Small timeout to avoid race conditions
-      setTimeout(() => {
-        navigate(destination);
-      }, 200);
+      navigate('/dashboard');
     }
-  }, [user, authLoading, navigate, redirecting]);
-  
-  const handleLogin = async (email: string, password: string, remember: boolean) => {
-    if (isSubmitting) {
-      console.log('Already processing login, skipping');
-      return false;
-    }
-    
-    try {
-      setIsSubmitting(true);
-      setLoginAttemptFailed(false);
-      console.log('Attempting login for:', email);
-      
-      // Attempt login
-      const success = await login(email, password);
-      console.log('Login result:', success);
-      
-      if (!success) {
-        setLoginAttemptFailed(true);
-      }
-      
-      return success;
-    } catch (error) {
-      console.error('Login handler error:', error);
-      setLoginAttemptFailed(true);
-      return false;
-    } finally {
-      // Always reset submission state after a short delay
-      setTimeout(() => {
-        setIsSubmitting(false);
-      }, 300); // Give time for auth state to update
-    }
-  };
-  
-  const handleRefreshSession = useCallback(async () => {
-    if (refreshingSession) {
-      console.log('Already refreshing session, skipping');
-      return;
-    }
-    
-    // Track refresh attempts
-    setRefreshAttemptCount(prev => prev + 1);
-    setRefreshingSession(true);
-    
-    toast({
-      title: "Refreshing session",
-      description: "Please wait while we refresh your session...",
-    });
-    
-    try {
-      console.log('Manually triggering session refresh');
-      
-      // Reset session state completely if we've tried standard refresh 
-      // multiple times without success
-      if (refreshAttemptCount >= 1 || authStuck) {
-        console.log('Using aggressive session reset approach');
-        await resetSessionState();
-        
-        // After reset, wait a moment
-        await new Promise(resolve => setTimeout(resolve, 500));
-      }
-      
-      // Try refresh session through the context
-      const user = await contextRefreshSession();
-      console.log('Refresh session result:', user ? 'success' : 'failed');
-      
-      // Reset auth stuck state if successful
-      if (user) {
-        setAuthStuck(false);
-        toast({
-          title: "Session refreshed",
-          description: "Your session has been refreshed successfully.",
-        });
-      } else {
-        // Always reset the auth stuck state even if refresh failed
-        // to allow the normal auth flow to continue
-        setAuthStuck(false);
-        
-        toast({
-          title: "Session refresh complete",
-          description: "You can now try to log in again.",
-        });
-      }
-    } catch (error) {
-      console.error('Error refreshing session:', error);
-      // Always reset auth stuck state to allow normal login flow
+  }, [user, navigate]);
+
+  // Handle auth stuck situation
+  useEffect(() => {
+    if (authLoading) {
+      const timer = setTimeout(() => {
+        if (authLoading && !user) {
+          setAuthStuck(true);
+          toast({
+            title: "Authentication taking too long",
+            description: "Having trouble authenticating? Try refreshing your session.",
+            variant: "warning",
+          });
+        }
+      }, 5000); // 5 seconds
+      return () => clearTimeout(timer);
+    } else {
       setAuthStuck(false);
-      
+    }
+  }, [authLoading, user, toast]);
+
+  // Function to handle session refresh
+  const handleRefreshSession = async () => {
+    setRefreshingSession(true);
+    try {
+      await refreshSession();
+    } catch (error) {
+      console.error("Session refresh failed", error);
       toast({
-        title: "Session reset complete",
-        description: "You can now try to log in again.",
+        title: "Session refresh failed",
+        description: "Could not refresh your session. Please try logging in again.",
+        variant: "destructive",
       });
     } finally {
-      // Always reset refreshing state after a delay
-      setTimeout(() => {
-        setRefreshingSession(false);
-      }, 1000);
+      setRefreshingSession(false);
+      setAuthStuck(false);
     }
-  }, [refreshingSession, refreshAttemptCount, authStuck, contextRefreshSession, resetSessionState]);
+  };
+
+  // Handle form submission
+  const handleSubmit = async (email: string, password: string) => {
+    setIsSubmitting(true);
+    setLoginAttemptFailed(false);
+    
+    try {
+      const success = await logIn(email, password);
+      if (success) {
+        toast({
+          title: "Login successful",
+          description: "Redirecting to dashboard...",
+        });
+        navigate('/dashboard');
+      } else {
+        setLoginAttemptFailed(true);
+        toast({
+          title: "Login failed",
+          description: "Invalid credentials. Please try again.",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Login failed", error);
+      setLoginAttemptFailed(true);
+      toast({
+        title: "Login failed",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return {
     user,
@@ -180,8 +101,6 @@ export const useLoginPage = () => {
     loginAttemptFailed,
     authStuck,
     refreshingSession,
-    refreshAttemptCount,
-    handleLogin,
-    handleRefreshSession
+    handleSubmit
   };
 };
