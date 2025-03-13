@@ -84,7 +84,8 @@ const Login = () => {
   const handleSubmit = async (email: string, password: string, remember: boolean) => {
     try {
       setIsSubmitting(true);
-      const result = await logIn(email, password, remember);
+      // Note: We're ignoring the remember parameter since it's not used in the current implementation
+      const result = await logIn(email, password);
       if (!result) {
         setIsSubmitting(false);
       }
