@@ -1,11 +1,13 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSessionManager } from './useSessionManager';
 
 export const useLoginPage = () => {
   const { user, isLoading: authLoading, logIn, refreshSession } = useAuth();
+  const { resetSessionState } = useSessionManager();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -14,10 +16,12 @@ export const useLoginPage = () => {
   const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
   const [authStuck, setAuthStuck] = useState(false);
   const [refreshingSession, setRefreshingSession] = useState(false);
+  const [connectionRetries, setConnectionRetries] = useState(0);
   
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
+      console.log("User is authenticated, redirecting to dashboard");
       setRedirecting(true);
       setIsSubmitting(false); // Reset loading state when user data is available
       navigate('/dashboard');
@@ -30,6 +34,7 @@ export const useLoginPage = () => {
       // If auth is no longer loading but we don't have a user and we're not redirecting,
       // then the login likely failed
       if (!user && !redirecting) {
+        console.log("Auth loading completed but no user and not redirecting, resetting submission state");
         setIsSubmitting(false);
       }
     }
@@ -37,56 +42,99 @@ export const useLoginPage = () => {
 
   // Handle auth stuck situation
   useEffect(() => {
-    if (authLoading) {
-      const timer = setTimeout(() => {
-        if (authLoading && !user) {
+    let timer: NodeJS.Timeout | null = null;
+    
+    if (authLoading || isSubmitting) {
+      timer = setTimeout(() => {
+        if ((authLoading || isSubmitting) && !user && !refreshingSession) {
+          console.log("Authentication appears to be stuck");
           setAuthStuck(true);
           toast({
             title: "Authentication taking too long",
-            description: "Having trouble authenticating? Try refreshing your session.",
+            description: "Having trouble connecting to the authentication service. You can try refreshing your session.",
             variant: "default",
           });
         }
       }, 5000); // 5 seconds
-      return () => clearTimeout(timer);
     } else {
+      // If we're not loading anymore, make sure we're not in "stuck" state
       setAuthStuck(false);
     }
-  }, [authLoading, user, toast]);
+    
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [authLoading, isSubmitting, user, refreshingSession, toast]);
 
   // Function to handle session refresh
-  const handleRefreshSession = async () => {
-    setRefreshingSession(true);
+  const handleRefreshSession = useCallback(async () => {
     try {
-      await refreshSession();
-    } catch (error) {
-      console.error("Session refresh failed", error);
-      toast({
-        title: "Session refresh failed",
-        description: "Could not refresh your session. Please try logging in again.",
-        variant: "destructive",
-      });
-    } finally {
-      setRefreshingSession(false);
-      setAuthStuck(false);
-      setIsSubmitting(false); // Reset submission state after refresh attempt
-    }
-  };
-
-  // Handle form submission
-  const handleSubmit = async (email: string, password: string): Promise<boolean> => {
-    setIsSubmitting(true);
-    setLoginAttemptFailed(false);
-    
-    try {
-      const success = await logIn(email, password);
-      if (success) {
+      console.log("Attempting to refresh session");
+      setRefreshingSession(true);
+      setConnectionRetries(prev => prev + 1);
+      
+      // First try to reset session state to clear any stale data
+      if (connectionRetries > 0) {
+        await resetSessionState();
+      }
+      
+      // Then attempt to refresh the session
+      const refreshedUser = await refreshSession();
+      
+      if (refreshedUser) {
+        console.log("Session refresh successful, user retrieved");
         toast({
-          title: "Login successful",
-          description: "Redirecting to dashboard...",
+          title: "Connection restored",
+          description: "Your session has been refreshed successfully.",
+          variant: "default",
         });
         return true;
       } else {
+        console.log("Session refresh completed but no user retrieved");
+        toast({
+          title: "Connection attempt failed",
+          description: "Could not establish connection. Please try again or reload the page.",
+          variant: "destructive",
+        });
+        return false;
+      }
+    } catch (error) {
+      console.error("Error during session refresh:", error);
+      toast({
+        title: "Session refresh failed",
+        description: "Could not refresh your session. Please try reloading the page.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setRefreshingSession(false);
+      // Only reset auth stuck if we've successfully refreshed or if this was the first retry
+      if (connectionRetries <= 1) {
+        setAuthStuck(false);
+      }
+      setIsSubmitting(false); // Reset submission state after refresh attempt
+    }
+  }, [refreshSession, resetSessionState, connectionRetries, toast]);
+
+  // Handle form submission
+  const handleSubmit = async (email: string, password: string): Promise<boolean> => {
+    try {
+      console.log("Login form submitted");
+      setIsSubmitting(true);
+      setLoginAttemptFailed(false);
+      
+      const success = await logIn(email, password);
+      
+      if (success) {
+        console.log("Login successful");
+        toast({
+          title: "Login successful",
+          description: "Redirecting to dashboard...",
+          variant: "default",
+        });
+        return true;
+      } else {
+        console.log("Login returned unsuccessful");
         setLoginAttemptFailed(true);
         setIsSubmitting(false); // Reset loading state on failure
         toast({
@@ -97,7 +145,7 @@ export const useLoginPage = () => {
         return false;
       }
     } catch (error) {
-      console.error("Login failed", error);
+      console.error("Login threw an exception:", error);
       setLoginAttemptFailed(true);
       setIsSubmitting(false); // Reset loading state on error
       toast({
@@ -117,6 +165,7 @@ export const useLoginPage = () => {
     loginAttemptFailed,
     authStuck,
     refreshingSession,
+    connectionRetries,
     handleSubmit,
     handleRefreshSession
   };

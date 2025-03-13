@@ -1,11 +1,12 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import LoginPageContent from '@/components/auth/LoginPageContent';
 import LoginErrorState from '@/components/auth/LoginErrorState';
 import { useLoginPage } from '@/hooks/auth/useLoginPage';
+import { useSessionManager } from '@/hooks/auth/useSessionManager';
 
 const Login = () => {
   const {
@@ -13,16 +14,36 @@ const Login = () => {
     isSubmitting,
     authStuck,
     refreshingSession,
+    connectionRetries,
     handleSubmit,
     handleRefreshSession
   } = useLoginPage();
-
-  const [refreshAttemptCount, setRefreshAttemptCount] = React.useState(0);
   
-  // Handle refresh session with attempt counting
-  const handleRefresh = async () => {
-    setRefreshAttemptCount(prev => prev + 1);
-    await handleRefreshSession();
+  const { resetSessionState } = useSessionManager();
+  const navigate = useNavigate();
+
+  // Reset session state on component mount
+  useEffect(() => {
+    // If there was a previous stuck state, reset the session
+    if (localStorage.getItem('auth_previously_stuck') === 'true') {
+      console.log("Previous stuck state detected, resetting session");
+      resetSessionState().then(() => {
+        localStorage.removeItem('auth_previously_stuck');
+      });
+    }
+    
+    // Set up cleanup function for if the user navigates away
+    return () => {
+      // If we're in a stuck state when leaving, remember that for next time
+      if (authStuck) {
+        localStorage.setItem('auth_previously_stuck', 'true');
+      }
+    };
+  }, [resetSessionState]);
+  
+  // Handle page reload
+  const handleReloadPage = () => {
+    window.location.reload();
   };
 
   // Show error state if auth is stuck
@@ -30,9 +51,10 @@ const Login = () => {
     return (
       <LoginErrorState
         isRefreshing={refreshingSession}
-        refreshAttemptCount={refreshAttemptCount}
+        refreshAttemptCount={connectionRetries}
         authStuck={authStuck}
-        onRefreshSession={handleRefresh}
+        onRefreshSession={handleRefreshSession}
+        onReloadPage={handleReloadPage}
       />
     );
   }

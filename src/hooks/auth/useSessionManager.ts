@@ -82,13 +82,16 @@ export const useSessionManager = () => {
       const sessionCheckPromise = supabase.auth.getSession();
       
       // Race the promises
-      const { data, error } = await Promise.race([
+      const result = await Promise.race([
         sessionCheckPromise,
         timeoutPromise.then(() => {
           console.warn('Session check timed out, returning null session');
           return { data: { session: null }, error: new Error('Timed out') };
         })
       ]);
+      
+      // TypeScript safety for the result
+      const { data, error } = result as { data: { session: any }, error: Error | null };
       
       if (error) {
         console.error('Session retrieval error:', error);

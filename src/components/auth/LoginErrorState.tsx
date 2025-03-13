@@ -8,6 +8,7 @@ interface LoginErrorStateProps {
   refreshAttemptCount: number;
   authStuck: boolean;
   onRefreshSession: () => Promise<void>;
+  onReloadPage: () => void;
 }
 
 const LoginErrorState: React.FC<LoginErrorStateProps> = ({
@@ -15,10 +16,11 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
   refreshAttemptCount,
   authStuck,
   onRefreshSession,
+  onReloadPage,
 }) => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <Card className="w-full max-w-md glass-card animate-fade-in">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+      <Card className="w-full max-w-md glass-card animate-fade-in shadow-lg">
         <CardHeader>
           <CardTitle className="text-2xl font-display text-center">
             Connection Issue
@@ -36,7 +38,7 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
           <Button 
             onClick={onRefreshSession} 
             disabled={isRefreshing}
-            className="w-full mb-4"
+            className="w-full mb-4 bg-blue-500 hover:bg-blue-600"
           >
             {isRefreshing ? 'Refreshing Connection...' : 'Refresh Connection'}
           </Button>
@@ -45,7 +47,7 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
             <div className="mt-2">
               <Button 
                 variant="outline" 
-                onClick={() => window.location.reload()}
+                onClick={onReloadPage}
                 className="w-full"
               >
                 Reload Page
@@ -55,7 +57,7 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
         </CardContent>
         
         <CardFooter className="flex flex-col text-sm text-gray-500">
-          <p>
+          <p className="text-center">
             {refreshAttemptCount > 1 
               ? "If this issue persists, please try again later or contact support."
               : "This will clear your local session data and attempt to reconnect."}
