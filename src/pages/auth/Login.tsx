@@ -9,10 +9,12 @@ import LoginForm from '@/components/auth/LoginForm';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
+import { useSessionManager } from '@/hooks/auth/useSessionManager';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, login, refreshSession } = useAuth();
+  const { user, isLoading: authLoading, login, refreshSession: contextRefreshSession } = useAuth();
+  const { resetSessionState } = useSessionManager();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
   const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
@@ -107,39 +109,43 @@ const Login = () => {
     
     try {
       console.log('Manually triggering session refresh');
-      const user = await refreshSession();
       
-      if (user) {
-        toast({
-          title: "Session refreshed",
-          description: "Your session has been refreshed successfully.",
-        });
-        setAuthStuck(false);
-      } else {
-        toast({
-          title: "Session refresh failed",
-          description: "Unable to refresh your session. Please try again or reload the page.",
-          variant: "destructive"
-        });
+      // First try to refresh the session normally
+      const user = await contextRefreshSession();
+      
+      // If that fails, try a more aggressive reset
+      if (!user && authStuck) {
+        console.log('Normal refresh failed, trying to reset session state');
+        await resetSessionState();
+        
+        // After reset, wait a moment and try again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Try refresh again after reset
+        await contextRefreshSession();
       }
+      
+      // Reset auth stuck state
+      setAuthStuck(false);
+      
+      toast({
+        title: "Session refreshed",
+        description: "Your session has been refreshed. Try logging in again.",
+      });
+      
+      // Force reload the page to reset all React state
+      window.location.reload();
+      
     } catch (error) {
       console.error('Error refreshing session:', error);
       toast({
         title: "Error",
-        description: "An error occurred while refreshing your session.",
+        description: "An error occurred while refreshing your session. Please try reloading the page.",
         variant: "destructive"
       });
     } finally {
       setTimeout(() => {
         setRefreshingSession(false);
-        
-        // If still stuck after refresh attempt, reload the page
-        if (authLoading) {
-          toast({
-            title: "Still having issues",
-            description: "Try reloading the page if problems persist.",
-          });
-        }
       }, 1000);
     }
   };
@@ -163,6 +169,17 @@ const Login = () => {
           >
             {refreshingSession ? 'Refreshing...' : 'Refresh Session'}
           </Button>
+          {authStuck && !refreshingSession && (
+            <div className="mt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.reload()}
+                className="mx-auto"
+              >
+                Reload Page
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     );

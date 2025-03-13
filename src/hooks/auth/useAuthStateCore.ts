@@ -11,6 +11,8 @@ export const useAuthStateCore = () => {
   const isMounted = useRef(true);
   const initialSessionChecked = useRef(false);
   const { refreshSession, checkCurrentSession } = useSessionManager();
+  const lastRefreshAttempt = useRef<number>(0);
+  const MAX_REFRESH_FREQUENCY = 5000; // 5 seconds between refresh attempts
 
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
@@ -99,6 +101,15 @@ export const useAuthStateCore = () => {
   // Session refresh method exposed to components
   const refreshSessionAndUpdateState = async () => {
     try {
+      // Prevent refreshing too frequently 
+      const now = Date.now();
+      if (now - lastRefreshAttempt.current < MAX_REFRESH_FREQUENCY) {
+        console.log("Throttling refresh attempts, too many attempts in a short period");
+        return null;
+      }
+      
+      lastRefreshAttempt.current = now;
+      
       console.log("Refreshing session and updating state");
       setIsLoading(true);
       const userWithConfig = await refreshSession();

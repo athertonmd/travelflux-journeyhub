@@ -28,7 +28,9 @@ export const useSessionManager = () => {
       }
       
       // If we have a session, try to refresh it
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+        refresh_token: sessionData.session.refresh_token,
+      });
       
       if (refreshError) {
         console.error("Session refresh error:", refreshError);
@@ -78,8 +80,22 @@ export const useSessionManager = () => {
     }
   };
 
+  /**
+   * Force reset the session state (for recovery from stuck states)
+   */
+  const resetSessionState = async (): Promise<void> => {
+    try {
+      console.log("Forcefully resetting session state");
+      // This will clear any cached session data and force a fresh fetch
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      console.error("Error resetting session state:", error);
+    }
+  };
+
   return {
     refreshSession,
-    checkCurrentSession
+    checkCurrentSession,
+    resetSessionState
   };
 };
