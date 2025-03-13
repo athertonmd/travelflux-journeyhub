@@ -55,7 +55,10 @@ export const useAuthStateCore = () => {
             const { data } = await supabase.auth.getSession();
             if (data.session) {
               console.log("Reconnection successful, handling auth state");
-              await handleAuthChange('RECONNECTED', data.session);
+              // We need to define handleAuthChange before using it here
+              if (typeof handleAuthChange === 'function') {
+                await handleAuthChange('RECONNECTED', data.session);
+              }
             } else {
               console.log("No session after reconnection attempt");
               if (isMounted.current) {
@@ -95,7 +98,7 @@ export const useAuthStateCore = () => {
     authStateChangeHandled.current = false;
     reconnectAttempts.current = 0;
 
-    // Function to handle auth state changes
+    // Function to handle auth state changes - Define this function within the useEffect scope
     const handleAuthChange = async (event: string, session: any) => {
       console.log('Auth state changed:', event, session ? 'with session' : 'no session');
       authStateChangeHandled.current = true;
