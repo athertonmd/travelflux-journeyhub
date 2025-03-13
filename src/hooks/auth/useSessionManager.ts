@@ -75,7 +75,7 @@ export const useSessionManager = () => {
       
       // Create a promise that rejects after a timeout
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Session check timed out')), 3000);
+        setTimeout(() => reject(new Error('Session check timed out')), 5000); // Increased timeout from 3000ms to 5000ms
       });
       
       // Create the session check promise
@@ -84,12 +84,10 @@ export const useSessionManager = () => {
       // Race the promises
       const result = await Promise.race([
         sessionCheckPromise,
-        timeoutPromise.then(() => {
-          console.warn('Session check timed out, returning null session');
-          return { data: { session: null }, error: new Error('Timed out') };
-        }).catch(err => {
-          console.error('Timeout promise rejection:', err);
-          return { data: { session: null }, error: err };
+        timeoutPromise.catch(err => {
+          console.warn('Session check timed out, falling back to cached session');
+          // Instead of rejecting, return a fallback result
+          return { data: { session: null }, error: new Error('Timed out but continuing') };
         })
       ]);
       
@@ -97,7 +95,12 @@ export const useSessionManager = () => {
       const { data, error } = result as { data: { session: any }, error: Error | null };
       
       if (error) {
-        console.error('Session retrieval error:', error);
+        // Only log as error if it's not our handled timeout
+        if (error.message !== 'Timed out but continuing') {
+          console.error('Session retrieval error:', error);
+        } else {
+          console.warn('Using fallback for timed out session check');
+        }
         return { session: null, error };
       }
       
