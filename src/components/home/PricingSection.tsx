@@ -11,14 +11,14 @@ const PricingSection = () => {
     name: 'Starter',
     price: 0,
     description: 'Perfect for small agencies just getting started.',
-    features: ['30 free credits', 'Tripscape Mobile', 'Tripscape Document Delivery', 'Tripscape Teams', 'Tripscape Risk Management'],
+    features: ['Tripscape Mobile', 'Tripscape Document Delivery', 'Tripscape Teams', 'Tripscape Risk Management'],
     cta: 'Start Free Trial',
     popular: false
   }, {
     name: 'Professional',
     price: 100,
     description: 'Everything you need for a growing travel agency.',
-    features: ['200 credits', 'Advanced itinerary management', 'Custom document templates', 'Tripscape Mobile integration', 'Customer management', 'Analytics dashboard'],
+    features: ['Advanced itinerary management', 'Custom document templates', 'Tripscape Mobile integration', 'Customer management', 'Analytics dashboard'],
     cta: 'Sign Up',
     popular: true
   }, {
