@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import LoginPageContent from '@/components/auth/LoginPageContent';
 import LoginErrorState from '@/components/auth/LoginErrorState';
 import { useLoginPage } from '@/hooks/auth/useLoginPage';
-import { useSessionManager } from '@/hooks/auth/useSessionManager';
+import { useSessionReset } from '@/hooks/auth/useSessionReset';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { toast } from '@/hooks/use-toast';
 
@@ -21,10 +21,11 @@ const Login = () => {
     connectionRetries,
     handleSubmit,
     handleRefreshSession,
-    setAuthStuck
+    setAuthStuck,
+    refreshSession
   } = useLoginPage();
   
-  const { resetSessionState } = useSessionManager();
+  const { resetSessionState } = useSessionReset();
   const navigate = useNavigate();
 
   // Reset session state on component mount
@@ -37,6 +38,14 @@ const Login = () => {
       });
     }
     
+    // Attempt an initial session refresh when mounting
+    if (!user && !authLoading && !isSubmitting) {
+      console.log("Login page mounted, trying initial refresh");
+      refreshSession().catch(err => {
+        console.error("Initial refresh error:", err);
+      });
+    }
+    
     // Set up cleanup function for if the user navigates away
     return () => {
       // If we're in a stuck state when leaving, remember that for next time
@@ -44,7 +53,16 @@ const Login = () => {
         localStorage.setItem('auth_previously_stuck', 'true');
       }
     };
-  }, [resetSessionState, authStuck]);
+  }, [resetSessionState, authStuck, user, authLoading, isSubmitting, refreshSession]);
+  
+  // Navigate to dashboard if user logged in
+  useEffect(() => {
+    if (user && !authLoading && !redirecting) {
+      console.log("User detected, redirecting to dashboard");
+      setAuthStuck(false);
+      navigate('/dashboard');
+    }
+  }, [user, authLoading, redirecting, navigate, setAuthStuck]);
   
   // Handle page reload
   const handleReloadPage = () => {
@@ -93,14 +111,11 @@ const Login = () => {
     );
   }
 
-  // Show loading state if redirecting
-  if (redirecting && user) {
-    console.log("Redirecting to dashboard with user:", user);
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <p className="text-center">Redirecting to dashboard...</p>
-      </div>
-    );
+  // Redirect to dashboard if authenticated
+  if (user && !authLoading) {
+    console.log("User is authenticated, redirecting to dashboard");
+    navigate('/dashboard');
+    return null;
   }
 
   return (

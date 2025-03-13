@@ -30,6 +30,7 @@ export const useSessionRefresh = () => {
           });
           // Force sign out locally to clear any inconsistent state
           await supabase.auth.signOut({ scope: 'local' });
+          return null;
         }
         
         return null;
@@ -75,6 +76,10 @@ export const useSessionRefresh = () => {
         }
         
         console.log("Session refreshed successfully");
+        
+        // Wait a moment to ensure session changes are processed
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         return await fetchUserConfig(refreshData.session.user);
       } catch (refreshException) {
         console.error("Exception during refresh:", refreshException);

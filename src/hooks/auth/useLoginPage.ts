@@ -4,9 +4,11 @@ import { useLoginForm } from './useLoginForm';
 import { useSessionRefreshUI } from './useSessionRefreshUI';
 import { useAuthStatus } from './useAuthStatus';
 import { useInitialSession } from './useInitialSession';
+import { useSessionReset } from './useSessionReset';
+import { useEffect } from 'react';
 
 export const useLoginPage = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshSession } = useAuth();
   
   const {
     isSubmitting,
@@ -18,8 +20,11 @@ export const useLoginPage = () => {
   const {
     refreshingSession,
     connectionRetries,
-    handleRefreshSession
+    handleRefreshSession,
+    setRefreshingSession
   } = useSessionRefreshUI();
+  
+  const { resetSessionState } = useSessionReset();
   
   const {
     authStuck,
@@ -30,6 +35,17 @@ export const useLoginPage = () => {
   
   // Initialize session and handle redirects
   useInitialSession(user, setRedirecting, setIsSubmitting);
+  
+  // Reset session state if there was a previous stuck state
+  useEffect(() => {
+    if (localStorage.getItem('auth_previously_stuck') === 'true') {
+      console.log("Detected previous stuck state, resetting session");
+      resetSessionState().then(() => {
+        localStorage.removeItem('auth_previously_stuck');
+        setRefreshingSession(false);
+      });
+    }
+  }, [resetSessionState, setRefreshingSession]);
 
   return {
     user,
@@ -42,6 +58,7 @@ export const useLoginPage = () => {
     connectionRetries,
     handleSubmit,
     handleRefreshSession,
-    setAuthStuck
+    setAuthStuck,
+    refreshSession
   };
 };
