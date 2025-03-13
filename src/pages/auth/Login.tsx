@@ -41,10 +41,13 @@ const Login = () => {
     setRefreshAttemptCount(prev => prev + 1);
     
     try {
-      await logIn('', '', false, true); // Just refresh the session
+      // Call logIn with just the refreshOnly flag
+      const success = await logIn('', '', true);
       setLoadingTimeout(false);
+      return success;
     } catch (error) {
       console.error('Error refreshing session:', error);
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -81,7 +84,7 @@ const Login = () => {
   const handleSubmit = async (email: string, password: string, remember: boolean) => {
     try {
       setIsSubmitting(true);
-      const result = await logIn(email, password);
+      const result = await logIn(email, password, remember);
       if (!result) {
         setIsSubmitting(false);
       }

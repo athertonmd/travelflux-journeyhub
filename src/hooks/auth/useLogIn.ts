@@ -7,7 +7,6 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
   const logIn = useCallback(async (
     email: string, 
     password: string, 
-    remember = false, 
     refreshOnly = false
   ): Promise<boolean> => {
     try {
