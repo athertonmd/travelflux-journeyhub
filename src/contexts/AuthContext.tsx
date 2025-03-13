@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
 import { AuthContextType } from '@/types/auth.types';
 import { useAuthState } from '@/hooks/useAuthState';
 import { useLogin } from '@/hooks/auth/useLogin';
@@ -29,23 +29,29 @@ export const useAuth = () => {
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Get all the hooks first to maintain consistent order
   const { user, setUser, isLoading, setIsLoading, refreshSession } = useAuthState();
   const loginFn = useLogin();
   const signupFn = useSignup();
   const { checkSetupStatus, updateSetupStatus } = useSetupStatus(setUser);
+  
+  // Add debug logging ref to avoid hook ordering issues
+  const debugLogRef = useRef(true);
 
-  // Add debug logging to help diagnose auth state issues
+  // Debug logging effect - make sure ALL hook calls are above this
   useEffect(() => {
-    console.log('AuthContext state updated:', { 
-      isLoggedIn: !!user, 
-      isLoading, 
-      setupCompleted: user?.setupCompleted,
-      user: user ? {
-        id: user.id,
-        email: user.email,
-        setupCompleted: user.setupCompleted
-      } : null
-    });
+    if (debugLogRef.current) {
+      console.log('AuthContext state updated:', { 
+        isLoggedIn: !!user, 
+        isLoading, 
+        setupCompleted: user?.setupCompleted,
+        user: user ? {
+          id: user.id,
+          email: user.email,
+          setupCompleted: user.setupCompleted
+        } : null
+      });
+    }
   }, [user, isLoading]);
 
   // Login function

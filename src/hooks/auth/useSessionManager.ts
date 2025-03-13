@@ -27,27 +27,36 @@ export const useSessionManager = () => {
         return null;
       }
       
-      // If we have a session, try to refresh it
-      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
-        refresh_token: sessionData.session.refresh_token,
-      });
-      
-      if (refreshError) {
-        console.error("Session refresh error:", refreshError);
-        // Even if refresh fails, try to fetch user config with existing session
+      try {
+        // If we have a session, try to refresh it
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+          refresh_token: sessionData.session.refresh_token,
+        });
+        
+        if (refreshError) {
+          console.error("Session refresh error:", refreshError);
+          // Even if refresh fails, try to fetch user config with existing session
+          if (sessionData.session?.user) {
+            return await fetchUserConfig(sessionData.session.user);
+          }
+          return null;
+        }
+        
+        if (!refreshData.session) {
+          console.log("No session after refresh attempt");
+          return null;
+        }
+        
+        console.log("Session refreshed successfully");
+        return await fetchUserConfig(refreshData.session.user);
+      } catch (refreshException) {
+        console.error("Exception during refresh:", refreshException);
+        // Fallback to existing session
         if (sessionData.session?.user) {
           return await fetchUserConfig(sessionData.session.user);
         }
         return null;
       }
-      
-      if (!refreshData.session) {
-        console.log("No session after refresh attempt");
-        return null;
-      }
-      
-      console.log("Session refreshed successfully");
-      return await fetchUserConfig(refreshData.session.user);
     } catch (error) {
       console.error("Error in refreshSession:", error);
       return null;
@@ -88,6 +97,7 @@ export const useSessionManager = () => {
       console.log("Forcefully resetting session state");
       // This will clear any cached session data and force a fresh fetch
       await supabase.auth.signOut({ scope: 'local' });
+      console.log("Session state reset completed");
     } catch (error) {
       console.error("Error resetting session state:", error);
     }

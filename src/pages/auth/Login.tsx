@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Navbar from '@/components/Navbar';
@@ -20,6 +20,7 @@ const Login = () => {
   const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
   const [authStuck, setAuthStuck] = useState(false);
   const [refreshingSession, setRefreshingSession] = useState(false);
+  const [refreshAttemptCount, setRefreshAttemptCount] = useState(0);
   
   console.log('Login page rendering with auth state:', { 
     user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
@@ -27,7 +28,8 @@ const Login = () => {
     isSubmitting,
     redirecting,
     loginAttemptFailed,
-    refreshingSession
+    refreshingSession,
+    refreshAttemptCount
   });
   
   // Timeout to detect if auth is stuck
@@ -94,12 +96,14 @@ const Login = () => {
     }
   };
   
-  const handleRefreshSession = async () => {
+  const handleRefreshSession = useCallback(async () => {
     if (refreshingSession) {
       console.log('Already refreshing session, skipping');
       return;
     }
     
+    // Track refresh attempts
+    setRefreshAttemptCount(prev => prev + 1);
     setRefreshingSession(true);
     
     toast({
@@ -110,32 +114,43 @@ const Login = () => {
     try {
       console.log('Manually triggering session refresh');
       
-      // First try to refresh the session normally
-      const user = await contextRefreshSession();
-      
-      // If that fails, try a more aggressive reset
-      if (!user && authStuck) {
-        console.log('Normal refresh failed, trying to reset session state');
+      // Reset session state completely if we've tried standard refresh 
+      // multiple times without success
+      if (refreshAttemptCount >= 1 || authStuck) {
+        console.log('Using aggressive session reset approach');
         await resetSessionState();
         
-        // After reset, wait a moment and try again
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Try refresh again after reset
-        await contextRefreshSession();
+        // After reset, wait a moment
+        await new Promise(resolve => setTimeout(resolve, 500));
       }
       
-      // Reset auth stuck state
-      setAuthStuck(false);
+      // Try refresh session through the context
+      const user = await contextRefreshSession();
+      console.log('Refresh session result:', user ? 'success' : 'failed');
       
-      toast({
-        title: "Session refreshed",
-        description: "Your session has been refreshed. Try logging in again.",
-      });
-      
-      // Force reload the page to reset all React state
-      window.location.reload();
-      
+      // Reset auth stuck state if successful
+      if (user) {
+        setAuthStuck(false);
+        toast({
+          title: "Session refreshed",
+          description: "Your session has been refreshed successfully.",
+        });
+      } else {
+        toast({
+          title: "Session refresh incomplete",
+          description: "Try clicking the refresh button again or reload the page.",
+          variant: "destructive"
+        });
+        
+        // If multiple refresh attempts have failed, suggest page reload
+        if (refreshAttemptCount >= 2) {
+          toast({
+            title: "Multiple refresh attempts failed",
+            description: "Please try reloading the page completely.",
+            variant: "destructive"
+          });
+        }
+      }
     } catch (error) {
       console.error('Error refreshing session:', error);
       toast({
@@ -144,11 +159,12 @@ const Login = () => {
         variant: "destructive"
       });
     } finally {
+      // Always reset refreshing state after a delay
       setTimeout(() => {
         setRefreshingSession(false);
       }, 1000);
     }
-  };
+  }, [refreshingSession, refreshAttemptCount, authStuck, contextRefreshSession, resetSessionState]);
   
   // Show loading spinner when actively submitting a login or when redirecting
   if (isSubmitting || redirecting) {
@@ -169,7 +185,7 @@ const Login = () => {
           >
             {refreshingSession ? 'Refreshing...' : 'Refresh Session'}
           </Button>
-          {authStuck && !refreshingSession && (
+          {(authStuck || refreshAttemptCount > 0) && !refreshingSession && (
             <div className="mt-4">
               <Button 
                 variant="outline" 

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
 import { fetchUserConfig } from './useUserConfig';
@@ -12,6 +12,7 @@ export const useAuthStateCore = () => {
   const initialSessionChecked = useRef(false);
   const { refreshSession, checkCurrentSession } = useSessionManager();
   const lastRefreshAttempt = useRef<number>(0);
+  const refreshInProgress = useRef<boolean>(false);
   const MAX_REFRESH_FREQUENCY = 5000; // 5 seconds between refresh attempts
 
   useEffect(() => {
@@ -99,8 +100,14 @@ export const useAuthStateCore = () => {
   }, []);
 
   // Session refresh method exposed to components
-  const refreshSessionAndUpdateState = async () => {
+  const refreshSessionAndUpdateState = useCallback(async () => {
     try {
+      // Check if refresh is already in progress
+      if (refreshInProgress.current) {
+        console.log("Refresh already in progress, skipping");
+        return null;
+      }
+      
       // Prevent refreshing too frequently 
       const now = Date.now();
       if (now - lastRefreshAttempt.current < MAX_REFRESH_FREQUENCY) {
@@ -108,10 +115,13 @@ export const useAuthStateCore = () => {
         return null;
       }
       
+      // Set flags to prevent duplicate refreshes
       lastRefreshAttempt.current = now;
+      refreshInProgress.current = true;
       
       console.log("Refreshing session and updating state");
       setIsLoading(true);
+      
       const userWithConfig = await refreshSession();
       
       if (isMounted.current) {
@@ -133,8 +143,11 @@ export const useAuthStateCore = () => {
         setIsLoading(false);
       }
       return null;
+    } finally {
+      // Ensure flag is reset even if there's an error
+      refreshInProgress.current = false;
     }
-  };
+  }, [refreshSession]);
 
   return { 
     user, 
