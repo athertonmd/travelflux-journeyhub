@@ -25,11 +25,11 @@ const Welcome = () => {
   const navigate = useNavigate();
   const [initialAuthCheck, setInitialAuthCheck] = useState(false);
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
-  const { refreshSession } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   
   // Initialize the onboarding hook
   const {
-    user,
+    user: onboardingUser,
     currentStep,
     formData,
     isLoading,
@@ -40,67 +40,50 @@ const Welcome = () => {
     handleComplete
   } = useOnboarding();
 
-  console.log('Welcome page rendering with state:', { 
-    user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
-    isLoading, 
-    initialAuthCheck,
-    authCheckComplete,
-    currentStep 
-  });
-
   // If no user and not loading, redirect to login
   useEffect(() => {
     // Only redirect after initial auth check is complete
-    if (authCheckComplete && !initialAuthCheck) {
+    if (!authLoading && !initialAuthCheck) {
       setInitialAuthCheck(true);
       
       if (!user) {
-        console.log('Welcome: No user detected after loading, redirecting to login');
         navigate('/login');
       } else if (user.setupCompleted) {
-        console.log('Welcome: User setup already completed, redirecting to dashboard');
         navigate('/dashboard');
-      } else {
-        console.log('Welcome: User found and setup not completed, staying on welcome page');
       }
     }
-  }, [user, authCheckComplete, navigate, initialAuthCheck]);
+  }, [user, authLoading, navigate, initialAuthCheck]);
 
   // Shorter timeout to prevent infinite loading
   useEffect(() => {
     const timeout = setTimeout(() => {
-      if (isLoading) {
-        console.log('Loading timeout reached, setting timeout state');
+      if (isLoading || authLoading) {
         setLoadingTimeoutReached(true);
       }
     }, 5000); // 5 seconds timeout
     
     return () => clearTimeout(timeout);
-  }, [isLoading]);
+  }, [isLoading, authLoading]);
 
   // If loading after timeout, show a retry button
-  if (isLoading && loadingTimeoutReached) {
+  if ((isLoading || authLoading) && loadingTimeoutReached) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <p className="mb-4 text-muted-foreground">Loading is taking longer than expected...</p>
         <Button 
-          onClick={async () => {
-            setLoadingTimeoutReached(false);
-            await refreshSession();
-            window.location.reload();
-          }} 
+          onClick={() => window.location.reload()} 
           variant="default"
           className="flex items-center gap-2"
         >
           <RefreshCw className="h-4 w-4" />
-          Refresh Session
+          Refresh Page
         </Button>
       </div>
     );
   }
 
   // If loading and not timed out, show loading spinner
-  if (isLoading && !loadingTimeoutReached) {
+  if (isLoading || authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <LoadingSpinner />
@@ -109,8 +92,8 @@ const Welcome = () => {
     );
   }
 
-  // If auth check is complete and no user, redirect will happen via the useEffect
-  if (!user && authCheckComplete) {
+  // If no user, redirect will happen via the useEffect
+  if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p>Redirecting to login...</p>

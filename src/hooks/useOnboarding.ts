@@ -10,11 +10,10 @@ import { toast } from '@/hooks/use-toast';
 export type { OnboardingFormData };
 
 export const useOnboarding = () => {
-  const { user, isLoading: authLoading, updateSetupStatus, refreshSession } = useAuth();
+  const { user, isLoading: authLoading, updateSetupStatus } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
-  const [authTimeoutExceeded, setAuthTimeoutExceeded] = useState(false);
   
   // Don't try to load form data if we don't have a user yet
   const userId = user?.id;
@@ -30,34 +29,8 @@ export const useOnboarding = () => {
   useEffect(() => {
     if (!authLoading && !authCheckComplete) {
       setAuthCheckComplete(true);
-      console.log('Auth check completed. User:', user ? 'authenticated' : 'unauthenticated');
     }
-  }, [authLoading, authCheckComplete, user]);
-
-  // Force refresh session if auth seems stuck or takes too long
-  useEffect(() => {
-    let timeout: NodeJS.Timeout;
-    
-    // Set a shorter timeout to handle potential hangs
-    timeout = setTimeout(async () => {
-      if (authLoading || (!authCheckComplete && !authTimeoutExceeded)) {
-        console.log('Auth timeout reached, attempting to refresh session');
-        setAuthTimeoutExceeded(true);
-        try {
-          await refreshSession();
-          // Regardless of result, mark auth check as complete to prevent hanging
-          setAuthCheckComplete(true);
-        } catch (error) {
-          console.error('Failed to refresh session:', error);
-          setAuthCheckComplete(true);
-        }
-      }
-    }, 3000); // 3 seconds timeout
-    
-    return () => {
-      if (timeout) clearTimeout(timeout);
-    };
-  }, [authLoading, refreshSession, authCheckComplete, authTimeoutExceeded]);
+  }, [authLoading, authCheckComplete]);
 
   // Pre-fill username from email if available
   useEffect(() => {
@@ -99,8 +72,8 @@ export const useOnboarding = () => {
     formData
   );
 
-  // Combine loading states but prevent infinite loading
-  const combinedIsLoading = isLoading || (authLoading && !authTimeoutExceeded) || formIsLoading;
+  // Combine loading states
+  const combinedIsLoading = isLoading || authLoading || formIsLoading;
 
   const handleComplete = useCallback(async (): Promise<boolean> => {
     try {
@@ -138,7 +111,7 @@ export const useOnboarding = () => {
     currentStep,
     formData,
     isLoading: combinedIsLoading,
-    authCheckComplete: authCheckComplete || authTimeoutExceeded, // Consider auth check complete if timeout exceeded
+    authCheckComplete,
     updateFormData,
     handleNext,
     handleBack,
