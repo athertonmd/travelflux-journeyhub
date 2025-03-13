@@ -1,66 +1,67 @@
 
-import { useState, useCallback } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
-import { useSessionManager } from './useSessionManager';
+import { supabase } from '@/integrations/supabase/client';
+import { fetchUserConfig } from './useUserConfig';
+import { User } from '@/types/auth.types';
 
+/**
+ * Hook to manage refreshing sessions
+ */
 export const useSessionRefresh = () => {
-  const { refreshSession } = useAuth();
-  const { resetSessionState } = useSessionManager();
-  const { toast } = useToast();
-  
-  const [refreshingSession, setRefreshingSession] = useState(false);
-  const [connectionRetries, setConnectionRetries] = useState(0);
-
-  // Function to handle session refresh
-  const handleRefreshSession = useCallback(async (): Promise<boolean> => {
+  /**
+   * Manually refresh the session and get user data
+   */
+  const refreshSession = async (): Promise<User | null> => {
     try {
-      console.log("Attempting to refresh session");
-      setRefreshingSession(true);
-      setConnectionRetries(prev => prev + 1);
+      console.log("Manually refreshing session");
       
-      // First try to reset session state to clear any stale data
-      if (connectionRetries > 0) {
-        await resetSessionState();
+      // First try to get the session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Session retrieval error:", sessionError);
+        return null;
       }
       
-      // Then attempt to refresh the session
-      const refreshedUser = await refreshSession();
+      if (!sessionData.session) {
+        console.log("No active session found during refresh");
+        return null;
+      }
       
-      if (refreshedUser) {
-        console.log("Session refresh successful, user retrieved");
-        toast({
-          title: "Connection restored",
-          description: "Your session has been refreshed successfully.",
-          variant: "default",
+      try {
+        // If we have a session, try to refresh it
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession({
+          refresh_token: sessionData.session.refresh_token,
         });
-        return true;
-      } else {
-        console.log("Session refresh completed but no user retrieved");
-        toast({
-          title: "Connection attempt failed",
-          description: "Could not establish connection. Please try again or reload the page.",
-          variant: "destructive",
-        });
-        return false;
+        
+        if (refreshError) {
+          console.error("Session refresh error:", refreshError);
+          // Even if refresh fails, try to fetch user config with existing session
+          if (sessionData.session?.user) {
+            return await fetchUserConfig(sessionData.session.user);
+          }
+          return null;
+        }
+        
+        if (!refreshData.session) {
+          console.log("No session after refresh attempt");
+          return null;
+        }
+        
+        console.log("Session refreshed successfully");
+        return await fetchUserConfig(refreshData.session.user);
+      } catch (refreshException) {
+        console.error("Exception during refresh:", refreshException);
+        // Fallback to existing session
+        if (sessionData.session?.user) {
+          return await fetchUserConfig(sessionData.session.user);
+        }
+        return null;
       }
     } catch (error) {
-      console.error("Error during session refresh:", error);
-      toast({
-        title: "Session refresh failed",
-        description: "Could not refresh your session. Please try reloading the page.",
-        variant: "destructive",
-      });
-      return false;
-    } finally {
-      setRefreshingSession(false);
+      console.error("Error in refreshSession:", error);
+      return null;
     }
-  }, [refreshSession, resetSessionState, connectionRetries, toast]);
-
-  return {
-    refreshingSession,
-    connectionRetries,
-    handleRefreshSession,
-    setRefreshingSession
   };
+
+  return { refreshSession };
 };
