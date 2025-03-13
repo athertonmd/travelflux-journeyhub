@@ -62,6 +62,19 @@ export const useOnboarding = () => {
     }
   }, [user, formData.userName, updateFormData]);
 
+  // Define saveConfiguration callback before using it in useOnboardingNavigation
+  const saveConfigCallback = useCallback(async (data: OnboardingFormData) => {
+    setIsLoading(true);
+    setFormLoading(true);
+    try {
+      const success = await saveConfiguration(data);
+      return success;
+    } finally {
+      setIsLoading(false);
+      setFormLoading(false);
+    }
+  }, []);
+
   const {
     saveConfiguration,
     completeSetup
@@ -70,12 +83,13 @@ export const useOnboarding = () => {
     setFormLoading(loading);
   });
 
+  // Initialize navigation hook with proper dependencies
   const {
     currentStep,
     handleNext,
     handleBack,
   } = useOnboardingNavigation(
-    (data) => saveConfiguration(data),
+    saveConfigCallback,
     formData
   );
 

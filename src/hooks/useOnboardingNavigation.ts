@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { OnboardingFormData } from './useOnboardingForm';
 
@@ -13,9 +13,11 @@ export const useOnboardingNavigation = (
   formData: OnboardingFormData
 ) => {
   const navigate = useNavigate();
-  const [currentStep, setCurrentStep] = useState('welcome');
+  // Initialize state properly with a default value
+  const [currentStep, setCurrentStep] = useState<string>('welcome');
 
-  const handleNext = async (steps: OnboardingStep[]) => {
+  // Convert to useCallback to maintain reference stability
+  const handleNext = useCallback(async (steps: OnboardingStep[]) => {
     const currentIndex = steps.findIndex(step => step.id === currentStep);
     
     // Save data at specific steps
@@ -26,18 +28,18 @@ export const useOnboardingNavigation = (
     if (currentIndex < steps.length - 1) {
       setCurrentStep(steps[currentIndex + 1].id);
     }
-  };
+  }, [currentStep, saveConfiguration, formData]);
 
-  const handleBack = (steps: OnboardingStep[]) => {
+  const handleBack = useCallback((steps: OnboardingStep[]) => {
     const currentIndex = steps.findIndex(step => step.id === currentStep);
     if (currentIndex > 0) {
       setCurrentStep(steps[currentIndex - 1].id);
     }
-  };
+  }, [currentStep]);
 
-  const navigateToDashboard = () => {
+  const navigateToDashboard = useCallback(() => {
     navigate('/dashboard');
-  };
+  }, [navigate]);
 
   return {
     currentStep,
