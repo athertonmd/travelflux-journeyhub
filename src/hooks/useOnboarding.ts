@@ -13,7 +13,6 @@ export const useOnboarding = () => {
   const { user, isLoading: authLoading, updateSetupStatus, refreshSession } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [formLoadAttempted, setFormLoadAttempted] = useState(false);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
   
   // Don't try to load form data if we don't have a user yet
@@ -38,7 +37,6 @@ export const useOnboarding = () => {
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     
-    // If auth is still loading after 5 seconds, try to refresh the session
     if (authLoading) {
       timeout = setTimeout(async () => {
         console.log('Auth loading timeout reached, attempting to refresh session');
@@ -54,14 +52,6 @@ export const useOnboarding = () => {
       if (timeout) clearTimeout(timeout);
     };
   }, [authLoading, refreshSession]);
-
-  // Set form load attempted after first data load attempt with valid userId
-  useEffect(() => {
-    if (userId && !formLoadAttempted) {
-      console.log('Setting form load attempted flag for user:', userId);
-      setFormLoadAttempted(true);
-    }
-  }, [userId, formLoadAttempted]);
 
   // Pre-fill username from email if available
   useEffect(() => {
@@ -89,10 +79,8 @@ export const useOnboarding = () => {
     formData
   );
 
-  // Combine loading states - ensure we wait for auth and initial form load
-  const combinedIsLoading = isLoading || 
-    (authLoading && !authCheckComplete) || 
-    (formIsLoading && !formLoadAttempted);
+  // Combine loading states
+  const combinedIsLoading = isLoading || authLoading || formIsLoading;
 
   const handleComplete = useCallback(async (): Promise<boolean> => {
     try {
