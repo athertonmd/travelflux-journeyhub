@@ -8,55 +8,45 @@ export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simple function to check the setup status
-  const checkSetupStatus = useCallback(async (userId: string): Promise<boolean> => {
-    try {
-      const { data, error } = await supabase
-        .from('agency_configurations')
-        .select('setup_completed')
-        .eq('user_id', userId)
-        .maybeSingle();
-      
-      if (error) {
-        console.error('Error checking setup status:', error);
-        return false;
-      }
-      
-      return data?.setup_completed || false;
-    } catch (error) {
-      console.error('Exception checking setup status:', error);
-      return false;
-    }
-  }, []);
-
-  // Function to update user state with Supabase user
+  // Update user state with Supabase user data
   const updateUserState = useCallback(async (supabaseUser: any) => {
     if (!supabaseUser) {
       setUser(null);
-      return;
+      return null;
     }
 
     try {
-      const setupCompleted = await checkSetupStatus(supabaseUser.id);
+      // Check setup status
+      const { data, error } = await supabase
+        .from('agency_configurations')
+        .select('setup_completed')
+        .eq('user_id', supabaseUser.id)
+        .maybeSingle();
+      
+      if (error) {
+        console.error('Error fetching user configuration:', error);
+      }
       
       const userData: User = {
         id: supabaseUser.id,
         email: supabaseUser.email || '',
         name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || '',
         agencyName: supabaseUser.user_metadata?.agencyName,
-        setupCompleted
+        setupCompleted: data?.setup_completed || false
       };
       
       setUser(userData);
+      return userData;
     } catch (error) {
       console.error('Error updating user state:', error);
       setUser(null);
+      return null;
     }
-  }, [checkSetupStatus]);
+  }, []);
 
-  // Auth state change listener
+  // Set up auth state listener
   useEffect(() => {
-    // Set initial loading state
+    console.log('Setting up auth state listener');
     setIsLoading(true);
     
     // Check for existing session
@@ -65,7 +55,7 @@ export const useAuth = () => {
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error getting session:', error);
+          console.error('Error checking session:', error);
           setIsLoading(false);
           return;
         }
@@ -76,14 +66,14 @@ export const useAuth = () => {
         
         setIsLoading(false);
       } catch (error) {
-        console.error('Exception getting session:', error);
+        console.error('Exception checking session:', error);
         setIsLoading(false);
       }
     };
     
     checkSession();
     
-    // Set up auth state change listener
+    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
@@ -126,6 +116,7 @@ export const useAuth = () => {
       });
       
       if (error) {
+        console.error('Signup error:', error);
         toast({
           title: 'Signup failed',
           description: error.message,
@@ -144,6 +135,7 @@ export const useAuth = () => {
       
       return false;
     } catch (error: any) {
+      console.error('Signup error:', error);
       toast({
         title: 'Signup error',
         description: error.message || 'An unexpected error occurred',
@@ -160,7 +152,7 @@ export const useAuth = () => {
     try {
       setIsLoading(true);
       
-      // First, sign out to clear any existing session
+      // Clear any existing sessions to prevent conflicts
       await supabase.auth.signOut({ scope: 'local' });
       
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -169,6 +161,7 @@ export const useAuth = () => {
       });
       
       if (error) {
+        console.error('Login error:', error);
         toast({
           title: 'Login failed',
           description: error.message,
@@ -178,17 +171,17 @@ export const useAuth = () => {
       }
       
       if (data.user) {
-        // Force a session refresh
-        const { data: sessionData } = await supabase.auth.getSession();
-        
-        if (sessionData.session) {
-          await updateUserState(sessionData.session.user);
-          return true;
-        }
+        // Session will be handled by the auth listener
+        toast({
+          title: 'Login successful',
+          description: 'Welcome back!'
+        });
+        return true;
       }
       
       return false;
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({
         title: 'Login error',
         description: error.message || 'An unexpected error occurred',
@@ -198,19 +191,19 @@ export const useAuth = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [updateUserState]);
+  }, []);
 
   // Logout function
   const logOut = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
       await supabase.auth.signOut();
-      setUser(null);
       toast({
         title: 'Logged out',
         description: 'You have been successfully logged out.'
       });
     } catch (error: any) {
+      console.error('Logout error:', error);
       toast({
         title: 'Logout error',
         description: error.message || 'An error occurred during logout',
@@ -240,29 +233,10 @@ export const useAuth = () => {
       setUser(prev => prev ? { ...prev, setupCompleted: completed } : null);
       return true;
     } catch (error) {
-      console.error('Exception updating setup status:', error);
+      console.error('Error updating setup status:', error);
       return false;
     }
   }, [user]);
-
-  // Session refresh function
-  const refreshSession = useCallback(async (): Promise<User | null> => {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error || !data.session) {
-        console.log('No active session found during refresh');
-        setUser(null);
-        return null;
-      }
-      
-      await updateUserState(data.session.user);
-      return user;
-    } catch (error) {
-      console.error('Error refreshing session:', error);
-      return null;
-    }
-  }, [updateUserState, user]);
 
   return {
     user,
@@ -270,7 +244,6 @@ export const useAuth = () => {
     signUp,
     logIn,
     logOut,
-    updateSetupStatus,
-    refreshSession
+    updateSetupStatus
   };
 };

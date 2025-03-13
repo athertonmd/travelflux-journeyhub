@@ -6,3 +6,12 @@ export type User = {
   agencyName?: string;
   setupCompleted?: boolean;
 };
+
+export type AuthContextType = {
+  user: User | null;
+  isLoading: boolean;
+  signUp: (name: string, email: string, password: string, agencyName?: string) => Promise<boolean>;
+  logIn: (email: string, password: string) => Promise<boolean>;
+  logOut: () => Promise<void>;
+  updateSetupStatus: (completed: boolean) => Promise<boolean>;
+};
