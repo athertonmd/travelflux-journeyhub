@@ -19,9 +19,21 @@ export const useLoginPage = () => {
   useEffect(() => {
     if (user) {
       setRedirecting(true);
+      setIsSubmitting(false); // Reset loading state when user data is available
       navigate('/dashboard');
     }
   }, [user, navigate]);
+
+  // Reset submission state when auth loading completes
+  useEffect(() => {
+    if (!authLoading && isSubmitting) {
+      // If auth is no longer loading but we don't have a user and we're not redirecting,
+      // then the login likely failed
+      if (!user && !redirecting) {
+        setIsSubmitting(false);
+      }
+    }
+  }, [authLoading, user, isSubmitting, redirecting]);
 
   // Handle auth stuck situation
   useEffect(() => {
@@ -32,7 +44,7 @@ export const useLoginPage = () => {
           toast({
             title: "Authentication taking too long",
             description: "Having trouble authenticating? Try refreshing your session.",
-            variant: "default", // Changed from "warning" to "default"
+            variant: "default",
           });
         }
       }, 5000); // 5 seconds
@@ -57,11 +69,12 @@ export const useLoginPage = () => {
     } finally {
       setRefreshingSession(false);
       setAuthStuck(false);
+      setIsSubmitting(false); // Reset submission state after refresh attempt
     }
   };
 
   // Handle form submission
-  const handleSubmit = async (email: string, password: string) => {
+  const handleSubmit = async (email: string, password: string): Promise<boolean> => {
     setIsSubmitting(true);
     setLoginAttemptFailed(false);
     
@@ -72,25 +85,27 @@ export const useLoginPage = () => {
           title: "Login successful",
           description: "Redirecting to dashboard...",
         });
-        navigate('/dashboard');
+        return true;
       } else {
         setLoginAttemptFailed(true);
+        setIsSubmitting(false); // Reset loading state on failure
         toast({
           title: "Login failed",
           description: "Invalid credentials. Please try again.",
           variant: "destructive",
         });
+        return false;
       }
     } catch (error) {
       console.error("Login failed", error);
       setLoginAttemptFailed(true);
+      setIsSubmitting(false); // Reset loading state on error
       toast({
         title: "Login failed",
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
-    } finally {
-      setIsSubmitting(false);
+      return false;
     }
   };
 

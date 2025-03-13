@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,13 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     remember: false,
   });
   const [localLoading, setLocalLoading] = useState(false);
+  
+  // Reset local loading if parent loading state changes to false
+  useEffect(() => {
+    if (!isLoading && localLoading) {
+      setLocalLoading(false);
+    }
+  }, [isLoading]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -51,7 +58,12 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     try {
       setLocalLoading(true);
       // Call the parent's login handler
-      await onLogin(formData.email, formData.password, formData.remember);
+      const success = await onLogin(formData.email, formData.password, formData.remember);
+      
+      // If login explicitly failed, reset loading state immediately
+      if (!success) {
+        setLocalLoading(false);
+      }
     } catch (error) {
       console.error('Error during login:', error);
       toast({
@@ -59,11 +71,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
         description: "An unexpected error occurred",
         variant: "destructive"
       });
-    } finally {
-      // Ensure the loading state is reset after a short delay
-      setTimeout(() => {
-        setLocalLoading(false);
-      }, 500);
+      setLocalLoading(false);
     }
   };
   
