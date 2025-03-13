@@ -7,19 +7,40 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import LoginForm from '@/components/auth/LoginForm';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, login } = useAuth();
+  const { user, isLoading: authLoading, login, refreshSession } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
+  const [authStuck, setAuthStuck] = useState(false);
   
   console.log('Login page rendering with auth state:', { 
     user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
     authLoading, 
     isSubmitting,
-    redirecting
+    redirecting,
+    loginAttemptFailed
   });
+  
+  // Timeout to detect if auth is stuck
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    
+    if (authLoading && !authStuck) {
+      timeout = setTimeout(() => {
+        console.log('Auth loading timeout reached, might be stuck');
+        setAuthStuck(true);
+      }, 5000); // 5 seconds timeout
+    }
+    
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [authLoading, authStuck]);
   
   // Redirect if user is already logged in
   useEffect(() => {
@@ -45,27 +66,79 @@ const Login = () => {
     
     try {
       setIsSubmitting(true);
+      setLoginAttemptFailed(false);
       console.log('Attempting login for:', email);
       
       // Attempt login
       const success = await login(email, password);
       console.log('Login result:', success);
       
+      if (!success) {
+        setLoginAttemptFailed(true);
+      }
+      
       return success;
     } catch (error) {
       console.error('Login handler error:', error);
+      setLoginAttemptFailed(true);
       return false;
     } finally {
-      // Always reset submission state
+      // Always reset submission state after a short delay
       setTimeout(() => {
         setIsSubmitting(false);
       }, 300); // Give time for auth state to update
     }
   };
   
+  const handleRefreshSession = async () => {
+    toast({
+      title: "Refreshing session",
+      description: "Please wait while we refresh your session...",
+    });
+    
+    try {
+      const user = await refreshSession();
+      if (user) {
+        toast({
+          title: "Session refreshed",
+          description: "Your session has been refreshed successfully.",
+        });
+        setAuthStuck(false);
+      } else {
+        toast({
+          title: "Session refresh failed",
+          description: "Unable to refresh your session. Please try again.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error refreshing session:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while refreshing your session.",
+        variant: "destructive"
+      });
+    }
+  };
+  
   // Show loading spinner when actively submitting a login or when redirecting
   if (isSubmitting || redirecting) {
     return <LoadingSpinner />;
+  }
+  
+  // If auth is taking too long, show a reset button
+  if (authLoading && authStuck) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold mb-2">Authentication is taking longer than expected</h2>
+          <p className="mb-4">This could be due to network issues or a problem with the authentication service.</p>
+          <Button onClick={handleRefreshSession} className="mx-auto">
+            Refresh Session
+          </Button>
+        </div>
+      </div>
+    );
   }
   
   return (
