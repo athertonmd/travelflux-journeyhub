@@ -52,7 +52,7 @@ export const useOnboarding = () => {
           setAuthCheckComplete(true);
         }
       }
-    }, 3000); // Reduce timeout to 3 seconds
+    }, 3000); // 3 seconds timeout
     
     return () => {
       if (timeout) clearTimeout(timeout);
@@ -68,6 +68,14 @@ export const useOnboarding = () => {
     }
   }, [user, formData.userName, updateFormData]);
 
+  const {
+    saveConfiguration,
+    completeSetup
+  } = useOnboardingSave(userId, (loading) => {
+    setIsLoading(loading);
+    setFormLoading(loading);
+  });
+
   // Define saveConfiguration callback before using it in useOnboardingNavigation
   const saveConfigCallback = useCallback(async (data: OnboardingFormData) => {
     setIsLoading(true);
@@ -79,15 +87,7 @@ export const useOnboarding = () => {
       setIsLoading(false);
       setFormLoading(false);
     }
-  }, []);
-
-  const {
-    saveConfiguration,
-    completeSetup
-  } = useOnboardingSave(userId, (loading) => {
-    setIsLoading(loading);
-    setFormLoading(loading);
-  });
+  }, [saveConfiguration]);
 
   // Initialize navigation hook with proper dependencies
   const {

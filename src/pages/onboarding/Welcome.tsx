@@ -27,6 +27,7 @@ const Welcome = () => {
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
   const { refreshSession } = useAuth();
   
+  // Initialize the onboarding hook
   const {
     user,
     currentStep,
@@ -72,7 +73,7 @@ const Welcome = () => {
         console.log('Loading timeout reached, setting timeout state');
         setLoadingTimeoutReached(true);
       }
-    }, 5000); // Reduced from 8 to 5 seconds
+    }, 5000); // 5 seconds timeout
     
     return () => clearTimeout(timeout);
   }, [isLoading]);
@@ -124,6 +125,7 @@ const Welcome = () => {
     }
   };
 
+  // Only render the main content if we have a user and setup is not completed
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b border-border">

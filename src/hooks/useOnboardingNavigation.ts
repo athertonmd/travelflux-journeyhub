@@ -13,7 +13,7 @@ export const useOnboardingNavigation = (
   formData: OnboardingFormData
 ) => {
   const navigate = useNavigate();
-  // Initialize state properly with a default value
+  // Initialize state with a proper type annotation to avoid React queue issues
   const [currentStep, setCurrentStep] = useState<string>('welcome');
 
   // Convert to useCallback to maintain reference stability
@@ -22,7 +22,11 @@ export const useOnboardingNavigation = (
     
     // Save data at specific steps
     if (['products', 'gds', 'config', 'trips', 'branding'].includes(currentStep)) {
-      await saveConfiguration(formData);
+      try {
+        await saveConfiguration(formData);
+      } catch (error) {
+        console.error('Error saving during navigation:', error);
+      }
     }
     
     if (currentIndex < steps.length - 1) {
