@@ -10,7 +10,8 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => false,
   logIn: async () => false,
   logOut: async () => {},
-  updateSetupStatus: async () => false
+  updateSetupStatus: async () => false,
+  refreshSession: async () => null
 });
 
 // Custom hook to use the auth context

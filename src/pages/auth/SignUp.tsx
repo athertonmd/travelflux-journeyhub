@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
@@ -14,12 +13,12 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
-import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { user, isLoading, signUp } = useAuthContext();
+  const { user, isLoading, signUp } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -35,7 +34,6 @@ const SignUp = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Redirect if already logged in
   useEffect(() => {
     if (user) {
       console.log('User already logged in, redirecting...');
@@ -104,7 +102,6 @@ const SignUp = () => {
       );
       
       if (success) {
-        // Auth listener will handle redirect
         console.log('Signup successful');
       }
     } catch (error: any) {

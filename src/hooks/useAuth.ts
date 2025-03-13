@@ -94,6 +94,30 @@ export const useAuth = () => {
     };
   }, [updateUserState]);
 
+  // Refresh session manually
+  const refreshSession = useCallback(async (): Promise<User | null> => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error refreshing session:', error);
+        return null;
+      }
+      
+      if (data.session?.user) {
+        return await updateUserState(data.session.user);
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Exception refreshing session:', error);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [updateUserState]);
+
   // Sign up function
   const signUp = useCallback(async (
     name: string,
@@ -244,6 +268,7 @@ export const useAuth = () => {
     signUp,
     logIn,
     logOut,
-    updateSetupStatus
+    updateSetupStatus,
+    refreshSession
   };
 };
