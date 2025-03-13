@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
 import { fetchUserConfig } from './useUserConfig';
 import { useSessionManager } from './useSessionManager';
+import { toast } from '@/hooks/use-toast';
 
 export const useAuthStateCore = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -16,6 +17,8 @@ export const useAuthStateCore = () => {
   const MAX_REFRESH_FREQUENCY = 5000; // 5 seconds between refresh attempts
   const authTimeout = useRef<NodeJS.Timeout | null>(null);
   const authStateChangeHandled = useRef(false);
+  const reconnectAttempts = useRef(0);
+  const MAX_RECONNECT_ATTEMPTS = 3;
 
   // Set a hard timeout for the initial auth load
   useEffect(() => {
@@ -25,7 +28,7 @@ export const useAuthStateCore = () => {
         if (isMounted.current && isLoading) {
           setIsLoading(false);
         }
-      }, 10000); // 10 second hard timeout - increased from 5s for network issues
+      }, 10000); // 10 second hard timeout
     }
     
     return () => {
@@ -35,11 +38,62 @@ export const useAuthStateCore = () => {
     };
   }, [isLoading]);
 
+  // Function to handle connection issues
+  const handleConnectionIssue = async () => {
+    if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+      reconnectAttempts.current++;
+      console.log(`Attempting reconnection (${reconnectAttempts.current}/${MAX_RECONNECT_ATTEMPTS})`);
+      
+      // Clear session and try again
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+        console.log("Session cleared, attempting to reconnect");
+        
+        // Wait a moment before checking session again
+        setTimeout(async () => {
+          try {
+            const { data } = await supabase.auth.getSession();
+            if (data.session) {
+              console.log("Reconnection successful, handling auth state");
+              await handleAuthChange('RECONNECTED', data.session);
+            } else {
+              console.log("No session after reconnection attempt");
+              if (isMounted.current) {
+                setIsLoading(false);
+              }
+            }
+          } catch (error) {
+            console.error("Error during reconnection attempt:", error);
+            if (isMounted.current) {
+              setIsLoading(false);
+            }
+          }
+        }, 1000);
+      } catch (error) {
+        console.error("Error clearing session during reconnection:", error);
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
+      }
+    } else {
+      console.log("Max reconnection attempts reached, giving up");
+      if (isMounted.current) {
+        setIsLoading(false);
+        toast({
+          title: "Connection issues detected",
+          description: "Please try logging in again or check your internet connection",
+          variant: "destructive"
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
     isMounted.current = true;
     setIsLoading(true);
     authStateChangeHandled.current = false;
+    reconnectAttempts.current = 0;
 
     // Function to handle auth state changes
     const handleAuthChange = async (event: string, session: any) => {
@@ -78,17 +132,22 @@ export const useAuthStateCore = () => {
       }
     };
 
-    // Set up auth state listener - directly using the code you provided
+    // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
     
     // Check current session immediately
     const checkSession = async () => {
       try {
-        // Only check the session if no auth state change has been handled yet
         if (!authStateChangeHandled.current) {
           console.log("Checking initial session as no auth state change detected yet");
-          const { data } = await supabase.auth.getSession();
+          const { data, error } = await supabase.auth.getSession();
           initialSessionChecked.current = true;
+          
+          if (error) {
+            console.error("Error getting initial session:", error);
+            handleConnectionIssue();
+            return;
+          }
           
           if (data.session) {
             console.log("Found existing session, handling auth state");
@@ -104,9 +163,7 @@ export const useAuthStateCore = () => {
         }
       } catch (error) {
         console.error("Error checking initial session:", error);
-        if (isMounted.current) {
-          setIsLoading(false);
-        }
+        handleConnectionIssue();
       }
     };
     

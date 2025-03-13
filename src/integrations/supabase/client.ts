@@ -16,6 +16,9 @@ export const supabase = createClient<Database>(
     auth: {
       autoRefreshToken: true,
       persistSession: true,
+      storageKey: 'tripscape-auth-token',
+      detectSessionInUrl: true,
+      flowType: 'implicit'
     },
   }
 );
