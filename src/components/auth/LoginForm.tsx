@@ -22,7 +22,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
   });
   const [localLoading, setLocalLoading] = useState(false);
   
-  // Reset local loading if parent loading state changes to false
+  // Reset local loading when parent loading state changes
   useEffect(() => {
     if (!isLoading && localLoading) {
       setLocalLoading(false);

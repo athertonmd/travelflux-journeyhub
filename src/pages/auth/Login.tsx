@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import LoginPageContent from '@/components/auth/LoginPageContent';
@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import { useState, useEffect } from 'react';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -22,8 +21,8 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-  // Show loading spinner while authentication is in progress
-  if (isLoading) {
+  // Show loading spinner only while authentication is being checked initially
+  if (isLoading && !isSubmitting) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <LoadingSpinner />
@@ -35,9 +34,12 @@ const Login = () => {
   const handleSubmit = async (email: string, password: string, remember: boolean) => {
     try {
       setIsSubmitting(true);
-      return await logIn(email, password);
-    } finally {
+      const result = await logIn(email, password);
       setIsSubmitting(false);
+      return result;
+    } catch (error) {
+      setIsSubmitting(false);
+      return false;
     }
   };
 
