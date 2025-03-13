@@ -7,6 +7,8 @@ import LoginPageContent from '@/components/auth/LoginPageContent';
 import LoginErrorState from '@/components/auth/LoginErrorState';
 import { useLoginPage } from '@/hooks/auth/useLoginPage';
 import { useSessionManager } from '@/hooks/auth/useSessionManager';
+import ErrorBoundary from '@/components/ErrorBoundary';
+import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const {
@@ -39,17 +41,38 @@ const Login = () => {
         localStorage.setItem('auth_previously_stuck', 'true');
       }
     };
-  }, [resetSessionState]);
+  }, [resetSessionState, authStuck]);
   
   // Handle page reload
   const handleReloadPage = () => {
+    localStorage.removeItem('auth_previously_stuck');
     window.location.reload();
   };
 
   // Handler for refresh session to adapt return type
   const handleRefreshSessionAdapter = async () => {
-    await handleRefreshSession();
+    try {
+      await handleRefreshSession();
+    } catch (error) {
+      console.error("Error in refresh session adapter:", error);
+      toast({
+        title: "Session refresh failed",
+        description: "Please try reloading the page instead.",
+        variant: "destructive",
+      });
+    }
   };
+
+  // Custom fallback for auth errors
+  const authErrorFallback = (
+    <LoginErrorState
+      isRefreshing={false}
+      refreshAttemptCount={connectionRetries}
+      authStuck={true}
+      onRefreshSession={handleRefreshSessionAdapter}
+      onReloadPage={handleReloadPage}
+    />
+  );
 
   // Show error state if auth is stuck
   if (authStuck) {
@@ -65,18 +88,30 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar />
-      <LoginPageContent 
-        isLoading={authLoading || isSubmitting}
-        onLogin={async (email, password, remember) => {
-          const result = await handleSubmit(email, password);
-          // Remember me functionality can be implemented here
-          return result;
-        }}
-      />
-      <Footer />
-    </div>
+    <ErrorBoundary fallback={authErrorFallback}>
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <LoginPageContent 
+          isLoading={authLoading || isSubmitting}
+          onLogin={async (email, password, remember) => {
+            try {
+              const result = await handleSubmit(email, password);
+              // Remember me functionality can be implemented here
+              return result;
+            } catch (error) {
+              console.error("Login error caught in component:", error);
+              toast({
+                title: "Login error",
+                description: "An unexpected error occurred. Please try again.",
+                variant: "destructive",
+              });
+              return false;
+            }
+          }}
+        />
+        <Footer />
+      </div>
+    </ErrorBoundary>
   );
 };
 

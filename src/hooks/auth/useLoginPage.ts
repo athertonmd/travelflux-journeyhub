@@ -7,7 +7,7 @@ import { useSessionManager } from './useSessionManager';
 
 export const useLoginPage = () => {
   const { user, isLoading: authLoading, logIn, refreshSession } = useAuth();
-  const { resetSessionState } = useSessionManager();
+  const { resetSessionState, checkCurrentSession } = useSessionManager();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -17,6 +17,22 @@ export const useLoginPage = () => {
   const [authStuck, setAuthStuck] = useState(false);
   const [refreshingSession, setRefreshingSession] = useState(false);
   const [connectionRetries, setConnectionRetries] = useState(0);
+  
+  // Check for existing session immediately
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      try {
+        const { session, error } = await checkCurrentSession();
+        if (error) {
+          console.log("Error checking initial session:", error.message);
+        }
+      } catch (error) {
+        console.error("Exception checking initial session:", error);
+      }
+    };
+    
+    checkExistingSession();
+  }, [checkCurrentSession]);
   
   // Redirect if user is already logged in
   useEffect(() => {
@@ -44,7 +60,9 @@ export const useLoginPage = () => {
   useEffect(() => {
     let timer: NodeJS.Timeout | null = null;
     
-    if (authLoading || isSubmitting) {
+    // Only start the timer if we're in a loading state and not already stuck
+    if ((authLoading || isSubmitting) && !authStuck && !refreshingSession) {
+      console.log("Starting auth stuck detection timer");
       timer = setTimeout(() => {
         if ((authLoading || isSubmitting) && !user && !refreshingSession) {
           console.log("Authentication appears to be stuck");
@@ -56,18 +74,24 @@ export const useLoginPage = () => {
           });
         }
       }, 5000); // 5 seconds
-    } else {
+    } else if (!authLoading && !isSubmitting) {
       // If we're not loading anymore, make sure we're not in "stuck" state
-      setAuthStuck(false);
+      if (authStuck) {
+        console.log("Resetting auth stuck state as loading has completed");
+        setAuthStuck(false);
+      }
     }
     
     return () => {
-      if (timer) clearTimeout(timer);
+      if (timer) {
+        console.log("Clearing auth stuck detection timer");
+        clearTimeout(timer);
+      }
     };
-  }, [authLoading, isSubmitting, user, refreshingSession, toast]);
+  }, [authLoading, isSubmitting, user, refreshingSession, authStuck, toast]);
 
   // Function to handle session refresh
-  const handleRefreshSession = useCallback(async () => {
+  const handleRefreshSession = useCallback(async (): Promise<boolean> => {
     try {
       console.log("Attempting to refresh session");
       setRefreshingSession(true);
@@ -88,6 +112,7 @@ export const useLoginPage = () => {
           description: "Your session has been refreshed successfully.",
           variant: "default",
         });
+        setAuthStuck(false);
         return true;
       } else {
         console.log("Session refresh completed but no user retrieved");
@@ -122,6 +147,11 @@ export const useLoginPage = () => {
       console.log("Login form submitted");
       setIsSubmitting(true);
       setLoginAttemptFailed(false);
+      
+      // Clear any previous stuck state
+      if (authStuck) {
+        setAuthStuck(false);
+      }
       
       const success = await logIn(email, password);
       
