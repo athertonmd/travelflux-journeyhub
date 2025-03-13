@@ -10,15 +10,19 @@ import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
 import DashboardContent from '@/components/dashboard/DashboardContent';
 import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
+import { useSessionReset } from '@/hooks/auth/useSessionReset';
 
 const Dashboard = () => {
   console.log('Dashboard component rendering');
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, isLoading: isAuthLoading, refreshSession } = useAuth();
   const navigate = useNavigate();
   const { creditInfo, isLoading: isCreditsLoading, error, purchaseCredits } = useCredits();
+  const { resetSessionState } = useSessionReset();
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [hasReportedError, setHasReportedError] = useState(false);
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
+  const [connectionRetries, setConnectionRetries] = useState(0);
+  const [isRecovering, setIsRecovering] = useState(false);
 
   console.log('Dashboard - Auth state:', { user, isAuthLoading });
   console.log('Dashboard - Credits state:', { creditInfo, isCreditsLoading, error });
@@ -55,19 +59,57 @@ const Dashboard = () => {
     return () => clearTimeout(timeout);
   }, [isAuthLoading]);
 
+  // Attempt to recover the session automatically
+  const handleRefreshConnection = async () => {
+    setIsRecovering(true);
+    setConnectionRetries(prev => prev + 1);
+    
+    try {
+      // First reset any stale session state
+      await resetSessionState();
+      
+      // Then attempt to refresh the session
+      const refreshedUser = await refreshSession();
+      
+      if (refreshedUser) {
+        console.log("Session recovery successful");
+        setLoadingTimeoutReached(false);
+      } else {
+        console.log("Session recovery failed, will redirect to login");
+        navigate('/login');
+      }
+    } catch (error) {
+      console.error("Error during session recovery:", error);
+    } finally {
+      setIsRecovering(false);
+    }
+  };
+
   // If auth is still loading after timeout, show a retry button
   if (isAuthLoading && loadingTimeoutReached) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <p className="mb-4 text-muted-foreground">Loading is taking longer than expected...</p>
         <Button 
-          onClick={() => window.location.reload()} 
+          onClick={handleRefreshConnection} 
           variant="default"
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 mb-4"
+          disabled={isRecovering}
         >
           <RefreshCw className="h-4 w-4" />
-          Refresh Page
+          {isRecovering ? "Recovering Session..." : "Refresh Connection"}
         </Button>
+        
+        {connectionRetries > 0 && (
+          <Button 
+            onClick={() => window.location.reload()} 
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Reload Page
+          </Button>
+        )}
       </div>
     );
   }

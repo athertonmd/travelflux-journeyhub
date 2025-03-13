@@ -1,7 +1,7 @@
 
 import { useAuth } from '@/contexts/AuthContext';
 import { useLoginForm } from './useLoginForm';
-import { useSessionRefresh } from './useSessionRefresh';
+import { useSessionRefreshUI } from './useSessionRefreshUI';
 import { useAuthStatus } from './useAuthStatus';
 import { useInitialSession } from './useInitialSession';
 
@@ -19,7 +19,7 @@ export const useLoginPage = () => {
     refreshingSession,
     connectionRetries,
     handleRefreshSession
-  } = useSessionRefresh();
+  } = useSessionRefreshUI();
   
   const {
     authStuck,

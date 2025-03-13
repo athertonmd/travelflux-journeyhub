@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { fetchUserConfig } from './useUserConfig';
 import { User } from '@/types/auth.types';
+import { toast } from '@/hooks/use-toast';
 
 /**
  * Hook to manage refreshing sessions
@@ -19,6 +20,18 @@ export const useSessionRefresh = () => {
       
       if (sessionError) {
         console.error("Session retrieval error:", sessionError);
+        
+        // Handle 400 Bad Request errors more gracefully
+        if (sessionError.status === 400) {
+          toast({
+            title: "Session expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive"
+          });
+          // Force sign out locally to clear any inconsistent state
+          await supabase.auth.signOut({ scope: 'local' });
+        }
+        
         return null;
       }
       
@@ -35,6 +48,20 @@ export const useSessionRefresh = () => {
         
         if (refreshError) {
           console.error("Session refresh error:", refreshError);
+          
+          // Handle 400 errors more specifically
+          if (refreshError.status === 400) {
+            toast({
+              title: "Unable to refresh session",
+              description: "Please log in again to continue.",
+              variant: "destructive"
+            });
+            
+            // Force sign out locally to clear any inconsistent state
+            await supabase.auth.signOut({ scope: 'local' });
+            return null;
+          }
+          
           // Even if refresh fails, try to fetch user config with existing session
           if (sessionData.session?.user) {
             return await fetchUserConfig(sessionData.session.user);
