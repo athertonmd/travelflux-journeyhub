@@ -46,6 +46,11 @@ const Login = () => {
     window.location.reload();
   };
 
+  // Handler for refresh session to adapt return type
+  const handleRefreshSessionAdapter = async () => {
+    await handleRefreshSession();
+  };
+
   // Show error state if auth is stuck
   if (authStuck) {
     return (
@@ -53,7 +58,7 @@ const Login = () => {
         isRefreshing={refreshingSession}
         refreshAttemptCount={connectionRetries}
         authStuck={authStuck}
-        onRefreshSession={handleRefreshSession}
+        onRefreshSession={handleRefreshSessionAdapter}
         onReloadPage={handleReloadPage}
       />
     );
