@@ -23,6 +23,7 @@ export const useAuthEventHandler = (setUser: React.Dispatch<React.SetStateAction
     }
     
     try {
+      console.log('Fetching user config for user:', session.user.id);
       const userWithConfig = await fetchUserConfig(session.user);
       
       if (userWithConfig) {
@@ -54,6 +55,7 @@ export const useAuthEventHandler = (setUser: React.Dispatch<React.SetStateAction
         
         if (error) {
           console.error("Error getting initial session:", error);
+          setIsLoading(false);
           return { success: false, error };
         }
         
@@ -68,6 +70,7 @@ export const useAuthEventHandler = (setUser: React.Dispatch<React.SetStateAction
         }
       } catch (error) {
         console.error("Error checking initial session:", error);
+        setIsLoading(false);
         return { success: false, error };
       }
     } else {

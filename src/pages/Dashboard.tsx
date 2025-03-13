@@ -11,12 +11,13 @@ import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
 import DashboardContent from '@/components/dashboard/DashboardContent';
 import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
 import { useSessionReset } from '@/hooks/auth/useSessionReset';
+import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
   console.log('Dashboard component rendering');
   const { user, isLoading: isAuthLoading, refreshSession } = useAuth();
   const navigate = useNavigate();
-  const { creditInfo, isLoading: isCreditsLoading, error, purchaseCredits } = useCredits();
+  const { creditInfo, isLoading: isCreditsLoading, error: creditError, fetchCreditInfo } = useCredits();
   const { resetSessionState } = useSessionReset();
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [hasReportedError, setHasReportedError] = useState(false);
@@ -25,15 +26,15 @@ const Dashboard = () => {
   const [isRecovering, setIsRecovering] = useState(false);
 
   console.log('Dashboard - Auth state:', { user, isAuthLoading });
-  console.log('Dashboard - Credits state:', { creditInfo, isCreditsLoading, error });
+  console.log('Dashboard - Credits state:', { creditInfo, isCreditsLoading, error: creditError });
 
   // Report any errors loading credits
   useEffect(() => {
-    if (error && !hasReportedError) {
-      console.error('Dashboard - Credit loading error:', error);
+    if (creditError && !hasReportedError) {
+      console.error('Dashboard - Credit loading error:', creditError);
       setHasReportedError(true);
     }
-  }, [error, hasReportedError]);
+  }, [creditError, hasReportedError]);
 
   // Handle redirects based on auth state
   useEffect(() => {
@@ -44,8 +45,17 @@ const Dashboard = () => {
     } else if (!isAuthLoading && user && !user.setupCompleted) {
       console.log('Setup not completed, redirecting to welcome');
       navigate('/welcome');
+    } else if (!isAuthLoading && user && user.setupCompleted) {
+      console.log('User is authenticated and setup is completed');
+      // If we have a user but no credit info, try to fetch credit info
+      if (!creditInfo && !isCreditsLoading && user) {
+        console.log('No credit info found, fetching credit info');
+        fetchCreditInfo().catch(err => {
+          console.error('Error fetching credit info:', err);
+        });
+      }
     }
-  }, [user, isAuthLoading, navigate]);
+  }, [user, isAuthLoading, navigate, creditInfo, isCreditsLoading, fetchCreditInfo]);
 
   // Force timeout to prevent infinite loading
   useEffect(() => {
@@ -54,7 +64,7 @@ const Dashboard = () => {
         console.log('Auth loading timeout reached, setting timeout state');
         setLoadingTimeoutReached(true);
       }
-    }, 8000); // 8 seconds timeout
+    }, 6000); // Reduced from 8000ms to 6000ms
     
     return () => clearTimeout(timeout);
   }, [isAuthLoading]);
@@ -74,12 +84,26 @@ const Dashboard = () => {
       if (refreshedUser) {
         console.log("Session recovery successful");
         setLoadingTimeoutReached(false);
+        toast({
+          title: "Connection restored",
+          description: "Your session has been refreshed successfully.",
+        });
       } else {
         console.log("Session recovery failed, will redirect to login");
+        toast({
+          title: "Connection failed",
+          description: "Please try logging in again.",
+          variant: "destructive",
+        });
         navigate('/login');
       }
     } catch (error) {
       console.error("Error during session recovery:", error);
+      toast({
+        title: "Connection error",
+        description: "An error occurred while trying to restore your session.",
+        variant: "destructive",
+      });
     } finally {
       setIsRecovering(false);
     }
@@ -96,7 +120,7 @@ const Dashboard = () => {
           className="flex items-center gap-2 mb-4"
           disabled={isRecovering}
         >
-          <RefreshCw className="h-4 w-4" />
+          <RefreshCw className={`h-4 w-4 ${isRecovering ? 'animate-spin' : ''}`} />
           {isRecovering ? "Recovering Session..." : "Refresh Connection"}
         </Button>
         
@@ -104,7 +128,7 @@ const Dashboard = () => {
           <Button 
             onClick={() => window.location.reload()} 
             variant="outline"
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 mt-2"
           >
             <RefreshCw className="h-4 w-4" />
             Reload Page
@@ -156,7 +180,15 @@ const Dashboard = () => {
           <PurchaseCreditsModal
             isOpen={isPurchaseModalOpen}
             onClose={() => setIsPurchaseModalOpen(false)}
-            onPurchase={purchaseCredits}
+            onPurchase={async (amount) => {
+              try {
+                await useCredits().purchaseCredits(amount);
+                return true;
+              } catch (error) {
+                console.error("Error purchasing credits:", error);
+                return false;
+              }
+            }}
             creditInfo={creditInfo}
             isLoading={isCreditsLoading}
           />

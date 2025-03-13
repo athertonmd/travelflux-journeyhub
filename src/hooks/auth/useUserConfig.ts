@@ -6,7 +6,10 @@ import { User } from '@/types/auth.types';
  * Utility to fetch user configuration from the database
  */
 export const fetchUserConfig = async (authUser: any): Promise<User | null> => {
-  if (!authUser || !authUser.id) return null;
+  if (!authUser || !authUser.id) {
+    console.error("fetchUserConfig: Invalid auth user provided", authUser);
+    return null;
+  }
   
   try {
     console.log("Fetching config for user:", authUser.id);
@@ -16,7 +19,7 @@ export const fetchUserConfig = async (authUser: any): Promise<User | null> => {
       setTimeout(() => {
         console.warn(`Config fetch timed out for user: ${authUser.id}`);
         resolve(null);
-      }, 3000);
+      }, 5000); // Reduced from 3000ms to 5000ms to give more time
     });
     
     // Create the config fetch promise
@@ -30,7 +33,14 @@ export const fetchUserConfig = async (authUser: any): Promise<User | null> => {
         
         if (configError) {
           console.error('Error fetching user config:', configError);
-          resolve(null);
+          // Resolve with basic user info even if config fetch fails
+          resolve({
+            id: authUser.id,
+            email: authUser.email || '',
+            name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
+            agencyName: authUser.user_metadata?.agencyName,
+            setupCompleted: false // Default to false if can't fetch
+          });
           return;
         }
         
@@ -44,17 +54,43 @@ export const fetchUserConfig = async (authUser: any): Promise<User | null> => {
           setupCompleted: configData?.setup_completed ?? false
         };
         
+        console.log("Resolved user config:", user);
         resolve(user);
       } catch (error) {
         console.error('Error in config fetch promise:', error);
-        resolve(null);
+        // Resolve with basic user info even if config fetch fails
+        resolve({
+          id: authUser.id,
+          email: authUser.email || '',
+          name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
+          agencyName: authUser.user_metadata?.agencyName,
+          setupCompleted: false // Default to false if can't fetch
+        });
       }
     });
     
     // Race the promises
-    return await Promise.race([fetchConfigPromise, timeoutPromise]);
+    const user = await Promise.race([fetchConfigPromise, timeoutPromise]);
+    if (!user) {
+      console.warn("Config fetch timed out, falling back to basic user info");
+      return {
+        id: authUser.id,
+        email: authUser.email || '',
+        name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
+        agencyName: authUser.user_metadata?.agencyName,
+        setupCompleted: false // Default to false if timed out
+      };
+    }
+    return user;
   } catch (error) {
     console.error('Error processing user config:', error);
-    return null;
+    // Return basic user info even if there's an error
+    return {
+      id: authUser.id,
+      email: authUser.email || '',
+      name: authUser.user_metadata?.name || authUser.email?.split('@')[0] || '',
+      agencyName: authUser.user_metadata?.agencyName,
+      setupCompleted: false // Default to false if error
+    };
   }
 };

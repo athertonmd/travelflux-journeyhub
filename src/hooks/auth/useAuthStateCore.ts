@@ -5,6 +5,7 @@ import { useSessionManager } from './useSessionManager';
 import { useAuthConnectionManager } from './useAuthConnectionManager';
 import { useAuthTimeoutManager } from './useAuthTimeoutManager';
 import { useAuthEventHandler } from './useAuthEventHandler';
+import { supabase } from '@/integrations/supabase/client';
 
 export const useAuthStateCore = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -24,11 +25,27 @@ export const useAuthStateCore = () => {
       return setupAuthTimeout(() => {
         console.log("Hard timeout for auth loading reached, forcing state to not loading");
         if (isMounted.current && isLoading) {
-          setIsLoading(false);
+          // Check one more time before giving up
+          supabase.auth.getSession().then(({ data, error }) => {
+            if (error) {
+              console.error("Final session check error:", error);
+              setIsLoading(false);
+            } else if (data.session) {
+              console.log("Found session in final check, user will be set by auth listener");
+              // Don't set isLoading=false here, let the auth listener handle it
+            } else {
+              console.log("No session in final check, setting isLoading=false");
+              setIsLoading(false);
+            }
+          }).catch(err => {
+            console.error("Error in final session check:", err);
+            setIsLoading(false);
+          });
         }
-      });
+      }, 7000); // Reduced from 10000ms to 7000ms
     }
-  }, [isLoading, setupAuthTimeout]);
+    return () => clearAuthTimeout();
+  }, [isLoading, setupAuthTimeout, clearAuthTimeout]);
 
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
@@ -47,8 +64,13 @@ export const useAuthStateCore = () => {
         if (!result.success) {
           // Handle connection issues
           handleConnectionIssue(async (session) => {
-            const { handleAuthChange } = useAuthEventHandler(setUser, setIsLoading);
-            await handleAuthChange('RECONNECTED', session);
+            if (session) {
+              const { handleAuthChange } = useAuthEventHandler(setUser, setIsLoading);
+              await handleAuthChange('RECONNECTED', session);
+            } else {
+              console.log("No session after reconnection attempt");
+              setIsLoading(false);
+            }
           });
         }
       });
