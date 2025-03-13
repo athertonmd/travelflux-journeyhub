@@ -7,7 +7,7 @@ import { useSignUpForm } from './useSignUpForm';
 
 interface SignUpFormProps {
   isLoading: boolean;
-  onSignUp: (name: string, email: string, password: string, agencyName: string) => Promise<void>;
+  onSignUp: (name: string, email: string, password: string, agencyName?: string) => Promise<void>;
 }
 
 const SignUpForm = ({ isLoading, onSignUp }: SignUpFormProps) => {
@@ -20,12 +20,13 @@ const SignUpForm = ({ isLoading, onSignUp }: SignUpFormProps) => {
           formData={formData}
           errors={errors}
           handleChange={handleChange}
+          isDisabled={isLoading}
         />
         
         <SubmitButton 
           isLoading={isLoading}
-          text="Sign Up"
-          loadingText="Creating Account..."
+          text="Create account"
+          loadingText="Creating account..."
         />
       </form>
     </CardContent>

@@ -18,7 +18,7 @@ interface FormErrors {
 }
 
 export const useSignUpForm = (
-  onSignUp: (name: string, email: string, password: string, agencyName: string) => Promise<void>
+  onSignUp: (name: string, email: string, password: string, agencyName?: string) => Promise<void>
 ) => {
   const [formData, setFormData] = useState<FormData>({
     name: '',
@@ -90,11 +90,14 @@ export const useSignUpForm = (
         agencyName: formData.agencyName
       });
       
+      // Only pass agencyName if it's not empty
+      const agencyNameParam = formData.agencyName.trim() || undefined;
+      
       await onSignUp(
         formData.name,
         formData.email,
         formData.password,
-        formData.agencyName
+        agencyNameParam
       );
     } catch (error: any) {
       console.error('Form submission error:', error);

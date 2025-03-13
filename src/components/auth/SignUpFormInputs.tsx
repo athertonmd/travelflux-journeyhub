@@ -22,9 +22,10 @@ interface SignUpFormInputsProps {
   formData: FormData;
   errors: FormErrors;
   handleChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  isDisabled?: boolean;
 }
 
-const SignUpFormInputs = ({ formData, errors, handleChange }: SignUpFormInputsProps) => {
+const SignUpFormInputs = ({ formData, errors, handleChange, isDisabled }: SignUpFormInputsProps) => {
   return (
     <>
       <div className="space-y-2">
@@ -37,6 +38,7 @@ const SignUpFormInputs = ({ formData, errors, handleChange }: SignUpFormInputsPr
           value={formData.name}
           onChange={handleChange}
           required
+          disabled={isDisabled}
           className={`transition-all duration-200 focus:ring-2 focus:ring-primary/30 ${
             errors.name ? 'border-red-500' : ''
           }`}
@@ -55,6 +57,7 @@ const SignUpFormInputs = ({ formData, errors, handleChange }: SignUpFormInputsPr
           placeholder="Your Travel Agency"
           value={formData.agencyName}
           onChange={handleChange}
+          disabled={isDisabled}
           className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
         />
       </div>
@@ -69,6 +72,7 @@ const SignUpFormInputs = ({ formData, errors, handleChange }: SignUpFormInputsPr
           value={formData.email}
           onChange={handleChange}
           required
+          disabled={isDisabled}
           className={`transition-all duration-200 focus:ring-2 focus:ring-primary/30 ${
             errors.email ? 'border-red-500' : ''
           }`}
@@ -88,6 +92,7 @@ const SignUpFormInputs = ({ formData, errors, handleChange }: SignUpFormInputsPr
           value={formData.password}
           onChange={handleChange}
           required
+          disabled={isDisabled}
           className={`transition-all duration-200 focus:ring-2 focus:ring-primary/30 ${
             errors.password ? 'border-red-500' : ''
           }`}
@@ -107,6 +112,7 @@ const SignUpFormInputs = ({ formData, errors, handleChange }: SignUpFormInputsPr
           value={formData.confirmPassword}
           onChange={handleChange}
           required
+          disabled={isDisabled}
           className={`transition-all duration-200 focus:ring-2 focus:ring-primary/30 ${
             errors.confirmPassword ? 'border-red-500' : ''
           }`}
