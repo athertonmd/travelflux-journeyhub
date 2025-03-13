@@ -7,6 +7,9 @@ import StepController from '@/components/onboarding/StepController';
 import FooterButtons from '@/components/onboarding/FooterButtons';
 import { useOnboarding } from '@/hooks/useOnboarding';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 const steps: Step[] = [
   { id: 'welcome', title: 'Welcome' },
@@ -21,11 +24,15 @@ const steps: Step[] = [
 const Welcome = () => {
   const navigate = useNavigate();
   const [initialAuthCheck, setInitialAuthCheck] = useState(false);
+  const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
+  const { refreshSession } = useAuth();
+  
   const {
     user,
     currentStep,
     formData,
     isLoading,
+    authCheckComplete,
     updateFormData,
     handleNext,
     handleBack,
@@ -36,13 +43,14 @@ const Welcome = () => {
     user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
     isLoading, 
     initialAuthCheck,
+    authCheckComplete,
     currentStep 
   });
 
   // If no user and not loading, redirect to login
   useEffect(() => {
     // Only redirect after initial auth check is complete
-    if (!isLoading) {
+    if (authCheckComplete && !initialAuthCheck) {
       setInitialAuthCheck(true);
       
       if (!user) {
@@ -51,18 +59,62 @@ const Welcome = () => {
       } else if (user.setupCompleted) {
         console.log('Welcome: User setup already completed, redirecting to dashboard');
         navigate('/dashboard');
+      } else {
+        console.log('Welcome: User found and setup not completed, staying on welcome page');
       }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, authCheckComplete, navigate, initialAuthCheck]);
 
-  // If loading or no user, show loading spinner
-  if (isLoading || !initialAuthCheck) {
-    return <LoadingSpinner />;
+  // Force timeout to prevent infinite loading
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (isLoading) {
+        console.log('Loading timeout reached, setting timeout state');
+        setLoadingTimeoutReached(true);
+      }
+    }, 8000); // 8 seconds timeout
+    
+    return () => clearTimeout(timeout);
+  }, [isLoading]);
+
+  // If loading after timeout, show a retry button
+  if (isLoading && loadingTimeoutReached) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <p className="mb-4 text-muted-foreground">Loading is taking longer than expected...</p>
+        <Button 
+          onClick={async () => {
+            setLoadingTimeoutReached(false);
+            await refreshSession();
+            window.location.reload();
+          }} 
+          variant="default"
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Refresh Session
+        </Button>
+      </div>
+    );
+  }
+
+  // If loading and not timed out, show loading spinner
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <LoadingSpinner />
+        <p className="mt-4 text-muted-foreground">Loading your setup wizard...</p>
+      </div>
+    );
   }
 
   // If auth check is complete and no user, redirect will happen via the useEffect
-  if (!user) {
-    return <LoadingSpinner />;
+  if (!user && initialAuthCheck) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Redirecting to login...</p>
+      </div>
+    );
   }
 
   const onComplete = async () => {

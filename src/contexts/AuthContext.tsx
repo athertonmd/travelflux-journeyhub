@@ -56,7 +56,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // If login appears to succeed but we don't get a user, try refreshing session
       if (!user) {
         console.log('Login succeeded but no user returned, trying to refresh session');
-        await refreshSession();
+        const refreshedUser = await refreshSession();
+        return !!refreshedUser;
       }
       
       return !!user;
@@ -70,6 +71,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<boolean> => {
     try {
       const user = await signupFn(name, email, password, agencyName);
+      if (!user) {
+        console.log('Signup succeeded but no user returned, trying to refresh session');
+        const refreshedUser = await refreshSession();
+        return !!refreshedUser;
+      }
       return !!user;
     } catch (error) {
       console.error('Signup error in context:', error);
@@ -80,6 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Logout function
   const logout = async (): Promise<void> => {
     try {
+      setIsLoading(true);
       await supabase.auth.signOut();
       setUser(null);
       toast({
@@ -93,6 +100,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "An error occurred during logout.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
