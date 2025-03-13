@@ -17,7 +17,7 @@ const Dashboard = () => {
   console.log('Dashboard component rendering');
   const { user, isLoading: isAuthLoading, refreshSession } = useAuth();
   const navigate = useNavigate();
-  const { creditInfo, isLoading: isCreditsLoading, error: creditError, fetchCreditInfo } = useCredits();
+  const { creditInfo, isLoading: isCreditsLoading, error: creditError, fetchCreditInfo, purchaseCredits } = useCredits();
   const { resetSessionState } = useSessionReset();
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [hasReportedError, setHasReportedError] = useState(false);
@@ -182,11 +182,10 @@ const Dashboard = () => {
             onClose={() => setIsPurchaseModalOpen(false)}
             onPurchase={async (amount) => {
               try {
-                await useCredits().purchaseCredits(amount);
-                return true;
+                await purchaseCredits(amount);
+                return; // Return void instead of boolean
               } catch (error) {
                 console.error("Error purchasing credits:", error);
-                return false;
               }
             }}
             creditInfo={creditInfo}

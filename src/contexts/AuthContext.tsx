@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext } from 'react';
 import { User } from '@/types/auth.types';
-import { useAuth as useAuthImplementation } from '@/hooks/auth/useAuth';
+import { useAuth as useAuthImplementation } from '@/hooks/useAuth';
 
 interface AuthContextType {
   user: User | null;
@@ -43,15 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
       // Log the unhandled promise rejection
       console.error('Unhandled promise rejection:', event.reason);
-      
-      // Check if it's an auth-related error
-      if (
-        event.reason?.message?.includes('auth') || 
-        event.reason?.message?.includes('session') ||
-        event.reason?.message?.includes('channel closed')
-      ) {
-        console.warn('Auth-related unhandled rejection detected, this might cause UI issues');
-      }
     };
     
     // Add the event listener

@@ -1,51 +1,58 @@
 
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useLoginForm } from './useLoginForm';
-import { useSessionRefreshUI } from './useSessionRefreshUI';
-import { useAuthStatus } from './useAuthStatus';
-import { useInitialSession } from './useInitialSession';
-import { useSessionReset } from './useSessionReset';
-import { useEffect } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export const useLoginPage = () => {
-  const { user, isLoading: authLoading, refreshSession } = useAuth();
+  const { user, isLoading: authLoading, logIn } = useAuth();
+  const navigate = useNavigate();
   
-  const {
-    isSubmitting,
-    loginAttemptFailed,
-    handleSubmit,
-    setIsSubmitting
-  } = useLoginForm();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
   
-  const {
-    refreshingSession,
-    connectionRetries,
-    handleRefreshSession,
-    setRefreshingSession
-  } = useSessionRefreshUI();
-  
-  const { resetSessionState } = useSessionReset();
-  
-  const {
-    authStuck,
-    redirecting,
-    setAuthStuck,
-    setRedirecting
-  } = useAuthStatus(authLoading, isSubmitting, user, refreshingSession);
-  
-  // Initialize session and handle redirects
-  useInitialSession(user, setRedirecting, setIsSubmitting);
-  
-  // Reset session state if there was a previous stuck state
+  // Handle redirect if user is already logged in
   useEffect(() => {
-    if (localStorage.getItem('auth_previously_stuck') === 'true') {
-      console.log("Detected previous stuck state, resetting session");
-      resetSessionState().then(() => {
-        localStorage.removeItem('auth_previously_stuck');
-        setRefreshingSession(false);
-      });
+    if (user && !redirecting) {
+      setRedirecting(true);
+      const destination = user.setupCompleted ? '/dashboard' : '/welcome';
+      navigate(destination);
     }
-  }, [resetSessionState, setRefreshingSession]);
+  }, [user, navigate, redirecting]);
+
+  // Handle login form submission
+  const handleSubmit = async (email: string, password: string): Promise<boolean> => {
+    if (isSubmitting) return false;
+    
+    try {
+      setIsSubmitting(true);
+      setLoginAttemptFailed(false);
+      
+      const success = await logIn(email, password);
+      
+      if (!success) {
+        setLoginAttemptFailed(true);
+        toast({
+          title: "Login failed",
+          description: "Please check your credentials and try again.",
+          variant: "destructive"
+        });
+      }
+      
+      return success;
+    } catch (error: any) {
+      setLoginAttemptFailed(true);
+      toast({
+        title: "Login error",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return {
     user,
@@ -53,12 +60,6 @@ export const useLoginPage = () => {
     isSubmitting,
     redirecting,
     loginAttemptFailed,
-    authStuck,
-    refreshingSession,
-    connectionRetries,
-    handleSubmit,
-    handleRefreshSession,
-    setAuthStuck,
-    refreshSession
+    handleSubmit
   };
 };
