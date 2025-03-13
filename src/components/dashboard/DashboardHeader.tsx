@@ -12,10 +12,10 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logOut } = useAuth();
   
   const handleLogout = async () => {
-    await logout();
+    await logOut();
     navigate('/');
   };
   

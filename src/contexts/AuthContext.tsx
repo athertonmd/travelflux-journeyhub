@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext } from 'react';
 import { User } from '@/types/auth.types';
-import { useAuth } from '@/hooks/auth/useAuth';
+import { useAuth as useAuthImplementation } from '@/hooks/auth/useAuth';
 
 interface AuthContextType {
   user: User | null;
@@ -10,6 +10,7 @@ interface AuthContextType {
   logIn: (email: string, password: string) => Promise<boolean>;
   logOut: () => Promise<void>;
   updateSetupStatus: (completed: boolean) => Promise<boolean>;
+  refreshSession: () => Promise<User | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,9 +19,11 @@ const AuthContext = createContext<AuthContextType>({
   signUp: async () => false,
   logIn: async () => false,
   logOut: async () => {},
-  updateSetupStatus: async () => false
+  updateSetupStatus: async () => false,
+  refreshSession: async () => null
 });
 
+// This hook provides access to the auth context
 export const useAuthContext = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -29,8 +32,11 @@ export const useAuthContext = () => {
   return context;
 };
 
+// Export useAuth as an alias of useAuthContext for backward compatibility
+export const useAuth = useAuthContext;
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const auth = useAuth();
+  const auth = useAuthImplementation();
   
   return (
     <AuthContext.Provider value={auth}>
