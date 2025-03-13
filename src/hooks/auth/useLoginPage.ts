@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
@@ -31,7 +32,7 @@ export const useLoginPage = () => {
           toast({
             title: "Authentication taking too long",
             description: "Having trouble authenticating? Try refreshing your session.",
-            variant: "warning",
+            variant: "default", // Changed from "warning" to "default"
           });
         }
       }, 5000); // 5 seconds
@@ -101,6 +102,7 @@ export const useLoginPage = () => {
     loginAttemptFailed,
     authStuck,
     refreshingSession,
-    handleSubmit
+    handleSubmit,
+    handleRefreshSession
   };
 };
