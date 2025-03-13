@@ -64,7 +64,7 @@ export const useSessionManager = () => {
   };
 
   /**
-   * Check the current session
+   * Check the current session with a timeout
    */
   const checkCurrentSession = async (): Promise<{ 
     session: any | null, 
@@ -72,7 +72,23 @@ export const useSessionManager = () => {
   }> => {
     try {
       console.log("Checking current session");
-      const { data, error } = await supabase.auth.getSession();
+      
+      // Create a promise that rejects after a timeout
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Session check timed out')), 3000);
+      });
+      
+      // Create the session check promise
+      const sessionCheckPromise = supabase.auth.getSession();
+      
+      // Race the promises
+      const { data, error } = await Promise.race([
+        sessionCheckPromise,
+        timeoutPromise.then(() => {
+          console.warn('Session check timed out, returning null session');
+          return { data: { session: null }, error: new Error('Timed out') };
+        })
+      ]);
       
       if (error) {
         console.error('Session retrieval error:', error);

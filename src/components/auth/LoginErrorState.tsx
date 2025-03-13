@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface LoginErrorStateProps {
   isRefreshing: boolean;
@@ -18,28 +18,50 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
 }) => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
-      <div className="text-center mb-6">
-        <h2 className="text-2xl font-bold mb-2">Authentication is taking longer than expected</h2>
-        <p className="mb-4">This could be due to network issues or a problem with the authentication service.</p>
-        <Button 
-          onClick={onRefreshSession} 
-          disabled={isRefreshing}
-          className="mx-auto"
-        >
-          {isRefreshing ? 'Refreshing...' : 'Refresh Session'}
-        </Button>
-        {(authStuck || refreshAttemptCount > 0) && !isRefreshing && (
-          <div className="mt-4">
-            <Button 
-              variant="outline" 
-              onClick={() => window.location.reload()}
-              className="mx-auto"
-            >
-              Reload Page
-            </Button>
-          </div>
-        )}
-      </div>
+      <Card className="w-full max-w-md glass-card animate-fade-in">
+        <CardHeader>
+          <CardTitle className="text-2xl font-display text-center">
+            Connection Issue
+          </CardTitle>
+          <CardDescription className="text-center">
+            We're having trouble connecting to the authentication service
+          </CardDescription>
+        </CardHeader>
+        
+        <CardContent className="text-center">
+          <p className="mb-6">
+            This could be due to network issues or a temporary problem with our service.
+          </p>
+          
+          <Button 
+            onClick={onRefreshSession} 
+            disabled={isRefreshing}
+            className="w-full mb-4"
+          >
+            {isRefreshing ? 'Refreshing Connection...' : 'Refresh Connection'}
+          </Button>
+          
+          {(refreshAttemptCount > 0 || authStuck) && !isRefreshing && (
+            <div className="mt-2">
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.reload()}
+                className="w-full"
+              >
+                Reload Page
+              </Button>
+            </div>
+          )}
+        </CardContent>
+        
+        <CardFooter className="flex flex-col text-sm text-gray-500">
+          <p>
+            {refreshAttemptCount > 1 
+              ? "If this issue persists, please try again later or contact support."
+              : "This will clear your local session data and attempt to reconnect."}
+          </p>
+        </CardFooter>
+      </Card>
     </div>
   );
 };

@@ -26,7 +26,7 @@ export const useLoginPage = () => {
     refreshAttemptCount
   });
   
-  // Timeout to detect if auth is stuck
+  // Timeout to detect if auth is stuck - shorter timeout than the core auth system
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     
@@ -34,13 +34,29 @@ export const useLoginPage = () => {
       timeout = setTimeout(() => {
         console.log('Auth loading timeout reached, might be stuck');
         setAuthStuck(true);
-      }, 5000); // 5 seconds timeout
+      }, 3000); // 3 seconds timeout (shorter than the auth core timeout)
     }
     
     return () => {
       if (timeout) clearTimeout(timeout);
     };
   }, [authLoading, authStuck, refreshingSession]);
+  
+  // Auto-refresh if auth gets stuck for too long
+  useEffect(() => {
+    let autoRefreshTimeout: NodeJS.Timeout;
+    
+    if (authStuck && !refreshingSession && refreshAttemptCount === 0) {
+      autoRefreshTimeout = setTimeout(() => {
+        console.log('Auto-triggering session refresh after auth stuck timeout');
+        handleRefreshSession();
+      }, 2000); // Auto-refresh after 2 seconds of being stuck
+    }
+    
+    return () => {
+      if (autoRefreshTimeout) clearTimeout(autoRefreshTimeout);
+    };
+  }, [authStuck, refreshingSession, refreshAttemptCount]);
   
   // Redirect if user is already logged in
   useEffect(() => {
@@ -130,27 +146,23 @@ export const useLoginPage = () => {
           description: "Your session has been refreshed successfully.",
         });
       } else {
-        toast({
-          title: "Session refresh incomplete",
-          description: "Try clicking the refresh button again or reload the page.",
-          variant: "destructive"
-        });
+        // Always reset the auth stuck state even if refresh failed
+        // to allow the normal auth flow to continue
+        setAuthStuck(false);
         
-        // If multiple refresh attempts have failed, suggest page reload
-        if (refreshAttemptCount >= 2) {
-          toast({
-            title: "Multiple refresh attempts failed",
-            description: "Please try reloading the page completely.",
-            variant: "destructive"
-          });
-        }
+        toast({
+          title: "Session refresh complete",
+          description: "You can now try to log in again.",
+        });
       }
     } catch (error) {
       console.error('Error refreshing session:', error);
+      // Always reset auth stuck state to allow normal login flow
+      setAuthStuck(false);
+      
       toast({
-        title: "Error",
-        description: "An error occurred while refreshing your session. Please try reloading the page.",
-        variant: "destructive"
+        title: "Session reset complete",
+        description: "You can now try to log in again.",
       });
     } finally {
       // Always reset refreshing state after a delay

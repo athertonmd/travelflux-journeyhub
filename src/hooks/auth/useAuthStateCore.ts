@@ -14,6 +14,25 @@ export const useAuthStateCore = () => {
   const lastRefreshAttempt = useRef<number>(0);
   const refreshInProgress = useRef<boolean>(false);
   const MAX_REFRESH_FREQUENCY = 5000; // 5 seconds between refresh attempts
+  const authTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Set a hard timeout for the initial auth load
+  useEffect(() => {
+    if (isLoading) {
+      authTimeout.current = setTimeout(() => {
+        console.log("Hard timeout for auth loading reached, forcing state to not loading");
+        if (isMounted.current && isLoading) {
+          setIsLoading(false);
+        }
+      }, 5000); // 5 second hard timeout
+    }
+    
+    return () => {
+      if (authTimeout.current) {
+        clearTimeout(authTimeout.current);
+      }
+    };
+  }, [isLoading]);
 
   useEffect(() => {
     console.log("useAuthState: Initializing auth state");
@@ -64,17 +83,17 @@ export const useAuthStateCore = () => {
     // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
     
-    // Check current session immediately
+    // Check current session immediately with a timeout
     const checkSession = async () => {
       try {
-        const { session } = await checkCurrentSession();
+        const { session, error } = await checkCurrentSession();
         initialSessionChecked.current = true;
         
         if (session) {
           console.log("Found existing session, handling auth state");
           await handleAuthChange('INITIAL', session);
         } else {
-          console.log('No active session found');
+          console.log('No active session found or error:', error?.message);
           if (isMounted.current) {
             setIsLoading(false);
           }
