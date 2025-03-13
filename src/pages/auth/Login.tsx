@@ -17,20 +17,22 @@ const Login = () => {
   const [redirecting, setRedirecting] = useState(false);
   const [loginAttemptFailed, setLoginAttemptFailed] = useState(false);
   const [authStuck, setAuthStuck] = useState(false);
+  const [refreshingSession, setRefreshingSession] = useState(false);
   
   console.log('Login page rendering with auth state:', { 
     user: user ? { id: user.id, setupCompleted: user.setupCompleted } : null, 
     authLoading, 
     isSubmitting,
     redirecting,
-    loginAttemptFailed
+    loginAttemptFailed,
+    refreshingSession
   });
   
   // Timeout to detect if auth is stuck
   useEffect(() => {
     let timeout: NodeJS.Timeout;
     
-    if (authLoading && !authStuck) {
+    if (authLoading && !authStuck && !refreshingSession) {
       timeout = setTimeout(() => {
         console.log('Auth loading timeout reached, might be stuck');
         setAuthStuck(true);
@@ -40,7 +42,7 @@ const Login = () => {
     return () => {
       if (timeout) clearTimeout(timeout);
     };
-  }, [authLoading, authStuck]);
+  }, [authLoading, authStuck, refreshingSession]);
   
   // Redirect if user is already logged in
   useEffect(() => {
@@ -91,13 +93,22 @@ const Login = () => {
   };
   
   const handleRefreshSession = async () => {
+    if (refreshingSession) {
+      console.log('Already refreshing session, skipping');
+      return;
+    }
+    
+    setRefreshingSession(true);
+    
     toast({
       title: "Refreshing session",
       description: "Please wait while we refresh your session...",
     });
     
     try {
+      console.log('Manually triggering session refresh');
       const user = await refreshSession();
+      
       if (user) {
         toast({
           title: "Session refreshed",
@@ -107,7 +118,7 @@ const Login = () => {
       } else {
         toast({
           title: "Session refresh failed",
-          description: "Unable to refresh your session. Please try again.",
+          description: "Unable to refresh your session. Please try again or reload the page.",
           variant: "destructive"
         });
       }
@@ -118,6 +129,18 @@ const Login = () => {
         description: "An error occurred while refreshing your session.",
         variant: "destructive"
       });
+    } finally {
+      setTimeout(() => {
+        setRefreshingSession(false);
+        
+        // If still stuck after refresh attempt, reload the page
+        if (authLoading) {
+          toast({
+            title: "Still having issues",
+            description: "Try reloading the page if problems persist.",
+          });
+        }
+      }, 1000);
     }
   };
   
@@ -127,14 +150,18 @@ const Login = () => {
   }
   
   // If auth is taking too long, show a reset button
-  if (authLoading && authStuck) {
+  if ((authLoading && authStuck) || refreshingSession) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <div className="text-center mb-6">
           <h2 className="text-2xl font-bold mb-2">Authentication is taking longer than expected</h2>
           <p className="mb-4">This could be due to network issues or a problem with the authentication service.</p>
-          <Button onClick={handleRefreshSession} className="mx-auto">
-            Refresh Session
+          <Button 
+            onClick={handleRefreshSession} 
+            disabled={refreshingSession}
+            className="mx-auto"
+          >
+            {refreshingSession ? 'Refreshing...' : 'Refresh Session'}
           </Button>
         </div>
       </div>

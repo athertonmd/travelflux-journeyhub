@@ -13,16 +13,41 @@ export const useSessionManager = () => {
   const refreshSession = async (): Promise<User | null> => {
     try {
       console.log("Manually refreshing session");
-      const { data, error } = await supabase.auth.getSession();
       
-      if (error || !data.session) {
+      // First try to get the session
+      const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error("Session retrieval error:", sessionError);
+        return null;
+      }
+      
+      if (!sessionData.session) {
         console.log("No active session found during refresh");
         return null;
       }
       
-      return await fetchUserConfig(data.session.user);
+      // If we have a session, try to refresh it
+      const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError) {
+        console.error("Session refresh error:", refreshError);
+        // Even if refresh fails, try to fetch user config with existing session
+        if (sessionData.session?.user) {
+          return await fetchUserConfig(sessionData.session.user);
+        }
+        return null;
+      }
+      
+      if (!refreshData.session) {
+        console.log("No session after refresh attempt");
+        return null;
+      }
+      
+      console.log("Session refreshed successfully");
+      return await fetchUserConfig(refreshData.session.user);
     } catch (error) {
-      console.error("Error refreshing session:", error);
+      console.error("Error in refreshSession:", error);
       return null;
     }
   };

@@ -63,14 +63,21 @@ export const useAuthStateCore = () => {
     
     // Check current session immediately
     const checkSession = async () => {
-      const { session } = await checkCurrentSession();
-      initialSessionChecked.current = true;
-      
-      if (session) {
-        console.log("Found existing session, handling auth state");
-        await handleAuthChange('INITIAL', session);
-      } else {
-        console.log('No active session found');
+      try {
+        const { session } = await checkCurrentSession();
+        initialSessionChecked.current = true;
+        
+        if (session) {
+          console.log("Found existing session, handling auth state");
+          await handleAuthChange('INITIAL', session);
+        } else {
+          console.log('No active session found');
+          if (isMounted.current) {
+            setIsLoading(false);
+          }
+        }
+      } catch (error) {
+        console.error("Error checking initial session:", error);
         if (isMounted.current) {
           setIsLoading(false);
         }
@@ -96,18 +103,24 @@ export const useAuthStateCore = () => {
       setIsLoading(true);
       const userWithConfig = await refreshSession();
       
-      if (userWithConfig) {
-        console.log("Setting refreshed user data:", userWithConfig);
-        setUser(userWithConfig);
-      } else {
-        setUser(null);
+      if (isMounted.current) {
+        if (userWithConfig) {
+          console.log("Setting refreshed user data:", userWithConfig);
+          setUser(userWithConfig);
+        } else {
+          console.log("No user returned after refresh, setting user to null");
+          setUser(null);
+        }
+        setIsLoading(false);
       }
-      setIsLoading(false);
+      
       return userWithConfig;
     } catch (error) {
       console.error("Error in refreshSessionAndUpdateState:", error);
-      setUser(null);
-      setIsLoading(false);
+      if (isMounted.current) {
+        setUser(null);
+        setIsLoading(false);
+      }
       return null;
     }
   };
