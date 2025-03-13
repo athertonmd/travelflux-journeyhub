@@ -52,7 +52,9 @@ const Login = () => {
   // Handler for refresh session to adapt return type
   const handleRefreshSessionAdapter = async () => {
     try {
-      await handleRefreshSession();
+      const result = await handleRefreshSession();
+      console.log("Refresh session result:", result);
+      return true;
     } catch (error) {
       console.error("Error in refresh session adapter:", error);
       toast({
@@ -60,13 +62,14 @@ const Login = () => {
         description: "Please try reloading the page instead.",
         variant: "destructive",
       });
+      return false;
     }
   };
 
   // Custom fallback for auth errors
   const authErrorFallback = (
     <LoginErrorState
-      isRefreshing={false}
+      isRefreshing={refreshingSession}
       refreshAttemptCount={connectionRetries}
       authStuck={true}
       onRefreshSession={handleRefreshSessionAdapter}
@@ -95,8 +98,16 @@ const Login = () => {
           isLoading={authLoading || isSubmitting}
           onLogin={async (email, password, remember) => {
             try {
+              console.log("Login attempt initiated for:", email);
               const result = await handleSubmit(email, password);
-              // Remember me functionality can be implemented here
+              console.log("Login result:", result);
+              
+              // If login was successful but we don't have a redirect, force navigate to dashboard
+              if (result === true) {
+                console.log("Login successful, manually navigating to dashboard");
+                navigate('/dashboard');
+              }
+              
               return result;
             } catch (error) {
               console.error("Login error caught in component:", error);

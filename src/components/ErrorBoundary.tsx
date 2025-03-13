@@ -40,7 +40,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
         <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
           <div className="w-full max-w-md bg-white rounded-lg shadow-md p-6">
             <h2 className="text-2xl font-semibold text-center mb-4">Something went wrong</h2>
-            <p className="text-gray-600 mb-6">
+            <p className="text-gray-600 mb-6 text-center">
               {this.state.error?.message || "An unexpected error occurred"}
             </p>
             <div className="flex gap-4 justify-center">

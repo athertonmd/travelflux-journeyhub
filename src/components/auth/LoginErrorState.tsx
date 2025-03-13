@@ -7,7 +7,7 @@ interface LoginErrorStateProps {
   isRefreshing: boolean;
   refreshAttemptCount: number;
   authStuck: boolean;
-  onRefreshSession: () => Promise<void>;
+  onRefreshSession: () => Promise<boolean>;
   onReloadPage: () => void;
 }
 

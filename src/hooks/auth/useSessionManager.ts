@@ -87,6 +87,9 @@ export const useSessionManager = () => {
         timeoutPromise.then(() => {
           console.warn('Session check timed out, returning null session');
           return { data: { session: null }, error: new Error('Timed out') };
+        }).catch(err => {
+          console.error('Timeout promise rejection:', err);
+          return { data: { session: null }, error: err };
         })
       ]);
       
