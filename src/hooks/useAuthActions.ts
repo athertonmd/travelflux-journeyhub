@@ -1,18 +1,18 @@
 
 import { User } from '@/types/auth.types';
-import { useLogin } from './auth/useLogin';
-import { useSignup } from './auth/useSignup';
-import { useLogout } from './auth/useLogout';
+import { useLogIn } from './auth/useLogIn';
+import { useSignUp } from './auth/useSignUp';
+import { useLogOut } from './auth/useLogOut';
 import { useSetupStatus } from './auth/useSetupStatus';
 
 export const useAuthActions = (
   setUser: React.Dispatch<React.SetStateAction<User | null>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const loginFn = useLogin();
-  const signupFn = useSignup();
-  const logout = useLogout(setUser);
-  const { checkSetupStatus, updateSetupStatus } = useSetupStatus(setUser);
+  const loginFn = useLogIn(setIsLoading);
+  const signupFn = useSignUp(setIsLoading);
+  const logout = useLogOut(setIsLoading);
+  const updateSetupStatus = useSetupStatus(setUser);
 
   // Wrapper function for login to manage global loading state
   const login = async (email: string, password: string): Promise<boolean> => {
@@ -41,7 +41,6 @@ export const useAuthActions = (
     login,
     signup,
     logout,
-    checkSetupStatus,
     updateSetupStatus
   };
 };
