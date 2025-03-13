@@ -12,13 +12,16 @@ import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const {
+    user,
     authLoading,
     isSubmitting,
+    redirecting,
     authStuck,
     refreshingSession,
     connectionRetries,
     handleSubmit,
-    handleRefreshSession
+    handleRefreshSession,
+    setAuthStuck
   } = useLoginPage();
   
   const { resetSessionState } = useSessionManager();
@@ -54,7 +57,7 @@ const Login = () => {
     try {
       const result = await handleRefreshSession();
       console.log("Refresh session result:", result);
-      return true;
+      return result;
     } catch (error) {
       console.error("Error in refresh session adapter:", error);
       toast({
@@ -90,6 +93,16 @@ const Login = () => {
     );
   }
 
+  // Show loading state if redirecting
+  if (redirecting && user) {
+    console.log("Redirecting to dashboard with user:", user);
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center">
+        <p className="text-center">Redirecting to dashboard...</p>
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary fallback={authErrorFallback}>
       <div className="min-h-screen flex flex-col">
@@ -100,12 +113,9 @@ const Login = () => {
             try {
               console.log("Login attempt initiated for:", email);
               const result = await handleSubmit(email, password);
-              console.log("Login result:", result);
               
-              // If login was successful but we don't have a redirect, force navigate to dashboard
-              if (result === true) {
-                console.log("Login successful, manually navigating to dashboard");
-                navigate('/dashboard');
+              if (result) {
+                console.log("Login successful, navigation will be handled by hook");
               }
               
               return result;

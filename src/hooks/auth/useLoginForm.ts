@@ -29,8 +29,7 @@ export const useLoginForm = () => {
           variant: "default",
         });
         
-        // Force navigation to dashboard on success
-        navigate('/dashboard');
+        // We'll let the useInitialSession hook handle the navigation
         return true;
       } else {
         console.log("Login returned unsuccessful");

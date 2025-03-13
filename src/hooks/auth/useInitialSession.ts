@@ -34,7 +34,13 @@ export const useInitialSession = (
       console.log("User is authenticated, redirecting to dashboard");
       setRedirecting(true);
       setIsSubmitting(false); // Reset loading state when user data is available
-      navigate('/dashboard');
+      
+      // Small delay to allow state updates before navigation
+      const redirectTimer = setTimeout(() => {
+        navigate('/dashboard');
+      }, 100);
+      
+      return () => clearTimeout(redirectTimer);
     }
   }, [user, navigate, setRedirecting, setIsSubmitting]);
 };
