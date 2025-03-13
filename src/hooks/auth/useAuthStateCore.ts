@@ -15,6 +15,7 @@ export const useAuthStateCore = () => {
   const refreshInProgress = useRef<boolean>(false);
   const MAX_REFRESH_FREQUENCY = 5000; // 5 seconds between refresh attempts
   const authTimeout = useRef<NodeJS.Timeout | null>(null);
+  const authStateChangeHandled = useRef(false);
 
   // Set a hard timeout for the initial auth load
   useEffect(() => {
@@ -24,7 +25,7 @@ export const useAuthStateCore = () => {
         if (isMounted.current && isLoading) {
           setIsLoading(false);
         }
-      }, 5000); // 5 second hard timeout
+      }, 10000); // 10 second hard timeout - increased from 5s for network issues
     }
     
     return () => {
@@ -38,16 +39,13 @@ export const useAuthStateCore = () => {
     console.log("useAuthState: Initializing auth state");
     isMounted.current = true;
     setIsLoading(true);
+    authStateChangeHandled.current = false;
 
     // Function to handle auth state changes
     const handleAuthChange = async (event: string, session: any) => {
       console.log('Auth state changed:', event, session ? 'with session' : 'no session');
+      authStateChangeHandled.current = true;
 
-      // Don't set loading again if we're about to clear the user
-      if (event !== 'SIGNED_OUT') {
-        setIsLoading(true);
-      }
-      
       if (!session || !session.user) {
         if (isMounted.current) {
           console.log('No active session, setting user to null');
@@ -80,23 +78,29 @@ export const useAuthStateCore = () => {
       }
     };
 
-    // Set up auth state listener
+    // Set up auth state listener - directly using the code you provided
     const { data: authListener } = supabase.auth.onAuthStateChange(handleAuthChange);
     
-    // Check current session immediately with a timeout
+    // Check current session immediately
     const checkSession = async () => {
       try {
-        const { session, error } = await checkCurrentSession();
-        initialSessionChecked.current = true;
-        
-        if (session) {
-          console.log("Found existing session, handling auth state");
-          await handleAuthChange('INITIAL', session);
-        } else {
-          console.log('No active session found or error:', error?.message);
-          if (isMounted.current) {
-            setIsLoading(false);
+        // Only check the session if no auth state change has been handled yet
+        if (!authStateChangeHandled.current) {
+          console.log("Checking initial session as no auth state change detected yet");
+          const { data } = await supabase.auth.getSession();
+          initialSessionChecked.current = true;
+          
+          if (data.session) {
+            console.log("Found existing session, handling auth state");
+            await handleAuthChange('INITIAL', data.session);
+          } else {
+            console.log('No active session found');
+            if (isMounted.current) {
+              setIsLoading(false);
+            }
           }
+        } else {
+          console.log("Skipping initial session check as auth state change was already handled");
         }
       } catch (error) {
         console.error("Error checking initial session:", error);
@@ -106,7 +110,8 @@ export const useAuthStateCore = () => {
       }
     };
     
-    checkSession();
+    // Set short timeout to allow potential auth state change to happen first
+    setTimeout(checkSession, 100);
 
     // Cleanup function
     return () => {

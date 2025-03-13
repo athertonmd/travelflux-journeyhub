@@ -75,7 +75,7 @@ export const useSessionManager = () => {
       
       // Create a promise that rejects after a timeout
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Session check timed out')), 5000); // Increased timeout from 3000ms to 5000ms
+        setTimeout(() => reject(new Error('Session check timed out')), 8000); // Increased from 5000ms to 8000ms
       });
       
       // Create the session check promise

@@ -13,6 +13,7 @@ export const useInitialSession = (
   const { checkCurrentSession } = useSessionManager();
   const navigate = useNavigate();
   const sessionCheckAttempted = useRef(false);
+  const redirectInProgress = useRef(false);
 
   // Check for existing session immediately
   useEffect(() => {
@@ -55,15 +56,16 @@ export const useInitialSession = (
   
   // Redirect if user is already logged in
   useEffect(() => {
-    if (user) {
-      console.log("User is authenticated, redirecting to dashboard");
+    if (user && !redirectInProgress.current) {
+      console.log("User is authenticated, redirecting to dashboard", user);
+      redirectInProgress.current = true;
       setRedirecting(true);
       setIsSubmitting(false); // Reset loading state when user data is available
       
       // Small delay to allow state updates before navigation
       const redirectTimer = setTimeout(() => {
         navigate('/dashboard');
-      }, 150); // Slightly increased delay for more reliable state updates
+      }, 300); // Increased delay for more reliable state updates
       
       return () => clearTimeout(redirectTimer);
     }

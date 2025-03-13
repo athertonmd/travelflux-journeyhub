@@ -1,12 +1,10 @@
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
 export const useLoginForm = () => {
   const { logIn } = useAuth();
-  const navigate = useNavigate();
   const { toast } = useToast();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -15,7 +13,7 @@ export const useLoginForm = () => {
   // Handle form submission
   const handleSubmit = async (email: string, password: string): Promise<boolean> => {
     try {
-      console.log("Login form submitted");
+      console.log("Login form submitted for:", email);
       setIsSubmitting(true);
       setLoginAttemptFailed(false);
       
@@ -29,7 +27,7 @@ export const useLoginForm = () => {
           variant: "default",
         });
         
-        // We'll let the useInitialSession hook handle the navigation
+        // We'll let the auth state change trigger the redirect
         return true;
       } else {
         console.log("Login returned unsuccessful");

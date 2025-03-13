@@ -47,7 +47,7 @@ export const useAuthStatus = (
             });
           }
         }
-      }, 8000); // Increased from 5000ms to 8000ms to reduce false positives
+      }, 12000); // Increased from 8000ms to 12000ms to give more time for slow connections
     } else if (!authLoading && !isSubmitting) {
       // If we're not loading anymore, make sure we're not in "stuck" state
       if (authStuck) {
