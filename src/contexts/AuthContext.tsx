@@ -7,6 +7,7 @@ import { useAuth as useAuthImplementation } from '@/hooks/useAuth';
 const AuthContext = createContext<AuthContextType>({
   user: null,
   isLoading: true,
+  authError: null,
   signUp: async () => false,
   logIn: async () => false,
   logOut: async () => {},

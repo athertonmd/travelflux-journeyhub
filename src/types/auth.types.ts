@@ -10,8 +10,9 @@ export type User = {
 export type AuthContextType = {
   user: User | null;
   isLoading: boolean;
+  authError: string | null;
   signUp: (name: string, email: string, password: string, agencyName?: string) => Promise<boolean>;
-  logIn: (email: string, password: string, refreshOnly?: boolean) => Promise<boolean>;
+  logIn: (email: string, password: string) => Promise<boolean>;
   logOut: () => Promise<void>;
   updateSetupStatus: (completed: boolean) => Promise<boolean>;
   refreshSession: () => Promise<User | null>;

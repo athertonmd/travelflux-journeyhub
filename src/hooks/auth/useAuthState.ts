@@ -2,16 +2,19 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
+import { toast } from '@/hooks/use-toast';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   // Update user state with Supabase user data
   const updateUserState = useCallback(async (supabaseUser: any) => {
     if (!supabaseUser) {
       console.log('No user data available, clearing user state');
       setUser(null);
+      setIsLoading(false);
       return null;
     }
 
@@ -27,6 +30,9 @@ export const useAuthState = () => {
       
       if (error) {
         console.error('Error fetching user configuration:', error.message);
+        setAuthError(error.message);
+        setIsLoading(false);
+        return null;
       }
       
       const userData: User = {
@@ -38,10 +44,12 @@ export const useAuthState = () => {
       };
       
       setUser(userData);
+      setIsLoading(false);
       return userData;
     } catch (error: any) {
       console.error('Error updating user state:', error.message);
-      setUser(null);
+      setAuthError(error.message);
+      setIsLoading(false);
       return null;
     }
   }, []);
@@ -49,6 +57,7 @@ export const useAuthState = () => {
   // Set up auth state listener
   useEffect(() => {
     console.log('Setting up auth state listener');
+    let isMounted = true;
     setIsLoading(true);
     
     // Initial session check
@@ -56,8 +65,11 @@ export const useAuthState = () => {
       try {
         const { data, error } = await supabase.auth.getSession();
         
+        if (!isMounted) return;
+        
         if (error) {
           console.error('Error checking session:', error.message);
+          setAuthError(error.message);
           setIsLoading(false);
           return;
         }
@@ -67,11 +79,12 @@ export const useAuthState = () => {
           await updateUserState(data.session.user);
         } else {
           console.log('No session found');
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       } catch (error: any) {
+        if (!isMounted) return;
         console.error('Session check error:', error.message);
+        setAuthError(error.message);
         setIsLoading(false);
       }
     };
@@ -81,15 +94,16 @@ export const useAuthState = () => {
       async (event, session) => {
         console.log('Auth state changed:', event);
         
+        if (!isMounted) return;
+        
         if (session?.user) {
           console.log('User authenticated:', session.user.email);
           await updateUserState(session.user);
         } else {
           console.log('User signed out or no session');
           setUser(null);
+          setIsLoading(false);
         }
-        
-        setIsLoading(false);
       }
     );
     
@@ -98,22 +112,44 @@ export const useAuthState = () => {
     
     // Clean up
     return () => {
+      isMounted = false;
       data?.subscription.unsubscribe();
     };
   }, [updateUserState]);
 
+  const refreshSession = async () => {
+    try {
+      setIsLoading(true);
+      setAuthError(null);
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error refreshing session:', error.message);
+        setAuthError(error.message);
+        setIsLoading(false);
+        return null;
+      }
+      
+      if (data.session?.user) {
+        return await updateUserState(data.session.user);
+      }
+      
+      setIsLoading(false);
+      return null;
+    } catch (error: any) {
+      console.error('Session refresh error:', error.message);
+      setAuthError(error.message);
+      setIsLoading(false);
+      return null;
+    }
+  };
+
   return {
     user,
     isLoading,
+    authError,
     setIsLoading,
-    refreshSession: async () => {
-      setIsLoading(true);
-      const { data } = await supabase.auth.getSession();
-      if (data.session?.user) {
-        await updateUserState(data.session.user);
-      }
-      setIsLoading(false);
-      return user;
-    }
+    setAuthError,
+    refreshSession
   };
 };

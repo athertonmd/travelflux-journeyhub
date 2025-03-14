@@ -8,26 +8,36 @@ import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoginErrorState from '@/components/auth/LoginErrorState';
+import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, logIn, isLoading } = useAuth();
+  const { user, logIn, isLoading, refreshSession, authError } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [refreshAttempts, setRefreshAttempts] = useState(0);
+  
+  console.log('Login page: Current state', { user, isLoading, hasError, authError });
   
   // Set timeout for stuck loading state
   useEffect(() => {
-    const timeoutId = window.setTimeout(() => {
-      if (isLoading) {
+    let timeoutId: number | undefined;
+    
+    if (isLoading && !hasError) {
+      console.log('Setting timeout for loading state');
+      timeoutId = window.setTimeout(() => {
         console.log('Loading timeout triggered, showing error state');
         setHasError(true);
-      }
-    }, 5000); // 5 seconds timeout
+      }, 10000); // 10 seconds timeout (longer to prevent false positives)
+    }
     
     return () => {
-      window.clearTimeout(timeoutId);
+      if (timeoutId) {
+        console.log('Clearing timeout');
+        window.clearTimeout(timeoutId);
+      }
     };
-  }, [isLoading]);
+  }, [isLoading, hasError]);
   
   // Redirect if already logged in
   useEffect(() => {
@@ -43,21 +53,45 @@ const Login = () => {
     window.location.reload();
   };
 
-  // Show error state if loading takes too long
-  if (hasError || (isLoading && isLoading)) {
+  // Handle session refresh
+  const handleRefreshSession = async () => {
+    setRefreshAttempts(prev => prev + 1);
+    setHasError(false);
+    
+    try {
+      const refreshedUser = await refreshSession();
+      if (refreshedUser) {
+        toast({
+          title: "Session restored",
+          description: "Your session has been successfully restored.",
+        });
+        return true;
+      } else {
+        setHasError(true);
+        return false;
+      }
+    } catch (error) {
+      console.error('Session refresh error:', error);
+      setHasError(true);
+      return false;
+    }
+  };
+
+  // Show error state if loading takes too long or there's an auth error
+  if (hasError || authError) {
     return (
       <LoginErrorState
         isRefreshing={false}
-        refreshAttemptCount={1}
+        refreshAttemptCount={refreshAttempts}
         authStuck={hasError}
-        onRefreshSession={async () => false}
+        onRefreshSession={handleRefreshSession}
         onReloadPage={handleReloadPage}
       />
     );
   }
 
   // Show loading spinner only during initial auth check
-  if (isLoading) {
+  if (isLoading && !isSubmitting) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <LoadingSpinner size={16} />
@@ -70,6 +104,7 @@ const Login = () => {
     try {
       console.log('Login form submitted');
       setIsSubmitting(true);
+      setHasError(false);
       
       const success = await logIn(email, password);
       console.log('Login result:', success ? 'success' : 'failed');
@@ -78,8 +113,8 @@ const Login = () => {
         setIsSubmitting(false);
       }
       return success;
-    } catch (error) {
-      console.error('Login error in handleSubmit:', error);
+    } catch (error: any) {
+      console.error('Login error in handleSubmit:', error.message);
       setIsSubmitting(false);
       return false;
     }
