@@ -9,19 +9,23 @@ export const useAuthActions = (
   setUser: React.Dispatch<React.SetStateAction<User | null>>,
   setIsLoading: React.Dispatch<React.SetStateAction<boolean>>
 ) => {
-  const loginFn = useLogIn(setIsLoading);
-  const signupFn = useSignUp(setIsLoading);
-  const logout = useLogOut(setIsLoading);
-  const updateSetupStatus = useSetupStatus(setUser);
+  // Use the hooks without passing parameters
+  const loginFn = useLogIn();
+  const signupFn = useSignUp();
+  const logout = useLogOut();
+  const updateSetupStatus = useSetupStatus();
 
   // Wrapper function for login to manage global loading state
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       console.log('Login wrapper called for:', email);
-      const user = await loginFn(email, password);
-      return !!user; // Convert User object to boolean
+      setIsLoading(true);
+      const success = await loginFn(email, password);
+      setIsLoading(false);
+      return success;
     } catch (error) {
       console.error('Login wrapper error:', error);
+      setIsLoading(false);
       return false;
     }
   };
@@ -29,10 +33,44 @@ export const useAuthActions = (
   // Wrapper function for signup to manage global loading state
   const signup = async (name: string, email: string, password: string, agencyName?: string): Promise<boolean> => {
     try {
-      const user = await signupFn(name, email, password, agencyName);
-      return !!user; // Convert User object to boolean
+      setIsLoading(true);
+      const success = await signupFn(name, email, password, agencyName);
+      setIsLoading(false);
+      return success;
     } catch (error) {
       console.error('Signup wrapper error:', error);
+      setIsLoading(false);
+      return false;
+    }
+  };
+
+  // Wrapper for logout
+  const handleLogout = async () => {
+    try {
+      setIsLoading(true);
+      await logout();
+      setUser(null);
+      setIsLoading(false);
+    } catch (error) {
+      console.error('Logout wrapper error:', error);
+      setIsLoading(false);
+    }
+  };
+
+  // Wrapper for updating setup status
+  const handleUpdateSetupStatus = async (completed: boolean): Promise<boolean> => {
+    try {
+      setIsLoading(true);
+      const success = await updateSetupStatus(completed);
+      if (success && setUser) {
+        // Update user state with new setup status
+        setUser(prev => prev ? { ...prev, setupCompleted: completed } : null);
+      }
+      setIsLoading(false);
+      return success;
+    } catch (error) {
+      console.error('Update setup status wrapper error:', error);
+      setIsLoading(false);
       return false;
     }
   };
@@ -40,7 +78,7 @@ export const useAuthActions = (
   return {
     login,
     signup,
-    logout,
-    updateSetupStatus
+    logout: handleLogout,
+    updateSetupStatus: handleUpdateSetupStatus
   };
 };
