@@ -2,12 +2,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
-import { toast } from '@/hooks/use-toast';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   // Update user state with Supabase user data
   const updateUserState = useCallback(async (supabaseUser: any) => {
@@ -66,6 +66,7 @@ export const useAuthState = () => {
     // Initial session check
     const checkSession = async () => {
       try {
+        console.log('Checking initial session');
         const { data, error } = await supabase.auth.getSession();
         
         if (!isMounted) return;
@@ -74,6 +75,7 @@ export const useAuthState = () => {
           console.error('Error checking session:', error.message);
           setAuthError(error.message);
           setIsLoading(false);
+          setSessionChecked(true);
           return;
         }
         
@@ -85,11 +87,14 @@ export const useAuthState = () => {
           setUser(null);
           setIsLoading(false);
         }
+        
+        setSessionChecked(true);
       } catch (error: any) {
         if (!isMounted) return;
         console.error('Session check error:', error.message);
         setAuthError(error.message);
         setIsLoading(false);
+        setSessionChecked(true);
       }
     };
     
@@ -108,6 +113,8 @@ export const useAuthState = () => {
           setUser(null);
           setIsLoading(false);
         }
+        
+        setSessionChecked(true);
       }
     );
     
@@ -129,15 +136,25 @@ export const useAuthState = () => {
       setIsLoading(true);
       setAuthError(null);
       
+      console.log('Manually refreshing session');
+      
       // Add a timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Session refresh timeout')), 5000);
+      const timeoutPromise = new Promise<{error: Error}>((_, reject) => {
+        setTimeout(() => reject({error: new Error('Session refresh timeout')}), 5000);
       });
       
       const sessionPromise = supabase.auth.getSession();
       
       // Race between the actual operation and the timeout
-      const result = await Promise.race([sessionPromise, timeoutPromise]) as any;
+      let result;
+      try {
+        result = await Promise.race([sessionPromise, timeoutPromise]);
+      } catch (error: any) {
+        console.error('Session refresh timed out:', error.message);
+        setAuthError('Session refresh timed out. Please try again.');
+        setIsLoading(false);
+        return null;
+      }
       
       if (result.error) {
         console.error('Error refreshing session:', result.error.message);
@@ -147,9 +164,11 @@ export const useAuthState = () => {
       }
       
       if (result.data?.session?.user) {
+        console.log('Session refreshed successfully');
         return await updateUserState(result.data.session.user);
       }
       
+      console.log('No session found after refresh');
       setIsLoading(false);
       return null;
     } catch (error: any) {
@@ -164,6 +183,7 @@ export const useAuthState = () => {
     user,
     isLoading,
     authError,
+    sessionChecked,
     setIsLoading,
     setAuthError,
     refreshSession

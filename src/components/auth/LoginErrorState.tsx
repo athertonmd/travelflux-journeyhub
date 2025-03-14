@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RotateCcw, AlertCircle, Trash2 } from 'lucide-react';
+import { RotateCcw, AlertCircle, Trash2, Info } from 'lucide-react';
 
 interface LoginErrorStateProps {
   isRefreshing: boolean;
@@ -38,22 +38,28 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
       <Card className="w-full max-w-md glass-card animate-fade-in shadow-lg">
         <CardHeader>
-          <div className="flex items-center justify-center text-red-500 mb-4">
+          <div className="flex items-center justify-center text-amber-500 mb-4">
             <AlertCircle size={48} />
           </div>
           <CardTitle className="text-2xl font-display text-center">
             Authentication Issue
           </CardTitle>
           <CardDescription className="text-center">
-            We're having trouble connecting to the authentication service
+            We're having trouble with the authentication process
           </CardDescription>
         </CardHeader>
         
         <CardContent className="text-center">
-          <p className="mb-6">
-            It looks like you're signed in but we're having trouble loading your account details.
-            Please try these troubleshooting steps:
-          </p>
+          <div className="bg-amber-50 border border-amber-200 rounded-md p-4 mb-6 text-left">
+            <div className="flex items-start">
+              <Info className="h-5 w-5 text-amber-500 mr-2 mt-0.5" />
+              <p className="text-sm text-amber-800">
+                {authStuck 
+                  ? "The authentication process is taking longer than expected. This could be due to network issues or server load."
+                  : "We're having trouble verifying your credentials. This could be due to an expired session or authentication error."}
+              </p>
+            </div>
+          </div>
           
           <div className="space-y-4">
             <Button 
@@ -99,7 +105,7 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
         
         <CardFooter className="flex flex-col text-sm text-gray-500">
           <p className="text-center">
-            If this issue persists, please contact support.
+            If this issue persists after trying these solutions, please contact support.
           </p>
         </CardFooter>
       </Card>

@@ -16,19 +16,32 @@ const Login = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [refreshAttempts, setRefreshAttempts] = useState(0);
+  const [showingErrorPage, setShowingErrorPage] = useState(false);
   
-  console.log('Login page: Current state', { user, isLoading, hasError, authError });
+  console.log('Login page: Current state', { 
+    user, 
+    isLoading, 
+    hasError, 
+    authError,
+    showingErrorPage
+  });
+  
+  // Reset error state when component mounts
+  useEffect(() => {
+    setHasError(false);
+    setShowingErrorPage(false);
+  }, []);
   
   // Set timeout for stuck loading state
   useEffect(() => {
     let timeoutId: number | undefined;
     
-    if (isLoading && !hasError) {
+    if (isLoading && !hasError && !showingErrorPage && !isSubmitting) {
       console.log('Setting timeout for loading state');
       timeoutId = window.setTimeout(() => {
         console.log('Loading timeout triggered, showing error state');
         setHasError(true);
-      }, 10000); // 10 seconds timeout (longer to prevent false positives)
+      }, 10000); // 10 seconds timeout
     }
     
     return () => {
@@ -37,16 +50,16 @@ const Login = () => {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [isLoading, hasError]);
+  }, [isLoading, hasError, showingErrorPage, isSubmitting]);
   
   // Redirect if already logged in
   useEffect(() => {
-    if (user && !hasError) {
+    if (user && !hasError && !showingErrorPage) {
       console.log('User logged in, redirecting to dashboard');
       const destination = user.setupCompleted ? '/dashboard' : '/welcome';
       navigate(destination);
     }
-  }, [user, navigate, hasError]);
+  }, [user, navigate, hasError, showingErrorPage]);
 
   // Handle page reload
   const handleReloadPage = () => {
@@ -57,6 +70,7 @@ const Login = () => {
   const handleRefreshSession = async () => {
     setRefreshAttempts(prev => prev + 1);
     setHasError(false);
+    setShowingErrorPage(true);
     
     try {
       const refreshedUser = await refreshSession();
@@ -65,6 +79,7 @@ const Login = () => {
           title: "Session restored",
           description: "Your session has been successfully restored.",
         });
+        setShowingErrorPage(false);
         return true;
       } else {
         setHasError(true);
@@ -74,14 +89,16 @@ const Login = () => {
       console.error('Session refresh error:', error);
       setHasError(true);
       return false;
+    } finally {
+      setShowingErrorPage(false);
     }
   };
 
   // Show error state if loading takes too long or there's an auth error
-  if (hasError || authError) {
+  if ((hasError || authError) && !isSubmitting) {
     return (
       <LoginErrorState
-        isRefreshing={false}
+        isRefreshing={isLoading}
         refreshAttemptCount={refreshAttempts}
         authStuck={hasError}
         onRefreshSession={handleRefreshSession}
@@ -91,7 +108,7 @@ const Login = () => {
   }
 
   // Show loading spinner only during initial auth check
-  if (isLoading && !isSubmitting) {
+  if (isLoading && !isSubmitting && !showingErrorPage) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <LoadingSpinner size={16} />
@@ -125,7 +142,7 @@ const Login = () => {
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <LoginPageContent 
-          isLoading={isSubmitting}
+          isLoading={isSubmitting || isLoading}
           onLogin={handleSubmit}
         />
         <Footer />

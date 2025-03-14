@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import AuthFormHeader from './auth/AuthFormHeader';
 import AuthFormFooter from './auth/AuthFormFooter';
 import AuthFormInputs from './auth/AuthFormInputs';
@@ -14,6 +15,7 @@ interface AuthFormProps {
 
 const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   const navigate = useNavigate();
+  const { logIn, signUp, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
@@ -34,29 +36,68 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (isLoading || authLoading) {
+      return;
+    }
+    
+    // Validate form
+    if (!formData.email || !formData.password) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (mode === 'signup' && (!formData.name || !formData.agencyName)) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (mode === 'signup' && !formData.acceptTerms) {
+      toast({
+        title: "Terms not accepted",
+        description: "Please accept the terms of service to continue",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      let success = false;
       
-      // Success message
-      toast({
-        title: mode === 'login' ? 'Welcome back!' : 'Account created!',
-        description: mode === 'login' 
-          ? 'You have successfully logged in.' 
-          : 'Your account has been created successfully.',
-      });
+      if (mode === 'login') {
+        success = await logIn(formData.email, formData.password);
+      } else {
+        success = await signUp(formData.name, formData.email, formData.password, formData.agencyName);
+      }
       
-      // Redirect to dashboard
-      navigate('/dashboard');
-    } catch (error) {
+      if (success) {
+        toast({
+          title: mode === 'login' ? 'Welcome back!' : 'Account created!',
+          description: mode === 'login' 
+            ? 'You have successfully logged in.' 
+            : 'Your account has been created successfully.',
+        });
+        
+        // Navigate will happen automatically via AuthContext redirect
+      } else {
+        setIsLoading(false);
+      }
+    } catch (error: any) {
       toast({
-        title: 'Error',
-        description: 'An error occurred. Please try again.',
-        variant: 'destructive',
+        title: "Error",
+        description: error.message || 'An error occurred. Please try again.',
+        variant: "destructive",
       });
-    } finally {
       setIsLoading(false);
     }
   };
@@ -72,7 +113,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
               <AuthFormInputs 
                 mode={mode}
                 formData={formData}
-                isLoading={isLoading}
+                isLoading={isLoading || authLoading}
                 handleChange={handleChange}
                 setFormData={setFormData}
               />
@@ -80,9 +121,9 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
               <Button 
                 type="submit" 
                 className="w-full animated-border-button mt-2" 
-                disabled={isLoading}
+                disabled={isLoading || authLoading}
               >
-                {isLoading ? (
+                {isLoading || authLoading ? (
                   <span className="flex items-center justify-center">
                     <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
