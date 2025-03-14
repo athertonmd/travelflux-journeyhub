@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RefreshCw, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
 interface LoginErrorStateProps {
   isRefreshing: boolean;
@@ -27,16 +27,14 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
             Connection Issue
           </CardTitle>
           <CardDescription className="text-center">
-            {refreshAttemptCount > 1 
-              ? "We're still having trouble connecting to the authentication service"
-              : "We're having trouble connecting to the authentication service"}
+            We're having trouble connecting to the authentication service
           </CardDescription>
         </CardHeader>
         
         <CardContent className="text-center">
           <p className="mb-6">
             This could be due to network issues or a temporary problem with our service.
-            {refreshAttemptCount > 1 && " Try these troubleshooting steps:"}
+            Try these troubleshooting steps:
           </p>
           
           <div className="space-y-4">

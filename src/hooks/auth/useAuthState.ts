@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
-import { toast } from '@/hooks/use-toast';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -11,13 +10,13 @@ export const useAuthState = () => {
   // Update user state with Supabase user data
   const updateUserState = useCallback(async (supabaseUser: any) => {
     if (!supabaseUser) {
-      console.log('No Supabase user, clearing user state');
+      console.log('No user data available, clearing user state');
       setUser(null);
       return null;
     }
 
     try {
-      console.log('Updating user state for user:', supabaseUser.id);
+      console.log('Updating user state for:', supabaseUser.email);
       
       // Check setup status
       const { data, error } = await supabase
@@ -27,12 +26,7 @@ export const useAuthState = () => {
         .maybeSingle();
       
       if (error) {
-        console.error('Error fetching user configuration:', error);
-        toast({
-          title: 'Error',
-          description: 'Could not fetch user configuration',
-          variant: 'destructive'
-        });
+        console.error('Error fetching user configuration:', error.message);
       }
       
       const userData: User = {
@@ -43,11 +37,10 @@ export const useAuthState = () => {
         setupCompleted: data?.setup_completed || false
       };
       
-      console.log('User state updated successfully:', userData.id);
       setUser(userData);
       return userData;
-    } catch (error) {
-      console.error('Error updating user state:', error);
+    } catch (error: any) {
+      console.error('Error updating user state:', error.message);
       setUser(null);
       return null;
     }
@@ -55,111 +48,72 @@ export const useAuthState = () => {
 
   // Set up auth state listener
   useEffect(() => {
-    let authSubscription: { data: { subscription: { unsubscribe: () => void } } } | null = null;
-    
     console.log('Setting up auth state listener');
     setIsLoading(true);
     
-    // Check for existing session
+    // Initial session check
     const checkSession = async () => {
       try {
-        console.log('Checking for existing session');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Error checking session:', error);
+          console.error('Error checking session:', error.message);
           setIsLoading(false);
           return;
         }
         
         if (data.session?.user) {
-          console.log('Session exists, updating user state with ID:', data.session.user.id);
+          console.log('Session exists, updating user state');
           await updateUserState(data.session.user);
         } else {
-          console.log('No session found, user not logged in');
+          console.log('No session found');
         }
         
         setIsLoading(false);
-      } catch (error) {
-        console.error('Exception checking session:', error);
+      } catch (error: any) {
+        console.error('Session check error:', error.message);
         setIsLoading(false);
       }
     };
     
-    // Set up auth state change listener
-    const setupAuthListener = async () => {
-      try {
-        authSubscription = await supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('Auth state changed:', event);
-            
-            if (session?.user) {
-              console.log('Session user found in auth state change, ID:', session.user.id);
-              await updateUserState(session.user);
-            } else {
-              console.log('No session user in auth state change');
-              setUser(null);
-            }
-            
-            setIsLoading(false);
-          }
-        );
+    // Auth state change listener
+    const { data } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Auth state changed:', event);
         
-        console.log('Auth listener set up successfully');
-      } catch (error) {
-        console.error('Error setting up auth listener:', error);
+        if (session?.user) {
+          console.log('User authenticated:', session.user.email);
+          await updateUserState(session.user);
+        } else {
+          console.log('User signed out or no session');
+          setUser(null);
+        }
+        
         setIsLoading(false);
       }
-    };
+    );
     
+    // Run the initial check
     checkSession();
-    setupAuthListener();
     
-    // Clean up listener on unmount
+    // Clean up
     return () => {
-      console.log('Cleaning up auth listener');
-      if (authSubscription?.data?.subscription) {
-        authSubscription.data.subscription.unsubscribe();
-      }
+      data?.subscription.unsubscribe();
     };
-  }, [updateUserState]);
-
-  // Refresh session manually
-  const refreshSession = useCallback(async (): Promise<User | null> => {
-    try {
-      console.log('Manually refreshing session');
-      setIsLoading(true);
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error refreshing session:', error);
-        setIsLoading(false);
-        return null;
-      }
-      
-      if (data.session?.user) {
-        console.log('Session found during refresh, user ID:', data.session.user.id);
-        const userData = await updateUserState(data.session.user);
-        setIsLoading(false);
-        return userData;
-      }
-      
-      console.log('No session found during refresh');
-      setIsLoading(false);
-      return null;
-    } catch (error) {
-      console.error('Exception refreshing session:', error);
-      setIsLoading(false);
-      return null;
-    }
   }, [updateUserState]);
 
   return {
     user,
-    setUser,
     isLoading,
     setIsLoading,
-    updateUserState,
-    refreshSession
+    refreshSession: async () => {
+      setIsLoading(true);
+      const { data } = await supabase.auth.getSession();
+      if (data.session?.user) {
+        await updateUserState(data.session.user);
+      }
+      setIsLoading(false);
+      return user;
+    }
   };
 };

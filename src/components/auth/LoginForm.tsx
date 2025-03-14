@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,14 +20,6 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     password: '',
     remember: false,
   });
-  const [localLoading, setLocalLoading] = useState(false);
-  
-  // Reset local loading when parent loading state changes
-  useEffect(() => {
-    if (!isLoading && localLoading) {
-      setLocalLoading(false);
-    }
-  }, [isLoading]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -40,8 +32,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isLoading || localLoading) {
-      console.log('Form submission blocked - already processing');
+    if (isLoading) {
       return;
     }
     
@@ -56,29 +47,17 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     }
     
     try {
-      setLocalLoading(true);
-      console.log('Calling onLogin from LoginForm');
-      
-      // Call the parent's login handler
-      const success = await onLogin(formData.email, formData.password, formData.remember);
-      
-      console.log('Login result:', success);
-      
-      // Always reset loading regardless of success/failure
-      setLocalLoading(false);
-    } catch (error) {
-      console.error('Error during login:', error);
+      console.log('Submitting login form');
+      await onLogin(formData.email, formData.password, formData.remember);
+    } catch (error: any) {
+      console.error('Error during login:', error.message);
       toast({
         title: "Login failed",
-        description: "An unexpected error occurred",
+        description: error.message || "An unexpected error occurred",
         variant: "destructive"
       });
-      setLocalLoading(false);
     }
   };
-  
-  // Combine both loading states to ensure button shows loading in all cases
-  const buttonLoading = isLoading || localLoading;
   
   return (
     <>
@@ -94,7 +73,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               value={formData.email}
               onChange={handleChange}
               required
-              disabled={buttonLoading}
+              disabled={isLoading}
               className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
               autoComplete="email"
             />
@@ -118,7 +97,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               value={formData.password}
               onChange={handleChange}
               required
-              disabled={buttonLoading}
+              disabled={isLoading}
               className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
               autoComplete="current-password"
             />
@@ -132,13 +111,13 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               onCheckedChange={(checked) => 
                 setFormData(prev => ({ ...prev, remember: checked === true }))
               }
-              disabled={buttonLoading}
+              disabled={isLoading}
             />
             <Label htmlFor="remember" className="text-sm">Remember me</Label>
           </div>
           
           <SubmitButton 
-            isLoading={buttonLoading}
+            isLoading={isLoading}
             text="Sign in"
             loadingText="Signing in..."
           />

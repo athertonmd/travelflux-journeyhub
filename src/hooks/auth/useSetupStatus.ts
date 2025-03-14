@@ -1,35 +1,36 @@
 
 import { useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
-import { User } from '@/types/auth.types';
 
-export const useSetupStatus = (setUser: React.Dispatch<React.SetStateAction<User | null>>) => {
+export const useSetupStatus = () => {
   const updateSetupStatus = useCallback(async (completed: boolean): Promise<boolean> => {
     try {
-      const { data, error } = await supabase.auth.getSession();
-      if (!data.session?.user) return false;
+      console.log('Updating setup status to:', completed);
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session?.user) {
+        console.error('No authenticated user found');
+        return false;
+      }
       
-      const userId = data.session.user.id;
+      const userId = sessionData.session.user.id;
       
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from('agency_configurations')
         .update({ setup_completed: completed })
         .eq('user_id', userId);
       
-      if (updateError) {
-        console.error('Error updating setup status:', updateError);
+      if (error) {
+        console.error('Error updating setup status:', error.message);
         return false;
       }
       
-      // Update local user state
-      setUser(prev => prev ? { ...prev, setupCompleted: completed } : null);
+      console.log('Setup status updated successfully');
       return true;
-    } catch (error) {
-      console.error('Error updating setup status:', error);
+    } catch (error: any) {
+      console.error('Setup status update exception:', error.message);
       return false;
     }
-  }, [setUser]);
+  }, []);
 
   return updateSetupStatus;
 };
