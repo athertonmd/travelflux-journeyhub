@@ -59,10 +59,9 @@ export const useAuthState = () => {
     console.log('Setting up auth state listener');
     let isMounted = true;
     
-    // Only set loading if we're not already loaded
-    if (!user) {
-      setIsLoading(true);
-    }
+    // Initial clear state
+    setIsLoading(true);
+    setAuthError(null);
     
     // Initial session check
     const checkSession = async () => {

@@ -41,12 +41,12 @@ const Login = () => {
   
   // Redirect if already logged in
   useEffect(() => {
-    if (user) {
+    if (user && !hasError) {
       console.log('User logged in, redirecting to dashboard');
       const destination = user.setupCompleted ? '/dashboard' : '/welcome';
       navigate(destination);
     }
-  }, [user, navigate]);
+  }, [user, navigate, hasError]);
 
   // Handle page reload
   const handleReloadPage = () => {
