@@ -13,6 +13,10 @@ const DashboardMetrics: React.FC = () => {
     navigate('/trip-log');
   };
   
+  const handleUsersTileClick = () => {
+    navigate('/users');
+  };
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <DashboardCard 
@@ -30,7 +34,9 @@ const DashboardMetrics: React.FC = () => {
         value={8} 
         isPositive={true} 
         changeValue={2}
-        icon={<Users className="h-8 w-8 text-primary" />} 
+        icon={<Users className="h-8 w-8 text-primary" />}
+        className="cursor-pointer hover:border-primary transition-colors"
+        onClick={handleUsersTileClick}
       />
       
       <DashboardCard 
