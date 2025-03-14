@@ -36,25 +36,42 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
         <CardContent className="text-center">
           <p className="mb-6">
             This could be due to network issues or a temporary problem with our service.
-            {refreshAttemptCount > 1 && " You can try reloading the page or signing in with different credentials."}
+            {refreshAttemptCount > 1 && " Try these troubleshooting steps:"}
           </p>
           
-          <Button 
-            onClick={onReloadPage}
-            className="w-full mb-4 bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2"
-          >
-            <RotateCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Reload Page
-          </Button>
+          <div className="space-y-4">
+            <Button 
+              onClick={onReloadPage}
+              className="w-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2"
+            >
+              <RotateCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Reload Page
+            </Button>
+            
+            <Button 
+              onClick={() => {
+                localStorage.clear();
+                sessionStorage.clear();
+                onReloadPage();
+              }}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2"
+            >
+              Clear Storage & Reload
+            </Button>
+          </div>
           
-          <p className="text-sm text-gray-600 mt-4">
-            If reloading doesn't work, you can try:
-          </p>
-          <ul className="text-sm text-gray-600 list-disc list-inside mt-2 text-left">
-            <li>Clearing your browser cache and cookies</li>
-            <li>Using an incognito/private browsing window</li>
-            <li>Checking your network connection</li>
-          </ul>
+          <div className="mt-8 text-sm text-gray-600 bg-gray-100 p-4 rounded-md text-left">
+            <h3 className="font-semibold mb-2">Troubleshooting Tips:</h3>
+            <ul className="list-disc list-inside space-y-1">
+              <li>Try using an incognito/private browsing window</li>
+              <li>Clear your browser cookies and cache</li>
+              <li>Check if you have any browser extensions blocking cookies</li>
+              <li>Try a different browser</li>
+              <li>Check your network connection</li>
+              <li>Ensure your browser is up to date</li>
+            </ul>
+          </div>
         </CardContent>
         
         <CardFooter className="flex flex-col text-sm text-gray-500">

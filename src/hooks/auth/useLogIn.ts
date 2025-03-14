@@ -17,19 +17,32 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
         // Just check the session
         console.log('Refresh only mode, checking session');
         const { data, error } = await supabase.auth.getSession();
+        
+        console.log('Session check result:', data?.session ? 'Session exists' : 'No session');
+        
         if (error) {
           console.error('Session check error:', error);
+          toast({
+            title: 'Session check failed',
+            description: error.message,
+            variant: 'destructive'
+          });
           setIsLoading(false);
           return false;
         }
-        console.log('Session check successful, session:', data.session ? 'exists' : 'none');
+        
         setIsLoading(false);
-        return !!data.session;
+        return !!data?.session;
       }
       
       // Regular login with email and password
       if (!email || !password) {
         console.error('Login error: Email and password required');
+        toast({
+          title: 'Login failed',
+          description: 'Email and password are required',
+          variant: 'destructive'
+        });
         setIsLoading(false);
         return false;
       }
@@ -52,8 +65,10 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
         return false;
       }
       
-      if (data.user) {
-        console.log('Login successful, user:', data.user.id);
+      console.log('Login response:', data?.user ? 'User exists' : 'No user in response');
+      
+      if (data?.user) {
+        console.log('Login successful, user ID:', data.user.id);
         toast({
           title: 'Login successful',
           description: 'Welcome back!'
@@ -62,10 +77,18 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
         return true;
       }
       
+      // If we reach here, something unexpected happened
+      console.error('Login completed but no user or error was returned');
+      toast({
+        title: 'Login error',
+        description: 'An unexpected error occurred during login',
+        variant: 'destructive'
+      });
+      
       setIsLoading(false);
       return false;
     } catch (error: any) {
-      console.error('Login error:', error);
+      console.error('Login exception:', error);
       toast({
         title: 'Login error',
         description: error.message || 'An unexpected error occurred',

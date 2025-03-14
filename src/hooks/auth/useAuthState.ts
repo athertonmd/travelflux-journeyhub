@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
+import { toast } from '@/hooks/use-toast';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -27,6 +28,11 @@ export const useAuthState = () => {
       
       if (error) {
         console.error('Error fetching user configuration:', error);
+        toast({
+          title: 'Error',
+          description: 'Could not fetch user configuration',
+          variant: 'destructive'
+        });
       }
       
       const userData: User = {
@@ -37,7 +43,7 @@ export const useAuthState = () => {
         setupCompleted: data?.setup_completed || false
       };
       
-      console.log('User state updated:', userData);
+      console.log('User state updated successfully:', userData.id);
       setUser(userData);
       return userData;
     } catch (error) {
@@ -49,6 +55,8 @@ export const useAuthState = () => {
 
   // Set up auth state listener
   useEffect(() => {
+    let authSubscription: { data: { subscription: { unsubscribe: () => void } } } | null = null;
+    
     console.log('Setting up auth state listener');
     setIsLoading(true);
     
@@ -65,10 +73,10 @@ export const useAuthState = () => {
         }
         
         if (data.session?.user) {
-          console.log('Session exists, updating user state');
+          console.log('Session exists, updating user state with ID:', data.session.user.id);
           await updateUserState(data.session.user);
         } else {
-          console.log('No session found');
+          console.log('No session found, user not logged in');
         }
         
         setIsLoading(false);
@@ -78,29 +86,41 @@ export const useAuthState = () => {
       }
     };
     
-    checkSession();
-    
-    // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event);
+    // Set up auth state change listener
+    const setupAuthListener = async () => {
+      try {
+        authSubscription = await supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('Auth state changed:', event);
+            
+            if (session?.user) {
+              console.log('Session user found in auth state change, ID:', session.user.id);
+              await updateUserState(session.user);
+            } else {
+              console.log('No session user in auth state change');
+              setUser(null);
+            }
+            
+            setIsLoading(false);
+          }
+        );
         
-        if (session?.user) {
-          console.log('Session user found in auth state change');
-          await updateUserState(session.user);
-        } else {
-          console.log('No session user in auth state change');
-          setUser(null);
-        }
-        
+        console.log('Auth listener set up successfully');
+      } catch (error) {
+        console.error('Error setting up auth listener:', error);
         setIsLoading(false);
       }
-    );
+    };
+    
+    checkSession();
+    setupAuthListener();
     
     // Clean up listener on unmount
     return () => {
       console.log('Cleaning up auth listener');
-      authListener.subscription.unsubscribe();
+      if (authSubscription?.data?.subscription) {
+        authSubscription.data.subscription.unsubscribe();
+      }
     };
   }, [updateUserState]);
 
@@ -118,7 +138,7 @@ export const useAuthState = () => {
       }
       
       if (data.session?.user) {
-        console.log('Session found during refresh');
+        console.log('Session found during refresh, user ID:', data.session.user.id);
         const userData = await updateUserState(data.session.user);
         setIsLoading(false);
         return userData;
