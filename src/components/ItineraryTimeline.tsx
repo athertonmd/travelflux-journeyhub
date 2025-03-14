@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { 
   Card, 
@@ -21,6 +20,7 @@ import { cn } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
 
 export interface ItineraryEvent {
   id: string;
@@ -42,8 +42,8 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ItineraryEvent[] | null>(null);
   const [showNoResults, setShowNoResults] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
   
-  // Group events by date
   const groupEventsByDate = (eventsToGroup: ItineraryEvent[]) => {
     return eventsToGroup.reduce((acc, event) => {
       if (!acc[event.date]) {
@@ -54,13 +54,17 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
     }, {} as Record<string, ItineraryEvent[]>);
   };
   
-  const eventsToDisplay = searchResults || events;
+  const eventsToDisplay = searchResults || [];
   const eventsByDate = groupEventsByDate(eventsToDisplay);
   
-  // Sort dates
-  const sortedDates = Object.keys(eventsByDate).sort((a, b) => 
-    new Date(a).getTime() - new Date(b).getTime()
-  );
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('en-US', { 
+      weekday: 'long', 
+      month: 'long', 
+      day: 'numeric' 
+    }).format(date);
+  };
   
   const getEventIcon = (type: ItineraryEvent['type']) => {
     switch (type) {
@@ -77,16 +81,9 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
     }
   };
   
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', { 
-      weekday: 'long', 
-      month: 'long', 
-      day: 'numeric' 
-    }).format(date);
-  };
-  
   const handleSearch = () => {
+    setHasSearched(true);
+    
     if (!searchQuery.trim()) {
       setSearchResults(null);
       setShowNoResults(false);
@@ -108,40 +105,45 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
     setSearchQuery('');
     setSearchResults(null);
     setShowNoResults(false);
+    setHasSearched(false);
   };
   
   return (
     <Card className={cn("glass-card", className)}>
       <CardHeader>
-        <CardTitle>Travel Itinerary</CardTitle>
-        <CardDescription>Your complete travel schedule</CardDescription>
+        <CardTitle>Travel Itinerary Search</CardTitle>
+        <CardDescription>Find your travel details by record locator</CardDescription>
         
-        <div className="mt-4 flex gap-2">
-          <div className="relative flex-1">
-            <Input
-              placeholder="Search itineraries..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="pr-8"
-            />
-            {searchQuery && (
-              <button 
-                onClick={clearSearch}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+        <div className="mt-4 space-y-2">
+          <Label htmlFor="record-locator">Record locator</Label>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <Input
+                id="record-locator"
+                placeholder="Enter record locator..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="pr-8"
+              />
+              {searchQuery && (
+                <button 
+                  onClick={clearSearch}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <Button 
+              onClick={handleSearch} 
+              size="sm" 
+              className="flex items-center gap-1"
+            >
+              <Search className="h-4 w-4" />
+              Search
+            </Button>
           </div>
-          <Button 
-            onClick={handleSearch} 
-            size="sm" 
-            className="flex items-center gap-1"
-          >
-            <Search className="h-4 w-4" />
-            Search
-          </Button>
         </div>
       </CardHeader>
       
@@ -150,7 +152,7 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
           <Alert variant="default" className="mb-4">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              No itineraries found matching "{searchQuery}". Try a different search term.
+              No itineraries found matching "{searchQuery}". Try a different record locator.
             </AlertDescription>
           </Alert>
         )}
@@ -163,7 +165,13 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
           </div>
         )}
         
-        {sortedDates.length > 0 ? (
+        {!hasSearched && (
+          <div className="py-8 text-center text-muted-foreground">
+            <p>Enter a record locator to search for itineraries.</p>
+          </div>
+        )}
+        
+        {hasSearched && sortedDates.length > 0 ? (
           <div className="space-y-6">
             {sortedDates.map((date, dateIndex) => (
               <div key={date} className="pl-6">
@@ -171,7 +179,6 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
                   {formatDate(date)}
                 </div>
                 <div className="relative">
-                  {/* Timeline line */}
                   <div 
                     className="absolute top-0 left-0 h-full w-px bg-primary/20"
                     style={{ left: '-12px' }}
@@ -186,7 +193,6 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
                           event.completed ? "opacity-60" : "opacity-100"
                         )}
                       >
-                        {/* Timeline dot */}
                         <div 
                           className={cn(
                             "absolute left-0 top-1.5 h-3 w-3 rounded-full border-2",
@@ -243,10 +249,12 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
               </div>
             ))}
           </div>
-        ) : !showNoResults && (
-          <div className="py-8 text-center text-muted-foreground">
-            <p>No upcoming itineraries found.</p>
-          </div>
+        ) : (
+          hasSearched && !showNoResults && (
+            <div className="py-8 text-center text-muted-foreground">
+              <p>No upcoming itineraries found.</p>
+            </div>
+          )
         )}
       </CardContent>
     </Card>
