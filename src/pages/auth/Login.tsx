@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import LoginPageContent from '@/components/auth/LoginPageContent';
@@ -12,42 +12,69 @@ import { toast } from '@/hooks/use-toast';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, logIn, isLoading, refreshSession, authError } = useAuth();
+  const { user, logIn, isLoading, refreshSession, authError, sessionChecked } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [refreshAttempts, setRefreshAttempts] = useState(0);
   const [showingErrorPage, setShowingErrorPage] = useState(false);
+  
+  // Add a timeout ref to track and clear timeouts
+  const loadingTimeoutRef = useRef<number | null>(null);
   
   console.log('Login page: Current state', { 
     user, 
     isLoading, 
     hasError, 
     authError,
-    showingErrorPage
+    showingErrorPage,
+    sessionChecked
   });
   
   // Reset error state when component mounts
   useEffect(() => {
     setHasError(false);
     setShowingErrorPage(false);
+    
+    // Clear any stuck sessions on page load
+    const clearStuckSessions = async () => {
+      if (window.location.href.includes('error=')) {
+        console.log('Error detected in URL, clearing session state');
+        localStorage.removeItem('tripscape-auth-token');
+        setHasError(true);
+      }
+    };
+    
+    clearStuckSessions();
+    
+    return () => {
+      // Clear timeout on unmount
+      if (loadingTimeoutRef.current) {
+        window.clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
+      }
+    };
   }, []);
   
   // Set timeout for stuck loading state
   useEffect(() => {
-    let timeoutId: number | undefined;
+    if (loadingTimeoutRef.current) {
+      window.clearTimeout(loadingTimeoutRef.current);
+      loadingTimeoutRef.current = null;
+    }
     
     if (isLoading && !hasError && !showingErrorPage && !isSubmitting) {
       console.log('Setting timeout for loading state');
-      timeoutId = window.setTimeout(() => {
+      loadingTimeoutRef.current = window.setTimeout(() => {
         console.log('Loading timeout triggered, showing error state');
         setHasError(true);
-      }, 10000); // 10 seconds timeout
+      }, 8000); // 8 seconds timeout (reduced from 10)
     }
     
     return () => {
-      if (timeoutId) {
+      if (loadingTimeoutRef.current) {
         console.log('Clearing timeout');
-        window.clearTimeout(timeoutId);
+        window.clearTimeout(loadingTimeoutRef.current);
+        loadingTimeoutRef.current = null;
       }
     };
   }, [isLoading, hasError, showingErrorPage, isSubmitting]);
@@ -108,7 +135,7 @@ const Login = () => {
   }
 
   // Show loading spinner only during initial auth check
-  if (isLoading && !isSubmitting && !showingErrorPage) {
+  if ((isLoading && !sessionChecked) && !isSubmitting && !showingErrorPage) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <LoadingSpinner size={16} />
@@ -138,7 +165,7 @@ const Login = () => {
   };
 
   return (
-    <ErrorBoundary fallback={<div>Something went wrong. Please try again.</div>}>
+    <ErrorBoundary fallback={<div className="min-h-screen flex flex-col items-center justify-center">Something went wrong. Please try reloading the page.</div>}>
       <div className="min-h-screen flex flex-col">
         <Navbar />
         <LoginPageContent 

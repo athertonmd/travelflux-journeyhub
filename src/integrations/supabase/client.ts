@@ -17,8 +17,18 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       persistSession: true,
       storageKey: 'tripscape-auth-token',
-      detectSessionInUrl: false,
-      flowType: 'pkce'
+      detectSessionInUrl: true, // Enable URL detection for auth callbacks
+      flowType: 'pkce',
+      debug: true // Enable debug mode to see more detailed logs
     },
+    global: {
+      headers: {
+        'X-Client-Info': 'tripscape-app'
+      }
+    },
+    // Set shorter timeout to prevent hanging requests
+    realtime: {
+      timeout: 10000 // 10 seconds (default is 1 minute)
+    }
   }
 );

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RotateCcw, AlertCircle, Trash2, Info } from 'lucide-react';
+import { RotateCcw, AlertCircle, Trash2, Info, RefreshCw } from 'lucide-react';
 
 interface LoginErrorStateProps {
   isRefreshing: boolean;
@@ -22,6 +22,14 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
   const clearStorageAndReload = () => {
     // Clear all storage
     console.log('Clearing all storage and reloading page');
+    
+    // Clear specific auth-related items first
+    localStorage.removeItem('tripscape-auth-token');
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('supabase.auth.expires_at');
+    localStorage.removeItem('supabase.auth.refresh_token');
+    
+    // Then clear all storage
     localStorage.clear();
     sessionStorage.clear();
     
@@ -31,7 +39,7 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
     });
     
     // Reload the page
-    window.location.reload();
+    window.location.href = '/login?cleared=true';
   };
   
   return (
@@ -55,17 +63,35 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
               <Info className="h-5 w-5 text-amber-500 mr-2 mt-0.5" />
               <p className="text-sm text-amber-800">
                 {authStuck 
-                  ? "The authentication process is taking longer than expected. This could be due to network issues or server load."
-                  : "We're having trouble verifying your credentials. This could be due to an expired session or authentication error."}
+                  ? "The authentication process is taking longer than expected. This could be due to a stale session or browser cache issues."
+                  : "We're having trouble verifying your credentials. This is often resolved by clearing your browser storage and trying again."}
               </p>
             </div>
           </div>
           
           <div className="space-y-4">
             <Button 
-              onClick={onRefreshSession}
+              onClick={clearStorageAndReload}
               className="w-full bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2"
-              disabled={isRefreshing}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Clear Storage & Login Again
+            </Button>
+            
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t"></span>
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-white px-2 text-muted-foreground">Or try these options</span>
+              </div>
+            </div>
+            
+            <Button 
+              onClick={onRefreshSession}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-2"
+              disabled={isRefreshing || refreshAttemptCount >= 3}
             >
               <RotateCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               {isRefreshing ? "Refreshing Session..." : "Refresh Session"}
@@ -79,33 +105,25 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
               <RotateCcw className="h-4 w-4" />
               Reload Page
             </Button>
-            
-            <Button 
-              onClick={clearStorageAndReload}
-              variant="destructive"
-              className="w-full flex items-center justify-center gap-2"
-            >
-              <Trash2 className="h-4 w-4" />
-              Clear Storage & Reload
-            </Button>
           </div>
           
           <div className="mt-8 text-sm text-gray-600 bg-gray-100 p-4 rounded-md text-left">
-            <h3 className="font-semibold mb-2">Troubleshooting Tips:</h3>
+            <h3 className="font-semibold mb-2">Why This Happens:</h3>
+            <p className="mb-4">Authentication issues are often caused by browser caching conflicts or stuck sessions. The "Clear Storage & Login Again" button is the most reliable fix as it performs a complete reset of your session data.</p>
+            
+            <h3 className="font-semibold mb-2">Additional Troubleshooting:</h3>
             <ul className="list-disc list-inside space-y-1">
               <li>Try using an incognito/private browsing window</li>
               <li>Clear your browser cookies and cache</li>
               <li>Check if you have any browser extensions blocking cookies</li>
               <li>Try a different browser</li>
-              <li>Check your network connection</li>
-              <li>Ensure your browser is up to date</li>
             </ul>
           </div>
         </CardContent>
         
         <CardFooter className="flex flex-col text-sm text-gray-500">
           <p className="text-center">
-            If this issue persists after trying these solutions, please contact support.
+            If this issue persists after trying all solutions, please contact support.
           </p>
         </CardFooter>
       </Card>

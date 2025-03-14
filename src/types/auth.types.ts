@@ -16,4 +16,5 @@ export type AuthContextType = {
   logOut: () => Promise<void>;
   updateSetupStatus: (completed: boolean) => Promise<boolean>;
   refreshSession: () => Promise<User | null>;
+  sessionChecked: boolean;
 };

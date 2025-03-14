@@ -17,7 +17,8 @@ export const useAuth = (): AuthContextType => {
     user, 
     isLoading: stateLoading, 
     authError,
-    refreshSession 
+    refreshSession,
+    sessionChecked 
   } = useAuthState();
   
   // Get auth operations - these hooks must be called unconditionally
@@ -121,7 +122,8 @@ export const useAuth = (): AuthContextType => {
     logIn,
     logOut,
     updateSetupStatus,
-    refreshSession
+    refreshSession,
+    sessionChecked
   }), [
     user,
     isLoading,
@@ -130,6 +132,7 @@ export const useAuth = (): AuthContextType => {
     logIn,
     logOut,
     updateSetupStatus,
-    refreshSession
+    refreshSession,
+    sessionChecked
   ]);
 };
