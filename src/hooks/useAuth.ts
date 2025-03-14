@@ -8,6 +8,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 export const useAuth = () => {
+  // Initialize all state first
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   
   // Get auth state management
@@ -18,16 +19,34 @@ export const useAuth = () => {
     refreshSession 
   } = useAuthState();
   
-  // Get auth operations
-  const signUp = useSignUp();
+  // Get auth operations - these hooks must be called unconditionally
+  const signUpFn = useSignUp();
   const logInFn = useLogIn();
-  const logOut = useLogOut();
-  const updateSetupStatus = useSetupStatus();
+  const logOutFn = useLogOut();
+  const updateSetupStatusFn = useSetupStatus();
   
   // Combined loading state
   const isLoading = stateLoading || isAuthLoading;
   
-  // Wrapped login to handle loading state
+  // Define all callbacks - ensure these are always defined in the same order
+  const signUp = useCallback(async (email: string, password: string, name: string, agencyName: string) => {
+    try {
+      setIsAuthLoading(true);
+      const result = await signUpFn(email, password, name, agencyName);
+      setIsAuthLoading(false);
+      return result;
+    } catch (error: any) {
+      console.error('SignUp error in useAuth:', error.message);
+      toast({
+        title: "Sign up failed",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+      setIsAuthLoading(false);
+      return false;
+    }
+  }, [signUpFn]);
+  
   const logIn = useCallback(async (email: string, password: string) => {
     try {
       setIsAuthLoading(true);
@@ -46,7 +65,41 @@ export const useAuth = () => {
     }
   }, [logInFn]);
   
-  // Reset auth loading state when component unmounts
+  const logOut = useCallback(async () => {
+    try {
+      setIsAuthLoading(true);
+      await logOutFn();
+      setIsAuthLoading(false);
+    } catch (error: any) {
+      console.error('Logout error in useAuth:', error.message);
+      toast({
+        title: "Logout failed",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+      setIsAuthLoading(false);
+    }
+  }, [logOutFn]);
+  
+  const updateSetupStatus = useCallback(async (completed: boolean) => {
+    try {
+      setIsAuthLoading(true);
+      const result = await updateSetupStatusFn(completed);
+      setIsAuthLoading(false);
+      return result;
+    } catch (error: any) {
+      console.error('Setup status update error in useAuth:', error.message);
+      toast({
+        title: "Setup status update failed",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+      setIsAuthLoading(false);
+      return false;
+    }
+  }, [updateSetupStatusFn]);
+  
+  // Always define the effect - this should be the last hook
   useEffect(() => {
     return () => {
       // Cleanup function to ensure loading states are reset

@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, ReactNode } from 'react';
+import React, { createContext, useContext, ReactNode, useMemo } from 'react';
 import { AuthContextType } from '@/types/auth.types';
 import { useAuth as useAuthImplementation } from '@/hooks/useAuth';
 
@@ -32,8 +32,15 @@ interface AuthProviderProps {
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const auth = useAuthImplementation();
   
+  // Use useMemo to prevent unnecessary re-renders of the context value
+  const contextValue = useMemo(() => auth, [
+    auth.user,
+    auth.isLoading,
+    auth.authError
+  ]);
+  
   return (
-    <AuthContext.Provider value={auth}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

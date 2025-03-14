@@ -11,7 +11,7 @@ import DashboardContent from '@/components/dashboard/DashboardContent';
 import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
-  const { user, isLoading: isAuthLoading, logOut } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const navigate = useNavigate();
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
@@ -27,51 +27,36 @@ const Dashboard = () => {
 
   // Handle redirects based on auth state
   useEffect(() => {
-    let redirectTimeout: number | undefined;
-    
-    if (!isAuthLoading && !user && isMounted) {
-      // Add small delay to prevent immediate redirect during auth state changes
-      redirectTimeout = window.setTimeout(() => {
-        if (isMounted) {
-          navigate('/login');
-        }
-      }, 500);
-    } else if (user && !user.setupCompleted && isMounted) {
-      redirectTimeout = window.setTimeout(() => {
-        if (isMounted) {
-          navigate('/welcome');
-        }
-      }, 500);
-    }
+    const redirectTimeout = window.setTimeout(() => {
+      if (!isMounted) return;
+      
+      if (!isAuthLoading && !user) {
+        navigate('/login');
+      } else if (user && !user.setupCompleted) {
+        navigate('/welcome');
+      }
+    }, 500);
     
     return () => {
-      if (redirectTimeout) {
-        window.clearTimeout(redirectTimeout);
-      }
+      window.clearTimeout(redirectTimeout);
     };
   }, [user, isAuthLoading, navigate, isMounted]);
 
   // Force timeout to prevent infinite loading
   useEffect(() => {
-    let timeout: number | undefined;
-    
-    if (isAuthLoading && !loadingTimeoutReached && isMounted) {
-      timeout = window.setTimeout(() => {
-        if (isMounted) {
-          setLoadingTimeoutReached(true);
-        }
-      }, 5000); // 5 seconds timeout
-    }
+    const timeout = window.setTimeout(() => {
+      if (isMounted && isAuthLoading) {
+        setLoadingTimeoutReached(true);
+      }
+    }, 8000); // 8 seconds timeout
     
     return () => {
-      if (timeout) {
-        window.clearTimeout(timeout);
-      }
+      window.clearTimeout(timeout);
     };
-  }, [isAuthLoading, loadingTimeoutReached, isMounted]);
+  }, [isAuthLoading, isMounted]);
 
   // Handle manual refresh 
-  const handleRefreshConnection = async () => {
+  const handleRefreshConnection = () => {
     if (!isMounted) return;
     
     setIsRecovering(true);
@@ -80,35 +65,56 @@ const Dashboard = () => {
       // Just reload the page as a simple solution
       window.location.reload();
     } catch (error) {
-      console.error("Error during page refresh:", error);
       if (isMounted) {
         toast({
           title: "Connection error",
           description: "An error occurred while trying to refresh the page.",
           variant: "destructive",
         });
-      }
-    } finally {
-      if (isMounted) {
         setIsRecovering(false);
       }
+    }
+  };
+
+  // Clear all storage data and reload
+  const handleClearAndReload = () => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.reload();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to clear storage. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   // If auth is still loading after timeout, show a retry button
   if (isAuthLoading && loadingTimeoutReached) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <p className="mb-4 text-muted-foreground">Loading is taking longer than expected...</p>
-        <Button 
-          onClick={handleRefreshConnection} 
-          variant="default"
-          className="flex items-center gap-2 mb-4"
-          disabled={isRecovering}
-        >
-          <RefreshCw className={`h-4 w-4 ${isRecovering ? 'animate-spin' : ''}`} />
-          {isRecovering ? "Refreshing..." : "Refresh Page"}
-        </Button>
+        <div className="flex flex-col gap-4 w-full max-w-md">
+          <Button 
+            onClick={handleRefreshConnection} 
+            variant="default"
+            className="flex items-center gap-2"
+            disabled={isRecovering}
+          >
+            <RefreshCw className={`h-4 w-4 ${isRecovering ? 'animate-spin' : ''}`} />
+            {isRecovering ? "Refreshing..." : "Refresh Page"}
+          </Button>
+          
+          <Button 
+            onClick={handleClearAndReload}
+            variant="destructive"
+            className="flex items-center gap-2"
+          >
+            Clear Storage & Reload
+          </Button>
+        </div>
       </div>
     );
   }
