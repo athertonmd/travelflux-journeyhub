@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, clearAuthData } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export const useLogOut = () => {
@@ -8,10 +8,7 @@ export const useLogOut = () => {
     try {
       console.log('Logging out user');
       
-      // First, clear any local storage related to auth
-      localStorage.removeItem('tripscape-auth-token');
-      
-      // Then sign out from Supabase
+      // First attempt to sign out from Supabase
       const { error } = await supabase.auth.signOut({
         scope: 'local' // Only sign out from this device
       });
@@ -23,21 +20,18 @@ export const useLogOut = () => {
           description: error.message,
           variant: 'destructive'
         });
-        
-        // Force clear auth data even if there was an error
-        localStorage.removeItem('supabase.auth.token');
-        localStorage.removeItem('supabase.auth.expires_at');
-        sessionStorage.removeItem('supabase.auth.token');
-        return;
+      } else {
+        console.log('Logout successful');
+        toast({
+          title: 'Logged out',
+          description: 'You have been successfully logged out.'
+        });
       }
       
-      console.log('Logout successful');
-      toast({
-        title: 'Logged out',
-        description: 'You have been successfully logged out.'
-      });
+      // Always clear auth data regardless of Supabase response
+      clearAuthData();
       
-      // Short timeout to allow state to update
+      // Short timeout to allow state to update before redirect
       setTimeout(() => {
         window.location.href = '/login';
       }, 300);
@@ -50,9 +44,10 @@ export const useLogOut = () => {
       });
       
       // Force clear auth data even if there was an exception
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('supabase.auth.expires_at');
-      sessionStorage.removeItem('supabase.auth.token');
+      clearAuthData();
+      
+      // Redirect to login page
+      window.location.href = '/login';
     }
   }, []);
 

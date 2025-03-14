@@ -12,7 +12,8 @@ const AuthContext = createContext<AuthContextType>({
   logIn: async () => false,
   logOut: async () => {},
   updateSetupStatus: async () => false,
-  refreshSession: async () => null
+  refreshSession: async () => null,
+  sessionChecked: false
 });
 
 // Custom hook to use the auth context
@@ -36,7 +37,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const contextValue = useMemo(() => auth, [
     auth.user,
     auth.isLoading,
-    auth.authError
+    auth.authError,
+    auth.sessionChecked
   ]);
   
   return (

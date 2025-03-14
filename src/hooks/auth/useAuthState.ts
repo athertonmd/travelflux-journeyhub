@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, clearAuthData } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
 
 export const useAuthState = () => {
@@ -84,7 +84,7 @@ export const useAuthState = () => {
         
         // Use Promise.race to add a timeout
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Session check timeout')), 8000);
+          setTimeout(() => reject(new Error('Session check timeout')), 5000); // Reduced from 8000
         });
         
         const sessionPromise = supabase.auth.getSession();
@@ -151,6 +151,7 @@ export const useAuthState = () => {
         if (session?.user) {
           console.log('User authenticated:', session.user.email);
           await updateUserState(session.user);
+          setSessionChecked(true);
         } else if (event === 'INITIAL_SESSION') {
           console.log('Initial session with no user, marking as checked');
           setUser(null);
@@ -203,6 +204,9 @@ export const useAuthState = () => {
       const timeoutPromise = new Promise<{error: Error}>((_, reject) => {
         setTimeout(() => reject({error: new Error('Session refresh timeout')}), 5000);
       });
+      
+      // Try to force-refresh the session
+      await supabase.auth.refreshSession();
       
       const sessionPromise = supabase.auth.getSession();
       

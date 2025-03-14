@@ -14,12 +14,12 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      autoRefreshToken: true,
+      autoRefreshToken: false, // Changed to false to handle refreshes manually
       persistSession: true,
       storageKey: 'tripscape-auth-token',
-      detectSessionInUrl: true, // Enable URL detection for auth callbacks
+      detectSessionInUrl: false, // Disabled URL detection to prevent conflicts
       flowType: 'pkce',
-      debug: true // Enable debug mode to see more detailed logs
+      debug: false // Disabled debug mode to reduce noise
     },
     global: {
       headers: {
@@ -28,7 +28,24 @@ export const supabase = createClient<Database>(
     },
     // Set shorter timeout to prevent hanging requests
     realtime: {
-      timeout: 10000 // 10 seconds (default is 1 minute)
+      timeout: 5000 // 5 seconds (reduced from 10 seconds)
     }
   }
 );
+
+// Add a helper function to completely clear auth data
+export const clearAuthData = () => {
+  console.log('Clearing all auth data');
+  
+  // Clear Supabase auth tokens from storage
+  localStorage.removeItem('tripscape-auth-token');
+  localStorage.removeItem('supabase.auth.token');
+  localStorage.removeItem('supabase.auth.expires_at');
+  localStorage.removeItem('supabase.auth.refresh_token');
+  sessionStorage.removeItem('supabase.auth.token');
+  
+  // Clear cookies
+  document.cookie.split(";").forEach(function(c) {
+    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+  });
+};

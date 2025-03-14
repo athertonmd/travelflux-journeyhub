@@ -2,7 +2,8 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { RotateCcw, AlertCircle, Trash2, Info, RefreshCw } from 'lucide-react';
+import { RotateCcw, AlertCircle, Info, RefreshCw } from 'lucide-react';
+import { clearAuthData } from '@/integrations/supabase/client';
 
 interface LoginErrorStateProps {
   isRefreshing: boolean;
@@ -20,23 +21,9 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
   onReloadPage,
 }) => {
   const clearStorageAndReload = () => {
-    // Clear all storage
+    // Clear all storage using the helper function
     console.log('Clearing all storage and reloading page');
-    
-    // Clear specific auth-related items first
-    localStorage.removeItem('tripscape-auth-token');
-    localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem('supabase.auth.expires_at');
-    localStorage.removeItem('supabase.auth.refresh_token');
-    
-    // Then clear all storage
-    localStorage.clear();
-    sessionStorage.clear();
-    
-    // Clear any cookies related to Supabase auth
-    document.cookie.split(";").forEach(function(c) {
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-    });
+    clearAuthData();
     
     // Reload the page
     window.location.href = '/login?cleared=true';
@@ -63,8 +50,8 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
               <Info className="h-5 w-5 text-amber-500 mr-2 mt-0.5" />
               <p className="text-sm text-amber-800">
                 {authStuck 
-                  ? "The authentication process is taking longer than expected. This could be due to a stale session or browser cache issues."
-                  : "We're having trouble verifying your credentials. This is often resolved by clearing your browser storage and trying again."}
+                  ? "The authentication process is taking longer than expected. Most users resolve this by clicking the 'Clear Storage & Login Again' button below."
+                  : "We're having trouble verifying your credentials. This is typically fixed by clearing your browser storage and trying again."}
               </p>
             </div>
           </div>

@@ -9,6 +9,7 @@ import LoadingSpinner from '@/components/auth/LoadingSpinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoginErrorState from '@/components/auth/LoginErrorState';
 import { toast } from '@/hooks/use-toast';
+import { clearAuthData } from '@/integrations/supabase/client';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -30,17 +31,32 @@ const Login = () => {
     sessionChecked
   });
   
-  // Reset error state when component mounts
+  // Reset error state when component mounts and check URL for parameters
   useEffect(() => {
     setHasError(false);
     setShowingErrorPage(false);
+    
+    // Check if URL contains cleared=true parameter
+    if (window.location.href.includes('cleared=true')) {
+      console.log('Session was cleared, starting fresh');
+      toast({
+        title: "Storage cleared",
+        description: "Your session data has been reset. Please try logging in again.",
+      });
+    }
     
     // Clear any stuck sessions on page load
     const clearStuckSessions = async () => {
       if (window.location.href.includes('error=')) {
         console.log('Error detected in URL, clearing session state');
-        localStorage.removeItem('tripscape-auth-token');
+        clearAuthData();
         setHasError(true);
+        
+        toast({
+          title: "Authentication error",
+          description: "We detected an error in your session. Your data has been reset.",
+          variant: "destructive"
+        });
       }
     };
     
@@ -67,7 +83,7 @@ const Login = () => {
       loadingTimeoutRef.current = window.setTimeout(() => {
         console.log('Loading timeout triggered, showing error state');
         setHasError(true);
-      }, 8000); // 8 seconds timeout (reduced from 10)
+      }, 5000); // 5 seconds timeout (reduced from 8)
     }
     
     return () => {
@@ -110,6 +126,11 @@ const Login = () => {
         return true;
       } else {
         setHasError(true);
+        toast({
+          title: "Session refresh failed",
+          description: "We couldn't restore your session. Please try clearing storage.",
+          variant: "destructive"
+        });
         return false;
       }
     } catch (error) {
