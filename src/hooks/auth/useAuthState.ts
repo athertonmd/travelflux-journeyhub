@@ -58,7 +58,11 @@ export const useAuthState = () => {
   useEffect(() => {
     console.log('Setting up auth state listener');
     let isMounted = true;
-    setIsLoading(true);
+    
+    // Only set loading if we're not already loaded
+    if (!user) {
+      setIsLoading(true);
+    }
     
     // Initial session check
     const checkSession = async () => {
@@ -79,6 +83,7 @@ export const useAuthState = () => {
           await updateUserState(data.session.user);
         } else {
           console.log('No session found');
+          setUser(null);
           setIsLoading(false);
         }
       } catch (error: any) {
@@ -90,7 +95,7 @@ export const useAuthState = () => {
     };
     
     // Auth state change listener
-    const { data } = supabase.auth.onAuthStateChange(
+    const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
         
@@ -112,8 +117,11 @@ export const useAuthState = () => {
     
     // Clean up
     return () => {
+      console.log('Cleaning up auth state listener');
       isMounted = false;
-      data?.subscription.unsubscribe();
+      if (authListener) {
+        authListener.subscription.unsubscribe();
+      }
     };
   }, [updateUserState]);
 
@@ -121,17 +129,26 @@ export const useAuthState = () => {
     try {
       setIsLoading(true);
       setAuthError(null);
-      const { data, error } = await supabase.auth.getSession();
       
-      if (error) {
-        console.error('Error refreshing session:', error.message);
-        setAuthError(error.message);
+      // Add a timeout to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Session refresh timeout')), 5000);
+      });
+      
+      const sessionPromise = supabase.auth.getSession();
+      
+      // Race between the actual operation and the timeout
+      const result = await Promise.race([sessionPromise, timeoutPromise]) as any;
+      
+      if (result.error) {
+        console.error('Error refreshing session:', result.error.message);
+        setAuthError(result.error.message);
         setIsLoading(false);
         return null;
       }
       
-      if (data.session?.user) {
-        return await updateUserState(data.session.user);
+      if (result.data?.session?.user) {
+        return await updateUserState(result.data.session.user);
       }
       
       setIsLoading(false);

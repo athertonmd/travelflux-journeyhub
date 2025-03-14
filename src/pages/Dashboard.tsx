@@ -15,29 +15,65 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
+  const [isMounted, setIsMounted] = useState(true);
+
+  // Set isMounted state for cleanup
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
 
   // Handle redirects based on auth state
   useEffect(() => {
-    if (!isAuthLoading && !user) {
-      navigate('/login');
-    } else if (user && !user.setupCompleted) {
-      navigate('/welcome');
+    let redirectTimeout: number | undefined;
+    
+    if (!isAuthLoading && !user && isMounted) {
+      // Add small delay to prevent immediate redirect during auth state changes
+      redirectTimeout = window.setTimeout(() => {
+        if (isMounted) {
+          navigate('/login');
+        }
+      }, 500);
+    } else if (user && !user.setupCompleted && isMounted) {
+      redirectTimeout = window.setTimeout(() => {
+        if (isMounted) {
+          navigate('/welcome');
+        }
+      }, 500);
     }
-  }, [user, isAuthLoading, navigate]);
+    
+    return () => {
+      if (redirectTimeout) {
+        window.clearTimeout(redirectTimeout);
+      }
+    };
+  }, [user, isAuthLoading, navigate, isMounted]);
 
   // Force timeout to prevent infinite loading
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (isAuthLoading) {
-        setLoadingTimeoutReached(true);
-      }
-    }, 5000); // 5 seconds timeout
+    let timeout: number | undefined;
     
-    return () => clearTimeout(timeout);
-  }, [isAuthLoading]);
+    if (isAuthLoading && !loadingTimeoutReached && isMounted) {
+      timeout = window.setTimeout(() => {
+        if (isMounted) {
+          setLoadingTimeoutReached(true);
+        }
+      }, 5000); // 5 seconds timeout
+    }
+    
+    return () => {
+      if (timeout) {
+        window.clearTimeout(timeout);
+      }
+    };
+  }, [isAuthLoading, loadingTimeoutReached, isMounted]);
 
   // Handle manual refresh 
   const handleRefreshConnection = async () => {
+    if (!isMounted) return;
+    
     setIsRecovering(true);
     
     try {
@@ -45,13 +81,17 @@ const Dashboard = () => {
       window.location.reload();
     } catch (error) {
       console.error("Error during page refresh:", error);
-      toast({
-        title: "Connection error",
-        description: "An error occurred while trying to refresh the page.",
-        variant: "destructive",
-      });
+      if (isMounted) {
+        toast({
+          title: "Connection error",
+          description: "An error occurred while trying to refresh the page.",
+          variant: "destructive",
+        });
+      }
     } finally {
-      setIsRecovering(false);
+      if (isMounted) {
+        setIsRecovering(false);
+      }
     }
   };
 

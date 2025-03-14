@@ -4,7 +4,7 @@ import { useSignUp } from '@/hooks/auth/useSignUp';
 import { useLogIn } from '@/hooks/auth/useLogIn';
 import { useLogOut } from '@/hooks/auth/useLogOut';
 import { useSetupStatus } from '@/hooks/auth/useSetupStatus';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
 
 export const useAuth = () => {
@@ -45,6 +45,14 @@ export const useAuth = () => {
       return false;
     }
   }, [logInFn]);
+  
+  // Reset auth loading state when component unmounts
+  useEffect(() => {
+    return () => {
+      // Cleanup function to ensure loading states are reset
+      setIsAuthLoading(false);
+    };
+  }, []);
   
   return {
     user,
