@@ -4,9 +4,28 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
-  const logIn = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const logIn = useCallback(async (
+    email: string, 
+    password: string, 
+    refreshOnly = false
+  ): Promise<boolean> => {
     try {
       setIsLoading(true);
+      
+      if (refreshOnly) {
+        // Just check the session
+        const { data, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error('Session check error:', error);
+          setIsLoading(false);
+          return false;
+        }
+        setIsLoading(false);
+        return !!data.session;
+      }
+      
+      // Proceed with normal login
+      console.log('Attempting login for:', email);
       
       // Clear any existing sessions to prevent conflicts
       await supabase.auth.signOut({ scope: 'local' });
@@ -23,6 +42,7 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
           description: error.message,
           variant: 'destructive'
         });
+        setIsLoading(false);
         return false;
       }
       
@@ -35,6 +55,7 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
         return true;
       }
       
+      setIsLoading(false);
       return false;
     } catch (error: any) {
       console.error('Login error:', error);
@@ -43,9 +64,8 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
         description: error.message || 'An unexpected error occurred',
         variant: 'destructive'
       });
-      return false;
-    } finally {
       setIsLoading(false);
+      return false;
     }
   }, [setIsLoading]);
 

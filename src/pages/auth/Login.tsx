@@ -7,11 +7,25 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import LoginErrorState from '@/components/auth/LoginErrorState';
 
 const Login = () => {
   const navigate = useNavigate();
   const { user, isLoading, logIn } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+  const [refreshAttemptCount, setRefreshAttemptCount] = useState(0);
+  
+  // Set timeout for stuck loading state
+  useEffect(() => {
+    if (isLoading && !loadingTimeout) {
+      const timeout = setTimeout(() => {
+        setLoadingTimeout(true);
+      }, 5000); // 5 seconds timeout
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [isLoading, loadingTimeout]);
   
   // Redirect if already logged in
   useEffect(() => {
@@ -21,7 +35,43 @@ const Login = () => {
     }
   }, [user, navigate]);
 
-  // Show loading spinner only while authentication is being checked initially
+  // Handle refresh attempt
+  const handleRefreshSession = async () => {
+    setIsSubmitting(true);
+    setRefreshAttemptCount(prev => prev + 1);
+    
+    try {
+      // Call logIn with just the refreshOnly flag
+      const success = await logIn('', '', true);
+      setLoadingTimeout(false);
+      return success;
+    } catch (error) {
+      console.error('Error refreshing session:', error);
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle page reload
+  const handleReloadPage = () => {
+    window.location.reload();
+  };
+
+  // Show error state if loading takes too long
+  if ((isLoading && loadingTimeout) || (refreshAttemptCount > 0 && isLoading)) {
+    return (
+      <LoginErrorState
+        isRefreshing={isSubmitting}
+        refreshAttemptCount={refreshAttemptCount}
+        authStuck={loadingTimeout}
+        onRefreshSession={handleRefreshSession}
+        onReloadPage={handleReloadPage}
+      />
+    );
+  }
+
+  // Show loading spinner only during initial auth check, not during form submission
   if (isLoading && !isSubmitting) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -34,10 +84,14 @@ const Login = () => {
   const handleSubmit = async (email: string, password: string, remember: boolean) => {
     try {
       setIsSubmitting(true);
+      // Note: We're ignoring the remember parameter since it's not used in the current implementation
       const result = await logIn(email, password);
-      setIsSubmitting(false);
+      if (!result) {
+        setIsSubmitting(false);
+      }
       return result;
     } catch (error) {
+      console.error('Login error in handleSubmit:', error);
       setIsSubmitting(false);
       return false;
     }
