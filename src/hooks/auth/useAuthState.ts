@@ -2,7 +2,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
-import { toast } from '@/hooks/use-toast';
 
 export const useAuthState = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -11,11 +10,14 @@ export const useAuthState = () => {
   // Update user state with Supabase user data
   const updateUserState = useCallback(async (supabaseUser: any) => {
     if (!supabaseUser) {
+      console.log('No Supabase user, clearing user state');
       setUser(null);
       return null;
     }
 
     try {
+      console.log('Updating user state for user:', supabaseUser.id);
+      
       // Check setup status
       const { data, error } = await supabase
         .from('agency_configurations')
@@ -35,6 +37,7 @@ export const useAuthState = () => {
         setupCompleted: data?.setup_completed || false
       };
       
+      console.log('User state updated:', userData);
       setUser(userData);
       return userData;
     } catch (error) {
@@ -52,6 +55,7 @@ export const useAuthState = () => {
     // Check for existing session
     const checkSession = async () => {
       try {
+        console.log('Checking for existing session');
         const { data, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -61,7 +65,10 @@ export const useAuthState = () => {
         }
         
         if (data.session?.user) {
+          console.log('Session exists, updating user state');
           await updateUserState(data.session.user);
+        } else {
+          console.log('No session found');
         }
         
         setIsLoading(false);
@@ -79,8 +86,10 @@ export const useAuthState = () => {
         console.log('Auth state changed:', event);
         
         if (session?.user) {
+          console.log('Session user found in auth state change');
           await updateUserState(session.user);
         } else {
+          console.log('No session user in auth state change');
           setUser(null);
         }
         
@@ -90,6 +99,7 @@ export const useAuthState = () => {
     
     // Clean up listener on unmount
     return () => {
+      console.log('Cleaning up auth listener');
       authListener.subscription.unsubscribe();
     };
   }, [updateUserState]);
@@ -97,24 +107,30 @@ export const useAuthState = () => {
   // Refresh session manually
   const refreshSession = useCallback(async (): Promise<User | null> => {
     try {
+      console.log('Manually refreshing session');
       setIsLoading(true);
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
         console.error('Error refreshing session:', error);
+        setIsLoading(false);
         return null;
       }
       
       if (data.session?.user) {
-        return await updateUserState(data.session.user);
+        console.log('Session found during refresh');
+        const userData = await updateUserState(data.session.user);
+        setIsLoading(false);
+        return userData;
       }
       
+      console.log('No session found during refresh');
+      setIsLoading(false);
       return null;
     } catch (error) {
       console.error('Exception refreshing session:', error);
-      return null;
-    } finally {
       setIsLoading(false);
+      return null;
     }
   }, [updateUserState]);
 

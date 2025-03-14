@@ -8,27 +8,44 @@ import { useAuth } from '@/contexts/AuthContext';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import LoginErrorState from '@/components/auth/LoginErrorState';
+import { supabase } from '@/integrations/supabase/client';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, isLoading: authLoading, logIn } = useAuth();
+  const { user, logIn } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [refreshAttemptCount, setRefreshAttemptCount] = useState(0);
   
-  // Combined loading state
-  const isLoading = authLoading && !isSubmitting;
-  
-  // Set timeout for stuck loading state
+  // Check session on mount
   useEffect(() => {
-    if (isLoading && !loadingTimeout) {
-      const timeout = setTimeout(() => {
-        setLoadingTimeout(true);
-      }, 5000); // 5 seconds timeout
-      
-      return () => clearTimeout(timeout);
-    }
-  }, [isLoading, loadingTimeout]);
+    const checkSession = async () => {
+      console.log('Login page: Checking session');
+      try {
+        const { data } = await supabase.auth.getSession();
+        console.log('Session check result:', data.session ? 'logged in' : 'no session');
+        
+        if (data.session?.user) {
+          console.log('User is already logged in');
+        }
+        
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Session check error:', error);
+        setIsLoading(false);
+      }
+    };
+    
+    checkSession();
+    
+    // Set timeout for stuck loading state
+    const timeout = setTimeout(() => {
+      setLoadingTimeout(true);
+    }, 5000); // 5 seconds timeout
+    
+    return () => clearTimeout(timeout);
+  }, []);
   
   // Redirect if already logged in
   useEffect(() => {
@@ -46,16 +63,9 @@ const Login = () => {
     
     try {
       console.log('Attempting to refresh session');
-      // Call logIn with just the refreshOnly flag
-      const success = await logIn('', '', true);
-      console.log('Session refresh result:', success);
-      setLoadingTimeout(false);
-      
-      if (!success) {
-        setIsSubmitting(false);
-      }
-      
-      return success;
+      // Force reload the page instead of just refreshing the session
+      window.location.reload();
+      return true;
     } catch (error) {
       console.error('Error refreshing session:', error);
       setIsSubmitting(false);
@@ -69,7 +79,7 @@ const Login = () => {
   };
 
   // Show error state if loading takes too long
-  if ((isLoading && loadingTimeout) || (refreshAttemptCount > 0 && authLoading)) {
+  if ((isLoading && loadingTimeout) || (refreshAttemptCount > 0 && isLoading)) {
     return (
       <LoginErrorState
         isRefreshing={isSubmitting}
@@ -81,12 +91,12 @@ const Login = () => {
     );
   }
 
-  // Show loading spinner only during initial auth check, not during form submission
-  if (isLoading && !isSubmitting) {
+  // Show loading spinner only during initial auth check
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
         <LoadingSpinner size={16} />
-        <p className="mt-4 text-muted-foreground">Loading your account...</p>
+        <p className="mt-4 text-muted-foreground">Checking login status...</p>
       </div>
     );
   }
@@ -95,14 +105,14 @@ const Login = () => {
     try {
       console.log('Login form submitted for:', email);
       setIsSubmitting(true);
-      // Note: We're ignoring the remember parameter since it's not used in the current implementation
-      const result = await logIn(email, password);
       
-      if (!result) {
-        console.log('Login failed, resetting submit state');
+      const success = await logIn(email, password);
+      console.log('Login result:', success ? 'success' : 'failed');
+      
+      if (!success) {
         setIsSubmitting(false);
       }
-      return result;
+      return success;
     } catch (error) {
       console.error('Login error in handleSubmit:', error);
       setIsSubmitting(false);

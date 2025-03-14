@@ -36,37 +36,30 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
         <CardContent className="text-center">
           <p className="mb-6">
             This could be due to network issues or a temporary problem with our service.
-            {refreshAttemptCount > 1 && " Try reloading the page or coming back later."}
+            {refreshAttemptCount > 1 && " You can try reloading the page or signing in with different credentials."}
           </p>
           
           <Button 
-            onClick={onRefreshSession} 
-            disabled={isRefreshing}
+            onClick={onReloadPage}
             className="w-full mb-4 bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            {isRefreshing ? 'Refreshing Connection...' : 'Refresh Connection'}
+            <RotateCcw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Reload Page
           </Button>
           
-          {(refreshAttemptCount > 0 || authStuck) && !isRefreshing && (
-            <div className="mt-2">
-              <Button 
-                variant="outline" 
-                onClick={onReloadPage}
-                className="w-full flex items-center justify-center gap-2"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Reload Page
-              </Button>
-            </div>
-          )}
+          <p className="text-sm text-gray-600 mt-4">
+            If reloading doesn't work, you can try:
+          </p>
+          <ul className="text-sm text-gray-600 list-disc list-inside mt-2 text-left">
+            <li>Clearing your browser cache and cookies</li>
+            <li>Using an incognito/private browsing window</li>
+            <li>Checking your network connection</li>
+          </ul>
         </CardContent>
         
         <CardFooter className="flex flex-col text-sm text-gray-500">
           <p className="text-center">
-            {refreshAttemptCount > 1 
-              ? "If this issue persists, please try clearing your browser cache or using incognito mode."
-              : "This will clear your local session data and attempt to reconnect."}
+            If this issue persists, please contact support.
           </p>
         </CardFooter>
       </Card>

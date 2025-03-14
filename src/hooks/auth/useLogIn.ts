@@ -11,24 +11,30 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
   ): Promise<boolean> => {
     try {
       setIsLoading(true);
+      console.log('Login function called', { refreshOnly, email: email ? 'provided' : 'empty' });
       
       if (refreshOnly) {
         // Just check the session
+        console.log('Refresh only mode, checking session');
         const { data, error } = await supabase.auth.getSession();
         if (error) {
           console.error('Session check error:', error);
           setIsLoading(false);
           return false;
         }
+        console.log('Session check successful, session:', data.session ? 'exists' : 'none');
         setIsLoading(false);
         return !!data.session;
       }
       
-      // Proceed with normal login
-      console.log('Attempting login for:', email);
+      // Regular login with email and password
+      if (!email || !password) {
+        console.error('Login error: Email and password required');
+        setIsLoading(false);
+        return false;
+      }
       
-      // Clear any existing sessions to prevent conflicts
-      await supabase.auth.signOut({ scope: 'local' });
+      console.log('Attempting login for:', email);
       
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -52,7 +58,7 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
           title: 'Login successful',
           description: 'Welcome back!'
         });
-        // Don't set isLoading to false here as the auth listener will handle that
+        setIsLoading(false);
         return true;
       }
       
