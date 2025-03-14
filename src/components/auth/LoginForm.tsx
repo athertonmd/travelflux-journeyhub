@@ -57,15 +57,13 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     
     try {
       setLocalLoading(true);
-      console.log('Calling onLogin from LoginForm');
-      
       // Call the parent's login handler
       const success = await onLogin(formData.email, formData.password, formData.remember);
       
-      console.log('Login result:', success);
-      
-      // Always reset loading regardless of success/failure
-      setLocalLoading(false);
+      // If login explicitly failed, reset loading state immediately
+      if (!success) {
+        setLocalLoading(false);
+      }
     } catch (error) {
       console.error('Error during login:', error);
       toast({

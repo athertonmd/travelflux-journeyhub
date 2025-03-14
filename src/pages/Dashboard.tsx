@@ -18,10 +18,12 @@ const Dashboard = () => {
 
   // Handle redirects based on auth state
   useEffect(() => {
-    if (!isAuthLoading && !user) {
-      navigate('/login');
-    } else if (user && !user.setupCompleted) {
-      navigate('/welcome');
+    if (!isAuthLoading) {
+      if (!user) {
+        navigate('/login');
+      } else if (user && !user.setupCompleted) {
+        navigate('/welcome');
+      }
     }
   }, [user, isAuthLoading, navigate]);
 
