@@ -1,16 +1,38 @@
 
 import React, { useState } from 'react';
-import ItineraryTimeline from '@/components/ItineraryTimeline';
+import ItineraryTimeline, { ItineraryEvent } from '@/components/ItineraryTimeline';
 import RecentActivitySection from '@/components/dashboard/RecentActivitySection';
 import CreditStatusCard from '@/components/CreditStatusCard';
 import PurchaseCreditsModal from '@/components/PurchaseCreditsModal';
 import { useCredits } from '@/hooks/useCredits';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
+import LowCreditsAlert from '@/components/LowCreditsAlert';
 
 const DashboardContent = () => {
   const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const { creditInfo, isLoading, error, purchaseCredits } = useCredits();
+
+  // Mock itinerary events for the timeline
+  const mockEvents: ItineraryEvent[] = [
+    {
+      id: '1',
+      title: 'Flight to New York',
+      date: new Date().toISOString().split('T')[0],
+      time: '10:30 AM',
+      location: 'JFK International Airport',
+      type: 'flight',
+      description: 'American Airlines AA123',
+    },
+    {
+      id: '2',
+      title: 'Check-in at Hotel',
+      date: new Date().toISOString().split('T')[0],
+      time: '2:00 PM',
+      location: 'Grand Hyatt New York',
+      type: 'hotel',
+    }
+  ];
 
   const handlePurchaseClick = () => {
     setIsPurchaseModalOpen(true);
@@ -24,7 +46,7 @@ const DashboardContent = () => {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-6">
-        <ItineraryTimeline />
+        <ItineraryTimeline events={mockEvents} />
         <RecentActivitySection />
       </div>
       
@@ -40,11 +62,17 @@ const DashboardContent = () => {
         )}
         
         {creditInfo && (
-          <CreditStatusCard 
-            creditInfo={creditInfo}
-            onPurchaseClick={handlePurchaseClick}
-            isLoading={isLoading}
-          />
+          <>
+            <LowCreditsAlert 
+              creditInfo={creditInfo}
+              onPurchaseClick={handlePurchaseClick}
+            />
+            <CreditStatusCard 
+              creditInfo={creditInfo}
+              onPurchaseClick={handlePurchaseClick}
+              isLoading={isLoading}
+            />
+          </>
         )}
         
         {isPurchaseModalOpen && creditInfo && (
