@@ -47,11 +47,12 @@ export const useLogIn = (setIsLoading: (loading: boolean) => void) => {
       }
       
       if (data.user) {
-        // Session will be handled by the auth listener
+        console.log('Login successful, user:', data.user.id);
         toast({
           title: 'Login successful',
           description: 'Welcome back!'
         });
+        // Don't set isLoading to false here as the auth listener will handle that
         return true;
       }
       

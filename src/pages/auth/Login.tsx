@@ -11,10 +11,13 @@ import LoginErrorState from '@/components/auth/LoginErrorState';
 
 const Login = () => {
   const navigate = useNavigate();
-  const { user, isLoading, logIn } = useAuth();
+  const { user, isLoading: authLoading, logIn } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loadingTimeout, setLoadingTimeout] = useState(false);
   const [refreshAttemptCount, setRefreshAttemptCount] = useState(0);
+  
+  // Combined loading state
+  const isLoading = authLoading && !isSubmitting;
   
   // Set timeout for stuck loading state
   useEffect(() => {
@@ -30,6 +33,7 @@ const Login = () => {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
+      console.log('User logged in, redirecting to dashboard');
       const destination = user.setupCompleted ? '/dashboard' : '/welcome';
       navigate(destination);
     }
@@ -41,15 +45,21 @@ const Login = () => {
     setRefreshAttemptCount(prev => prev + 1);
     
     try {
+      console.log('Attempting to refresh session');
       // Call logIn with just the refreshOnly flag
       const success = await logIn('', '', true);
+      console.log('Session refresh result:', success);
       setLoadingTimeout(false);
+      
+      if (!success) {
+        setIsSubmitting(false);
+      }
+      
       return success;
     } catch (error) {
       console.error('Error refreshing session:', error);
-      return false;
-    } finally {
       setIsSubmitting(false);
+      return false;
     }
   };
 
@@ -59,7 +69,7 @@ const Login = () => {
   };
 
   // Show error state if loading takes too long
-  if ((isLoading && loadingTimeout) || (refreshAttemptCount > 0 && isLoading)) {
+  if ((isLoading && loadingTimeout) || (refreshAttemptCount > 0 && authLoading)) {
     return (
       <LoginErrorState
         isRefreshing={isSubmitting}
@@ -75,18 +85,21 @@ const Login = () => {
   if (isLoading && !isSubmitting) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
-        <LoadingSpinner />
-        <p className="mt-4 text-muted-foreground">Loading...</p>
+        <LoadingSpinner size={16} />
+        <p className="mt-4 text-muted-foreground">Loading your account...</p>
       </div>
     );
   }
 
   const handleSubmit = async (email: string, password: string, remember: boolean) => {
     try {
+      console.log('Login form submitted for:', email);
       setIsSubmitting(true);
       // Note: We're ignoring the remember parameter since it's not used in the current implementation
       const result = await logIn(email, password);
+      
       if (!result) {
+        console.log('Login failed, resetting submit state');
         setIsSubmitting(false);
       }
       return result;

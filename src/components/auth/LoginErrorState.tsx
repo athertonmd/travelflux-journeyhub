@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { RefreshCw, RotateCcw } from 'lucide-react';
 
 interface LoginErrorStateProps {
   isRefreshing: boolean;
@@ -26,20 +27,24 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
             Connection Issue
           </CardTitle>
           <CardDescription className="text-center">
-            We're having trouble connecting to the authentication service
+            {refreshAttemptCount > 1 
+              ? "We're still having trouble connecting to the authentication service"
+              : "We're having trouble connecting to the authentication service"}
           </CardDescription>
         </CardHeader>
         
         <CardContent className="text-center">
           <p className="mb-6">
             This could be due to network issues or a temporary problem with our service.
+            {refreshAttemptCount > 1 && " Try reloading the page or coming back later."}
           </p>
           
           <Button 
             onClick={onRefreshSession} 
             disabled={isRefreshing}
-            className="w-full mb-4 bg-blue-500 hover:bg-blue-600"
+            className="w-full mb-4 bg-blue-500 hover:bg-blue-600 flex items-center justify-center gap-2"
           >
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             {isRefreshing ? 'Refreshing Connection...' : 'Refresh Connection'}
           </Button>
           
@@ -48,8 +53,9 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
               <Button 
                 variant="outline" 
                 onClick={onReloadPage}
-                className="w-full"
+                className="w-full flex items-center justify-center gap-2"
               >
+                <RotateCcw className="h-4 w-4" />
                 Reload Page
               </Button>
             </div>
@@ -59,7 +65,7 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
         <CardFooter className="flex flex-col text-sm text-gray-500">
           <p className="text-center">
             {refreshAttemptCount > 1 
-              ? "If this issue persists, please try again later or contact support."
+              ? "If this issue persists, please try clearing your browser cache or using incognito mode."
               : "This will clear your local session data and attempt to reconnect."}
           </p>
         </CardFooter>
