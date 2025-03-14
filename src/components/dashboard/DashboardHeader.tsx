@@ -1,51 +1,64 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Settings, HelpCircle, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { User } from '@/types/auth.types';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { Settings, LogOut, CreditCard } from 'lucide-react';
 
 interface DashboardHeaderProps {
   user: User;
 }
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
-  const navigate = useNavigate();
   const { logOut } = useAuth();
   
-  const handleLogout = async () => {
+  const handleLogOut = async () => {
     await logOut();
-    navigate('/');
   };
   
   return (
-    <header className="border-b border-border bg-card">
-      <div className="container mx-auto py-4 px-4 flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Agency Dashboard</h1>
-        <div className="flex items-center gap-4">
-          <span className="text-sm">Welcome, {user.name || user.email}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/settings')}
-          >
-            <Settings className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleLogout}
-            title="Log out"
-          >
-            <LogOut className="h-5 w-5" />
-          </Button>
+    <header className="bg-card border-b border-border">
+      <div className="container mx-auto py-4 px-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl font-semibold">Welcome, {user.name}</h1>
+            <p className="text-muted-foreground">{user.agencyName || 'Your Dashboard'}</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="outline" 
+              size="sm"
+              asChild
+            >
+              <Link to="/credits" className="flex items-center gap-2">
+                <CreditCard className="h-4 w-4" />
+                Credits
+              </Link>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              asChild
+            >
+              <Link to="/settings" className="flex items-center gap-2">
+                <Settings className="h-4 w-4" />
+                Settings
+              </Link>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={handleLogOut}
+              className="flex items-center gap-2"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign Out
+            </Button>
+          </div>
         </div>
       </div>
     </header>

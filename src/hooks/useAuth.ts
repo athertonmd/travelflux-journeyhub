@@ -4,10 +4,11 @@ import { useSignUp } from '@/hooks/auth/useSignUp';
 import { useLogIn } from '@/hooks/auth/useLogIn';
 import { useLogOut } from '@/hooks/auth/useLogOut';
 import { useSetupStatus } from '@/hooks/auth/useSetupStatus';
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from '@/hooks/use-toast';
+import { AuthContextType } from '@/types/auth.types';
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   // Initialize all state first
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   
@@ -101,13 +102,18 @@ export const useAuth = () => {
   
   // Always define the effect - this should be the last hook
   useEffect(() => {
+    let isMounted = true;
+    console.log('Running useAuth effect');
+    
     return () => {
-      // Cleanup function to ensure loading states are reset
+      console.log('Cleaning up useAuth effect');
+      isMounted = false;
       setIsAuthLoading(false);
     };
   }, []);
   
-  return {
+  // Use useMemo to prevent unnecessary re-renders
+  return useMemo(() => ({
     user,
     isLoading,
     authError,
@@ -116,5 +122,14 @@ export const useAuth = () => {
     logOut,
     updateSetupStatus,
     refreshSession
-  };
+  }), [
+    user,
+    isLoading,
+    authError,
+    signUp,
+    logIn,
+    logOut,
+    updateSetupStatus,
+    refreshSession
+  ]);
 };
