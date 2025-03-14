@@ -16,6 +16,7 @@ interface DashboardCardProps {
   changeValue?: number; // For backward compatibility
   className?: string;
   children?: React.ReactNode;
+  onClick?: () => void;
 }
 
 const DashboardCard: React.FC<DashboardCardProps> = ({
@@ -28,6 +29,7 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   changeValue,
   className,
   children,
+  onClick,
 }) => {
   // Convert legacy props to trend object if provided
   const trendData = trend || (
@@ -37,7 +39,10 @@ const DashboardCard: React.FC<DashboardCardProps> = ({
   );
 
   return (
-    <Card className={cn("overflow-hidden transition-all duration-200 hover:shadow-md glass-card", className)}>
+    <Card 
+      className={cn("overflow-hidden transition-all duration-200 hover:shadow-md glass-card", className)}
+      onClick={onClick}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <div>
           <CardTitle className="text-sm font-medium">{title}</CardTitle>

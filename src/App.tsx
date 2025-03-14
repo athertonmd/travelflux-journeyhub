@@ -22,6 +22,7 @@ import BlogPost from "./pages/BlogPost";
 import VideoUpload from './pages/admin/VideoUpload';
 import ErrorBoundary from "./components/ErrorBoundary";
 import Credits from "./pages/Credits";
+import TripLog from "./pages/TripLog";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +48,7 @@ const App = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/credits" element={<Credits />} />
+                <Route path="/trip-log" element={<TripLog />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:id" element={<BlogPost />} />
                 <Route path="/admin/videos" element={<VideoUpload />} />
