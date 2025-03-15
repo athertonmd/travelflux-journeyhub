@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { CardContent, CardFooter } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import SubmitButton from '@/components/auth/SubmitButton';
+import { clearAuthData } from '@/integrations/supabase/client';
 
 interface LoginFormProps {
   isLoading: boolean;
@@ -20,6 +21,21 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     password: '',
     remember: false,
   });
+  
+  // Clear any stale auth data when form is initially mounted
+  useEffect(() => {
+    // Check if there was a previous auth error from URL
+    if (window.location.href.includes('error=')) {
+      console.log('Error parameter detected in URL, clearing session state');
+      clearAuthData();
+      
+      toast({
+        title: "Session reset",
+        description: "Previous login session was cleared due to errors.",
+        variant: "default"
+      });
+    }
+  }, []);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -121,6 +137,25 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
             text="Sign in"
             loadingText="Signing in..."
           />
+          
+          <div className="text-center mt-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-xs"
+              onClick={() => {
+                clearAuthData();
+                toast({
+                  title: "Storage cleared",
+                  description: "Auth data has been reset. Try logging in again.",
+                });
+              }}
+              disabled={isLoading}
+            >
+              Reset session data
+            </Button>
+          </div>
         </form>
       </CardContent>
       <CardFooter className="flex flex-col">

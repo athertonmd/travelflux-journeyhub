@@ -14,38 +14,79 @@ export const supabase = createClient<Database>(
   SUPABASE_PUBLISHABLE_KEY,
   {
     auth: {
-      autoRefreshToken: false, // Changed to false to handle refreshes manually
+      autoRefreshToken: true, // Enable auto refresh for tokens
       persistSession: true,
       storageKey: 'tripscape-auth-token',
-      detectSessionInUrl: false, // Disabled URL detection to prevent conflicts
+      detectSessionInUrl: true, // Enable URL detection to handle redirects properly
       flowType: 'pkce',
-      debug: false // Disabled debug mode to reduce noise
+      debug: process.env.NODE_ENV === 'development' // Only enable debug in development
     },
     global: {
       headers: {
         'X-Client-Info': 'tripscape-app'
       }
     },
-    // Set shorter timeout to prevent hanging requests
+    // Set reasonable timeout to prevent hanging requests
     realtime: {
-      timeout: 5000 // 5 seconds (reduced from 10 seconds)
+      timeout: 10000 // 10 seconds
     }
   }
 );
 
-// Add a helper function to completely clear auth data
+// Improved helper function to completely clear auth data
 export const clearAuthData = () => {
   console.log('Clearing all auth data');
   
-  // Clear Supabase auth tokens from storage
-  localStorage.removeItem('tripscape-auth-token');
-  localStorage.removeItem('supabase.auth.token');
-  localStorage.removeItem('supabase.auth.expires_at');
-  localStorage.removeItem('supabase.auth.refresh_token');
-  sessionStorage.removeItem('supabase.auth.token');
-  
-  // Clear cookies
-  document.cookie.split(";").forEach(function(c) {
-    document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-  });
+  try {
+    // Clear Supabase auth tokens from storage
+    localStorage.removeItem('tripscape-auth-token');
+    localStorage.removeItem('supabase.auth.token');
+    localStorage.removeItem('supabase.auth.expires_at');
+    localStorage.removeItem('supabase.auth.refresh_token');
+    
+    // Clear session storage as well
+    sessionStorage.removeItem('supabase.auth.token');
+    sessionStorage.removeItem('tripscape-auth-token');
+    
+    // Clear all Supabase-related items
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.includes('supabase') || key.includes('auth') || key.includes('tripscape'))) {
+        localStorage.removeItem(key);
+      }
+    }
+    
+    // Clear cookies
+    document.cookie.split(";").forEach(function(c) {
+      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+    });
+    
+    // Force the session to be cleared in Supabase
+    supabase.auth.signOut({ scope: 'local' }).catch(err => {
+      console.error('Error during forced signout:', err);
+    });
+  } catch (error) {
+    console.error('Error clearing auth data:', error);
+  }
+};
+
+// Add a helper to check token validity without triggering auto-refresh
+export const isTokenExpired = async (): Promise<boolean> => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (!data.session) return true;
+    
+    // Get expiry time from session
+    const expiresAt = data.session.expires_at;
+    if (!expiresAt) return true;
+    
+    // Add buffer time (5 minutes) to avoid edge cases
+    const bufferTime = 5 * 60; // 5 minutes in seconds
+    const currentTime = Math.floor(Date.now() / 1000);
+    
+    return currentTime > expiresAt - bufferTime;
+  } catch (error) {
+    console.error('Error checking token expiry:', error);
+    return true; // Assume expired if we can't check
+  }
 };

@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase, clearAuthData } from '@/integrations/supabase/client';
+import { supabase, clearAuthData, isTokenExpired } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
 
 export const useAuthState = () => {
@@ -13,6 +13,7 @@ export const useAuthState = () => {
   const isMounted = useRef(true);
   const refreshAttempts = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const lastRefreshedAt = useRef<number>(0);
 
   // Update user state with Supabase user data
   const updateUserState = useCallback(async (supabaseUser: any) => {
@@ -37,6 +38,14 @@ export const useAuthState = () => {
       
       if (error) {
         console.error('Error fetching user configuration:', error.message);
+        
+        // Check if this is a token error
+        if (error.message.includes('JWT') || error.message.includes('token')) {
+          console.warn('Token error detected, attempting refresh');
+          await refreshSession();
+          return null;
+        }
+        
         setAuthError(error.message);
         setIsLoading(false);
         return null;
@@ -82,9 +91,21 @@ export const useAuthState = () => {
       try {
         console.log('Checking initial session');
         
+        // Check if token is about to expire
+        const expired = await isTokenExpired();
+        if (expired) {
+          console.log('Token is expired or about to expire, attempting refresh');
+          
+          // Clear any existing auth data if we know it's expired
+          // This helps prevent using stale tokens
+          if (window.location.pathname === '/login') {
+            clearAuthData();
+          }
+        }
+        
         // Use Promise.race to add a timeout
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Session check timeout')), 5000); // Reduced from 8000
+          setTimeout(() => reject(new Error('Session check timeout')), 5000);
         });
         
         const sessionPromise = supabase.auth.getSession();
@@ -148,6 +169,15 @@ export const useAuthState = () => {
           return;
         }
         
+        if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed, updating state');
+          if (session?.user) {
+            await updateUserState(session.user);
+          }
+          setSessionChecked(true);
+          return;
+        }
+        
         if (session?.user) {
           console.log('User authenticated:', session.user.email);
           await updateUserState(session.user);
@@ -164,10 +194,26 @@ export const useAuthState = () => {
     // Run the initial check
     checkSession();
     
+    // Add periodic token check
+    const tokenCheckInterval = setInterval(async () => {
+      if (!isMounted.current) return;
+      
+      // Only perform check if we're not already loading
+      if (!isLoading && user) {
+        const expired = await isTokenExpired();
+        if (expired) {
+          console.log('Token is about to expire, refreshing session');
+          await refreshSession();
+        }
+      }
+    }, 60000); // Check every minute
+    
     // Clean up
     return () => {
       console.log('Cleaning up auth state listener');
       isMounted.current = false;
+      clearInterval(tokenCheckInterval);
+      
       if (authListener) {
         authListener.subscription.unsubscribe();
       }
@@ -179,6 +225,14 @@ export const useAuthState = () => {
 
   const refreshSession = async () => {
     try {
+      // Prevent too frequent refreshes
+      const now = Date.now();
+      if (now - lastRefreshedAt.current < 5000) {
+        console.log('Skipping refresh - too soon since last refresh');
+        return user;
+      }
+      lastRefreshedAt.current = now;
+      
       if (refreshAttempts.current >= 3) {
         console.log('Too many refresh attempts, suggesting clearing storage');
         setAuthError('Session refresh failed after multiple attempts. Please try clearing storage.');
@@ -206,14 +260,12 @@ export const useAuthState = () => {
       });
       
       // Try to force-refresh the session
-      await supabase.auth.refreshSession();
-      
-      const sessionPromise = supabase.auth.getSession();
+      const refreshPromise = supabase.auth.refreshSession();
       
       // Race between the actual operation and the timeout
       let result;
       try {
-        result = await Promise.race([sessionPromise, timeoutPromise]);
+        result = await Promise.race([refreshPromise, timeoutPromise]);
       } catch (error: any) {
         console.error('Session refresh timed out:', error.message);
         setAuthError('Session refresh timed out. Please try again or clear storage.');
@@ -223,6 +275,18 @@ export const useAuthState = () => {
       
       if (result.error) {
         console.error('Error refreshing session:', result.error.message);
+        
+        // If we have a token error or refresh error, it's likely the token is invalid
+        // or the refresh token has expired
+        if (
+          result.error.message.includes('JWT') || 
+          result.error.message.includes('token') ||
+          result.error.message.includes('refresh')
+        ) {
+          console.log('Token error detected, clearing auth data for fresh login');
+          clearAuthData();
+        }
+        
         setAuthError(result.error.message);
         setIsLoading(false);
         return null;

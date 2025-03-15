@@ -7,6 +7,7 @@ import { useSetupStatus } from '@/hooks/auth/useSetupStatus';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { AuthContextType } from '@/types/auth.types';
+import { clearAuthData } from '@/integrations/supabase/client';
 
 export const useAuth = (): AuthContextType => {
   // Initialize all state first
@@ -51,6 +52,12 @@ export const useAuth = (): AuthContextType => {
   
   const logIn = useCallback(async (email: string, password: string) => {
     try {
+      // Clear any existing auth state before login to avoid conflicts
+      if (authError) {
+        console.log('Clearing auth data before login due to previous errors');
+        clearAuthData();
+      }
+      
       setIsAuthLoading(true);
       const result = await logInFn(email, password);
       setIsAuthLoading(false);
@@ -65,12 +72,16 @@ export const useAuth = (): AuthContextType => {
       setIsAuthLoading(false);
       return false;
     }
-  }, [logInFn]);
+  }, [logInFn, authError]);
   
   const logOut = useCallback(async () => {
     try {
       setIsAuthLoading(true);
       await logOutFn();
+      
+      // Always clear auth data on logout to prevent stale tokens
+      clearAuthData();
+      
       setIsAuthLoading(false);
     } catch (error: any) {
       console.error('Logout error in useAuth:', error.message);
@@ -79,6 +90,10 @@ export const useAuth = (): AuthContextType => {
         description: error.message || "An unexpected error occurred",
         variant: "destructive"
       });
+      
+      // Even if logout fails, clear local storage
+      clearAuthData();
+      
       setIsAuthLoading(false);
     }
   }, [logOutFn]);
@@ -101,17 +116,34 @@ export const useAuth = (): AuthContextType => {
     }
   }, [updateSetupStatusFn]);
   
-  // Always define the effect - this should be the last hook
+  // Effect to handle automatic session recovery
   useEffect(() => {
     let isMounted = true;
     console.log('Running useAuth effect');
+    
+    // Check for auth errors and try to refresh if needed
+    const checkAndRefresh = async () => {
+      if (!isMounted) return;
+      
+      if (authError && !isAuthLoading && !isLoading && sessionChecked) {
+        console.log('Auth error detected, attempting session refresh');
+        
+        try {
+          await refreshSession();
+        } catch (error) {
+          console.error('Failed to refresh session:', error);
+        }
+      }
+    };
+    
+    checkAndRefresh();
     
     return () => {
       console.log('Cleaning up useAuth effect');
       isMounted = false;
       setIsAuthLoading(false);
     };
-  }, []);
+  }, [authError, isAuthLoading, isLoading, refreshSession, sessionChecked]);
   
   // Use useMemo to prevent unnecessary re-renders
   return useMemo(() => ({
