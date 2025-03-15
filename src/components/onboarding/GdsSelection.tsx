@@ -17,19 +17,9 @@ const GdsSelection: React.FC<GdsSelectionProps> = ({ selected, onSelect }) => {
       description: 'Connect to Sabre to process your PNRs and itineraries.',
     },
     {
-      id: 'amadeus',
-      name: 'Amadeus',
-      description: 'Integrate with Amadeus to manage bookings and travel data.',
-    },
-    {
       id: 'travelport',
       name: 'Travelport',
       description: 'Connect to Galileo, Apollo, or Worldspan with Travelport.',
-    },
-    {
-      id: 'other',
-      name: 'Other',
-      description: 'Configure a different GDS or booking system.',
     },
   ];
 
