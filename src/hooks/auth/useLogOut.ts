@@ -2,8 +2,11 @@
 import { useCallback } from 'react';
 import { supabase, clearAuthData } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 
 export const useLogOut = () => {
+  const navigate = useNavigate();
+  
   const logOut = useCallback(async (): Promise<void> => {
     try {
       console.log('Logging out user');
@@ -31,10 +34,9 @@ export const useLogOut = () => {
       // Always clear auth data regardless of Supabase response
       clearAuthData();
       
-      // Short timeout to allow state to update before redirect
-      setTimeout(() => {
-        window.location.href = '/login';
-      }, 300);
+      // Use React Router navigation instead of window.location for a smoother transition
+      navigate('/login');
+      
     } catch (error: any) {
       console.error('Logout exception:', error.message);
       toast({
@@ -46,10 +48,10 @@ export const useLogOut = () => {
       // Force clear auth data even if there was an exception
       clearAuthData();
       
-      // Redirect to login page
-      window.location.href = '/login';
+      // Use React Router navigation for error case as well
+      navigate('/login');
     }
-  }, []);
+  }, [navigate]);
 
   return logOut;
 };

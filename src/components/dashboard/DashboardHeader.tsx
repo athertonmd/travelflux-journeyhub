@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { User } from '@/types/auth.types';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,9 +12,11 @@ interface DashboardHeaderProps {
 
 const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
   const { logOut } = useAuth();
+  const navigate = useNavigate();
   
   const handleLogOut = async () => {
     await logOut();
+    // The redirection is now handled in the useLogOut hook
   };
   
   return (
