@@ -16,7 +16,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
   
   const handleLogOut = async () => {
     await logOut();
-    // The redirection is now handled in the useLogOut hook
+    navigate('/login');
   };
   
   return (

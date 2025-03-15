@@ -31,11 +31,11 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ErrorBoundary>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <Router>
+        <Router>
+          <ErrorBoundary>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/signup" element={<SignUp />} />
@@ -56,9 +56,9 @@ const App = () => {
                 <Route path="/admin/videos" element={<VideoUpload />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </Router>
-          </AuthProvider>
-        </ErrorBoundary>
+            </AuthProvider>
+          </ErrorBoundary>
+        </Router>
       </TooltipProvider>
     </QueryClientProvider>
   );
