@@ -1,18 +1,22 @@
+
 import React from 'react';
 import ProductSelection from '@/components/onboarding/ProductSelection';
 import GdsSelection from '@/components/onboarding/GdsSelection';
 import GdsConfigForm from '@/components/onboarding/GdsConfigForm';
 import TripTileSelection from '@/components/onboarding/TripTileSelection';
+import ContactInfoForm from '@/components/onboarding/ContactInfoForm';
 import BrandingConfig from '@/components/onboarding/BrandingConfig';
 import WelcomeStep from '@/components/onboarding/WelcomeStep';
 import CompleteStep from '@/components/onboarding/CompleteStep';
 import { CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { OnboardingFormData } from '@/hooks/useOnboardingForm';
+
 interface StepControllerProps {
   currentStep: string;
   formData: OnboardingFormData;
   updateFormData: (key: keyof OnboardingFormData, value: any) => void;
 }
+
 const StepController: React.FC<StepControllerProps> = ({
   currentStep,
   formData,
@@ -60,13 +64,38 @@ const StepController: React.FC<StepControllerProps> = ({
     case 'trips':
       return <>
           <CardHeader>
-            <CardTitle className="text-2xl">Trip Tiles</CardTitle>
+            <CardTitle className="text-2xl">Mobile Settings</CardTitle>
             <CardDescription>
-              Select up to 4 trip tiles that will appear on your mobile app home screen.
+              Configure the mobile experience for your travelers.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <TripTileSelection selected={formData.selectedTripTiles} onUpdate={tiles => updateFormData('selectedTripTiles', tiles)} />
+            <div className="space-y-8">
+              <div>
+                <h3 className="text-lg font-medium mb-4">Trip Tiles</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Select up to 4 trip tiles that will appear on your travelers' mobile app home screen.
+                </p>
+                <TripTileSelection selected={formData.selectedTripTiles} onUpdate={tiles => updateFormData('selectedTripTiles', tiles)} />
+              </div>
+              
+              <div className="pt-6 border-t border-border">
+                <h3 className="text-lg font-medium mb-4">Contact Information</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  Configure the contact information that will be displayed to your travelers in the mobile app.
+                </p>
+                <ContactInfoForm 
+                  blurb={formData.contactInfo.blurb} 
+                  contacts={formData.contactInfo.contacts}
+                  onUpdate={(key, value) => {
+                    updateFormData('contactInfo', {
+                      ...formData.contactInfo,
+                      [key]: value
+                    });
+                  }}
+                />
+              </div>
+            </div>
           </CardContent>
         </>;
     case 'branding':
@@ -87,4 +116,5 @@ const StepController: React.FC<StepControllerProps> = ({
       return <WelcomeStep userName={formData.userName || 'there'} />;
   }
 };
+
 export default StepController;

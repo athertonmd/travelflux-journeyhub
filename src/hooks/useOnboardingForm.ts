@@ -3,6 +3,19 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
+export interface ContactMethod {
+  type: 'telephone' | 'email' | 'sms' | 'web';
+  value: string;
+  linkUrl?: string;
+}
+
+export interface Contact {
+  id: string;
+  title: string;
+  methods: ContactMethod[];
+  details: string;
+}
+
 export interface OnboardingFormData {
   userName?: string;
   products: {
@@ -26,6 +39,10 @@ export interface OnboardingFormData {
     primaryColor: string;
     secondaryColor: string;
     logo: File | null;
+  };
+  contactInfo: {
+    blurb: string;
+    contacts: Contact[];
   };
 }
 
@@ -52,6 +69,10 @@ export const initialFormData: OnboardingFormData = {
     primaryColor: '#1EAEDB',
     secondaryColor: '#0FA0CE',
     logo: null
+  },
+  contactInfo: {
+    blurb: 'We are here to help. Please use any of the contact details below.',
+    contacts: []
   }
 };
 
