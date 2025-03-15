@@ -8,7 +8,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings as SettingsIcon, ArrowLeft } from 'lucide-react';
+import { Settings as SettingsIcon, ArrowLeft, Save } from 'lucide-react';
 
 const Settings = () => {
   const { user } = useAuth();
@@ -68,7 +68,7 @@ const Settings = () => {
       
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
-          <Card className="max-w-4xl mx-auto">
+          <Card className="max-w-5xl mx-auto">
             <CardHeader>
               <CardTitle className="flex items-center">
                 <SettingsIcon className="h-5 w-5 mr-2" />
@@ -132,6 +132,7 @@ const Settings = () => {
               <Button 
                 variant="outline" 
                 onClick={handleBackToDashboard}
+                className="flex items-center gap-2"
               >
                 <ArrowLeft className="h-4 w-4 mr-2" />
                 Back to Dashboard
@@ -139,6 +140,7 @@ const Settings = () => {
               <Button 
                 onClick={handleSave}
                 disabled={isLoading}
+                className="flex items-center gap-2"
               >
                 {isLoading ? (
                   <span className="flex items-center">
@@ -148,7 +150,12 @@ const Settings = () => {
                     </svg>
                     Saving...
                   </span>
-                ) : "Save Changes"}
+                ) : (
+                  <>
+                    <Save className="h-4 w-4 mr-2" />
+                    Save Changes
+                  </>
+                )}
               </Button>
             </CardFooter>
           </Card>

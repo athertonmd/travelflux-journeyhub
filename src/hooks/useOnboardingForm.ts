@@ -16,6 +16,10 @@ export interface OnboardingFormData {
     apiKey: string;
     pcc: string;
     email: string;
+    pccList: string;
+    queueNumber: string;
+    sabreQueueAssignment: string;
+    fnbtsEntry: string;
   };
   selectedTripTiles: string[];
   branding: {
@@ -37,7 +41,11 @@ export const initialFormData: OnboardingFormData = {
     endpoint: '',
     apiKey: '',
     pcc: '',
-    email: ''
+    email: '',
+    pccList: '',
+    queueNumber: '',
+    sabreQueueAssignment: '',
+    fnbtsEntry: ''
   },
   selectedTripTiles: [],
   branding: {
@@ -71,7 +79,10 @@ export const useOnboardingForm = (userId: string | undefined) => {
           
           if (data.products) newFormData.products = data.products as OnboardingFormData['products'];
           if (data.gds_provider) newFormData.gdsProvider = data.gds_provider;
-          if (data.gds_config) newFormData.gdsConfig = data.gds_config as OnboardingFormData['gdsConfig'];
+          if (data.gds_config) newFormData.gdsConfig = {
+            ...initialFormData.gdsConfig,
+            ...(data.gds_config as Partial<OnboardingFormData['gdsConfig']>)
+          };
           if (data.selected_trip_tiles) newFormData.selectedTripTiles = data.selected_trip_tiles;
           if (data.branding && typeof data.branding === 'object') {
             const brandingData = data.branding as Record<string, unknown>;

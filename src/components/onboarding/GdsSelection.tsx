@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Globe } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
+import { Card, CardContent } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 interface GdsSelectionProps {
   selected: string;
@@ -10,48 +10,56 @@ interface GdsSelectionProps {
 }
 
 const GdsSelection: React.FC<GdsSelectionProps> = ({ selected, onSelect }) => {
+  const gdsOptions = [
+    {
+      id: 'sabre',
+      name: 'Sabre',
+      description: 'Connect to Sabre to process your PNRs and itineraries.',
+    },
+    {
+      id: 'amadeus',
+      name: 'Amadeus',
+      description: 'Integrate with Amadeus to manage bookings and travel data.',
+    },
+    {
+      id: 'travelport',
+      name: 'Travelport',
+      description: 'Connect to Galileo, Apollo, or Worldspan with Travelport.',
+    },
+    {
+      id: 'other',
+      name: 'Other',
+      description: 'Configure a different GDS or booking system.',
+    },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="text-sm text-gray-600 mb-4">
-        Select the Global Distribution System (GDS) that your agency uses. This will allow Tripscape to receive booking data.
-      </div>
-
-      <RadioGroup 
-        value={selected} 
-        onValueChange={onSelect}
-        className="space-y-4"
-      >
-        <div className={`border rounded-lg p-6 ${selected === 'Sabre' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-          <div className="flex items-start">
-            <RadioGroupItem value="Sabre" id="sabre" className="mt-1" />
-            <div className="ml-3 flex-1">
-              <Label htmlFor="sabre" className="text-lg font-semibold block cursor-pointer">Sabre</Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Connect with Sabre GDS for real-time booking data and traveler information.
-              </p>
-            </div>
-            <div className="bg-primary/10 p-3 rounded-full">
-              <Globe className="h-6 w-6 text-primary" />
-            </div>
+    <RadioGroup 
+      value={selected}
+      onValueChange={onSelect}
+      className="space-y-4"
+    >
+      {gdsOptions.map((gds) => (
+        <div
+          key={gds.id}
+          className={`flex items-start space-x-3 cursor-pointer ${
+            selected === gds.name ? 'border-primary' : 'border-border'
+          }`}
+          onClick={() => onSelect(gds.name)}
+        >
+          <RadioGroupItem value={gds.name} id={gds.id} className="mt-1" />
+          <div className="flex-1">
+            <Label
+              htmlFor={gds.id}
+              className="text-base font-medium cursor-pointer"
+            >
+              {gds.name}
+            </Label>
+            <p className="text-sm text-muted-foreground">{gds.description}</p>
           </div>
         </div>
-
-        <div className={`border rounded-lg p-6 ${selected === 'Travelport' ? 'border-primary bg-primary/5' : 'border-border'}`}>
-          <div className="flex items-start">
-            <RadioGroupItem value="Travelport" id="travelport" className="mt-1" />
-            <div className="ml-3 flex-1">
-              <Label htmlFor="travelport" className="text-lg font-semibold block cursor-pointer">Travelport</Label>
-              <p className="text-sm text-gray-600 mt-1">
-                Connect with Travelport GDS (Galileo, Apollo, Worldspan) for real-time booking data.
-              </p>
-            </div>
-            <div className="bg-primary/10 p-3 rounded-full">
-              <Globe className="h-6 w-6 text-primary" />
-            </div>
-          </div>
-        </div>
-      </RadioGroup>
-    </div>
+      ))}
+    </RadioGroup>
   );
 };
 
