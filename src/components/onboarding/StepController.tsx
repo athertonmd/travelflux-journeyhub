@@ -84,7 +84,7 @@ const StepController: React.FC<StepControllerProps> = ({
       return (
         <>
           <CardHeader>
-            <CardTitle className="text-2xl">Trip Tiles</CardTitle>
+            <CardTitle className="text-2xl">Mobile Settings</CardTitle>
             <CardDescription>
               Select up to 4 trip tiles that will appear on your mobile app home screen.
             </CardDescription>

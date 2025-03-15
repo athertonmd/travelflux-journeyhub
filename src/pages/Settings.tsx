@@ -82,7 +82,7 @@ const Settings = () => {
                   <TabsTrigger value="products">Products</TabsTrigger>
                   <TabsTrigger value="gds">GDS</TabsTrigger>
                   <TabsTrigger value="config">GDS Config</TabsTrigger>
-                  <TabsTrigger value="trips">Trip Tiles</TabsTrigger>
+                  <TabsTrigger value="trips">Mobile Settings</TabsTrigger>
                   <TabsTrigger value="branding">Branding</TabsTrigger>
                 </TabsList>
                 
