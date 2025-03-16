@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,11 +36,15 @@ const COUNTRIES = [
 interface RiskAlertsConfigProps {
   selectedCountries: string[];
   onUpdate: (countries: string[]) => void;
+  tripBriefsEnabled?: boolean;
+  onTripBriefsChange?: (enabled: boolean) => void;
 }
 
 const RiskAlertsConfig: React.FC<RiskAlertsConfigProps> = ({
   selectedCountries,
-  onUpdate
+  onUpdate,
+  tripBriefsEnabled = false,
+  onTripBriefsChange = () => {}
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -139,6 +144,27 @@ const RiskAlertsConfig: React.FC<RiskAlertsConfigProps> = ({
             </div>
           </div>
         </ScrollArea>
+      </div>
+
+      <div className="pt-4 border-t border-border">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="trip-briefs"
+            checked={tripBriefsEnabled}
+            onCheckedChange={(checked) => onTripBriefsChange(checked === true)}
+          />
+          <div>
+            <label
+              htmlFor="trip-briefs"
+              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+            >
+              Enable Trip Briefs
+            </label>
+            <p className="text-xs text-muted-foreground mt-1">
+              Send risk assessment documents to travelers before their trip to provide the latest risk assessment for their destination.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

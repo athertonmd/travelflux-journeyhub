@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { OnboardingFormData } from './useOnboardingForm';
@@ -23,7 +22,8 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
           secondaryColor: formData.branding.secondaryColor
         } as unknown as Json,
         contact_info: formData.contactInfo as unknown as Json,
-        alert_countries: formData.alertCountries
+        alert_countries: formData.alertCountries,
+        trip_briefs_enabled: formData.tripBriefsEnabled
       };
       
       const { error } = await supabase

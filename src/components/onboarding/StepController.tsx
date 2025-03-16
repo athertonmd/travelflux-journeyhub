@@ -110,6 +110,8 @@ const StepController: React.FC<StepControllerProps> = ({
           <RiskAlertsConfig
             selectedCountries={formData.alertCountries || []}
             onUpdate={countries => updateFormData('alertCountries', countries)}
+            tripBriefsEnabled={formData.tripBriefsEnabled || false}
+            onTripBriefsChange={(enabled) => updateFormData('tripBriefsEnabled', enabled)}
           />
         </CardContent>
       </>;

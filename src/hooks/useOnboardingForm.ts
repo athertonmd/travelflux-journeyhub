@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -46,6 +45,7 @@ export interface OnboardingFormData {
     contacts: Contact[];
   };
   alertCountries: string[];
+  tripBriefsEnabled?: boolean;
 }
 
 export const initialFormData: OnboardingFormData = {
@@ -76,7 +76,8 @@ export const initialFormData: OnboardingFormData = {
     blurb: 'We are here to help. Please use any of the contact details below.',
     contacts: []
   },
-  alertCountries: []
+  alertCountries: [],
+  tripBriefsEnabled: false
 };
 
 export const useOnboardingForm = (userId: string | undefined) => {
@@ -108,6 +109,7 @@ export const useOnboardingForm = (userId: string | undefined) => {
           };
           if (data.selected_trip_tiles) newFormData.selectedTripTiles = data.selected_trip_tiles;
           if (data.alert_countries) newFormData.alertCountries = data.alert_countries;
+          if (data.trip_briefs_enabled) newFormData.tripBriefsEnabled = data.trip_briefs_enabled;
           
           if (data.branding && typeof data.branding === 'object') {
             const brandingData = data.branding as Record<string, unknown>;
