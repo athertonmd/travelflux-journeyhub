@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -177,12 +178,12 @@ const RiskAlertsConfig: React.FC<RiskAlertsConfigProps> = ({
           <Input
             id="alert-email"
             type="email"
-            placeholder="Enter email address for risk alerts"
+            placeholder="Enter email addresses separated by commas"
             value={alertEmail}
             onChange={(e) => onAlertEmailChange(e.target.value)}
           />
           <p className="text-xs text-muted-foreground">
-            Send risk alerts to people who are not included in the PNR (Passenger Name Record).
+            Send risk alerts to people who are not included in the PNR (Passenger Name Record). For multiple recipients, separate email addresses with commas.
           </p>
         </div>
       </div>
