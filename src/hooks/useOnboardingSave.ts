@@ -19,7 +19,8 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         branding: {
           primaryColor: formData.branding.primaryColor,
           secondaryColor: formData.branding.secondaryColor
-        }
+        },
+        contact_info: formData.contactInfo
       };
       
       // Update the configuration in the database

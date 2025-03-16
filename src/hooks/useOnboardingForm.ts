@@ -86,6 +86,7 @@ export const useOnboardingForm = (userId: string | undefined) => {
       if (!userId) return;
 
       try {
+        setIsLoading(true);
         const { data, error } = await supabase
           .from('agency_configurations')
           .select('*')
@@ -113,11 +114,16 @@ export const useOnboardingForm = (userId: string | undefined) => {
               secondaryColor: typeof brandingData.secondaryColor === 'string' ? brandingData.secondaryColor : '#0FA0CE'
             };
           }
+          if (data.contact_info && typeof data.contact_info === 'object') {
+            newFormData.contactInfo = data.contact_info as OnboardingFormData['contactInfo'];
+          }
           
           setFormData(newFormData);
         }
       } catch (error) {
         console.error('Error fetching configuration:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 

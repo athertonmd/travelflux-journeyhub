@@ -12,6 +12,7 @@ export type Database = {
       agency_configurations: {
         Row: {
           branding: Json | null
+          contact_info: Json | null
           created_at: string | null
           gds_config: Json | null
           gds_provider: string | null
@@ -24,6 +25,7 @@ export type Database = {
         }
         Insert: {
           branding?: Json | null
+          contact_info?: Json | null
           created_at?: string | null
           gds_config?: Json | null
           gds_provider?: string | null
@@ -36,6 +38,7 @@ export type Database = {
         }
         Update: {
           branding?: Json | null
+          contact_info?: Json | null
           created_at?: string | null
           gds_config?: Json | null
           gds_provider?: string | null
