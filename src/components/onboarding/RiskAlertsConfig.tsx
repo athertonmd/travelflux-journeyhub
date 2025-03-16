@@ -6,6 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { X, Search } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 
 // List of countries for selection
 const COUNTRIES = [
@@ -38,13 +39,17 @@ interface RiskAlertsConfigProps {
   onUpdate: (countries: string[]) => void;
   tripBriefsEnabled?: boolean;
   onTripBriefsChange?: (enabled: boolean) => void;
+  alertEmail?: string;
+  onAlertEmailChange?: (email: string) => void;
 }
 
 const RiskAlertsConfig: React.FC<RiskAlertsConfigProps> = ({
   selectedCountries,
   onUpdate,
   tripBriefsEnabled = false,
-  onTripBriefsChange = () => {}
+  onTripBriefsChange = () => {},
+  alertEmail = '',
+  onAlertEmailChange = () => {}
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -164,6 +169,22 @@ const RiskAlertsConfig: React.FC<RiskAlertsConfigProps> = ({
               Send risk assessment documents to travelers before their trip to provide the latest risk assessment for their destination.
             </p>
           </div>
+        </div>
+        
+        <div className="mt-4 space-y-2">
+          <label htmlFor="alert-email" className="text-sm font-medium">
+            Additional Risk Alert Email
+          </label>
+          <Input
+            id="alert-email"
+            type="email"
+            placeholder="Enter email address for risk alerts"
+            value={alertEmail}
+            onChange={(e) => onAlertEmailChange(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Send risk alerts to people who are not included in the PNR (Passenger Name Record).
+          </p>
         </div>
       </div>
     </div>

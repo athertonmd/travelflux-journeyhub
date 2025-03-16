@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ProductSelection from '@/components/onboarding/ProductSelection';
 import GdsSelection from '@/components/onboarding/GdsSelection';
@@ -112,6 +113,8 @@ const StepController: React.FC<StepControllerProps> = ({
             onUpdate={countries => updateFormData('alertCountries', countries)}
             tripBriefsEnabled={formData.tripBriefsEnabled || false}
             onTripBriefsChange={(enabled) => updateFormData('tripBriefsEnabled', enabled)}
+            alertEmail={formData.alertEmail || ''}
+            onAlertEmailChange={(email) => updateFormData('alertEmail', email)}
           />
         </CardContent>
       </>;

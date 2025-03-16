@@ -46,6 +46,7 @@ export interface OnboardingFormData {
   };
   alertCountries: string[];
   tripBriefsEnabled?: boolean;
+  alertEmail?: string;
 }
 
 export const initialFormData: OnboardingFormData = {
@@ -77,7 +78,8 @@ export const initialFormData: OnboardingFormData = {
     contacts: []
   },
   alertCountries: [],
-  tripBriefsEnabled: false
+  tripBriefsEnabled: false,
+  alertEmail: ''
 };
 
 export const useOnboardingForm = (userId: string | undefined) => {
@@ -109,7 +111,10 @@ export const useOnboardingForm = (userId: string | undefined) => {
           };
           if (data.selected_trip_tiles) newFormData.selectedTripTiles = data.selected_trip_tiles;
           if (data.alert_countries) newFormData.alertCountries = data.alert_countries;
-          if (data.trip_briefs_enabled) newFormData.tripBriefsEnabled = data.trip_briefs_enabled;
+          if (data.trip_briefs_enabled !== null && data.trip_briefs_enabled !== undefined) {
+            newFormData.tripBriefsEnabled = data.trip_briefs_enabled;
+          }
+          if (data.alert_email) newFormData.alertEmail = data.alert_email;
           
           if (data.branding && typeof data.branding === 'object') {
             const brandingData = data.branding as Record<string, unknown>;
@@ -120,11 +125,8 @@ export const useOnboardingForm = (userId: string | undefined) => {
             };
           }
           
-          // Handle contact_info with proper type checking
           if (data.contact_info && typeof data.contact_info === 'object') {
-            // Convert from database JSON type to our app type
             if (Array.isArray(data.contact_info)) {
-              // Handle unexpected array type by using default values
               newFormData.contactInfo = initialFormData.contactInfo;
             } else {
               const contactInfoObj = data.contact_info as Record<string, unknown>;

@@ -24,7 +24,8 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         } as unknown as Json,
         contact_info: formData.contactInfo as unknown as Json,
         alert_countries: formData.alertCountries,
-        trip_briefs_enabled: formData.tripBriefsEnabled
+        trip_briefs_enabled: formData.tripBriefsEnabled,
+        alert_email: formData.alertEmail
       };
       
       const { error } = await supabase
