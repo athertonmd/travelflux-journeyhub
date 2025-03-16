@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,7 +20,6 @@ const Settings = () => {
     handleComplete
   } = useOnboarding();
 
-  // Redirect if not logged in
   React.useEffect(() => {
     if (!user) {
       navigate('/login');
@@ -78,11 +76,12 @@ const Settings = () => {
             
             <CardContent>
               <Tabs defaultValue="products" value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid grid-cols-5 mb-6">
+                <TabsList className="grid grid-cols-6 mb-6">
                   <TabsTrigger value="products">Products</TabsTrigger>
                   <TabsTrigger value="gds">GDS</TabsTrigger>
                   <TabsTrigger value="config">GDS Config</TabsTrigger>
                   <TabsTrigger value="trips">Mobile Settings</TabsTrigger>
+                  <TabsTrigger value="risk-alerts">Risk Alerts</TabsTrigger>
                   <TabsTrigger value="branding">Branding</TabsTrigger>
                 </TabsList>
                 
@@ -113,6 +112,14 @@ const Settings = () => {
                 <TabsContent value="trips">
                   <StepController 
                     currentStep="trips"
+                    formData={formData}
+                    updateFormData={updateFormData}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="risk-alerts">
+                  <StepController 
+                    currentStep="risk-alerts"
                     formData={formData}
                     updateFormData={updateFormData}
                   />

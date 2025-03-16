@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { OnboardingFormData } from './useOnboardingForm';
@@ -10,7 +9,6 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
     setIsLoading(true);
     
     try {
-      // Prepare data for saving to Supabase
       const configData = {
         products: formData.products,
         gds_provider: formData.gdsProvider,
@@ -20,10 +18,10 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
           primaryColor: formData.branding.primaryColor,
           secondaryColor: formData.branding.secondaryColor
         },
-        contact_info: formData.contactInfo
+        contact_info: formData.contactInfo,
+        alert_countries: formData.alertCountries
       };
       
-      // Update the configuration in the database
       const { error } = await supabase
         .from('agency_configurations')
         .update(configData)
@@ -49,11 +47,9 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
     setIsLoading(true);
     
     try {
-      // First save all configuration
       const saveResult = await saveConfiguration(formData);
       if (!saveResult) return false;
       
-      // Then mark setup as completed
       const { error } = await supabase
         .from('agency_configurations')
         .update({ setup_completed: true })

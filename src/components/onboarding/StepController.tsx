@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProductSelection from '@/components/onboarding/ProductSelection';
 import GdsSelection from '@/components/onboarding/GdsSelection';
@@ -6,6 +5,7 @@ import GdsConfigForm from '@/components/onboarding/GdsConfigForm';
 import TripTileSelection from '@/components/onboarding/TripTileSelection';
 import ContactInfoForm from '@/components/onboarding/ContactInfoForm';
 import BrandingConfig from '@/components/onboarding/BrandingConfig';
+import RiskAlertsConfig from '@/components/onboarding/RiskAlertsConfig';
 import WelcomeStep from '@/components/onboarding/WelcomeStep';
 import CompleteStep from '@/components/onboarding/CompleteStep';
 import { CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
@@ -98,6 +98,21 @@ const StepController: React.FC<StepControllerProps> = ({
             </div>
           </CardContent>
         </>;
+    case 'risk-alerts':
+      return <>
+        <CardHeader>
+          <CardTitle className="text-2xl">Risk Alerts</CardTitle>
+          <CardDescription>
+            Select countries for which you want to receive risk alerts when travelers visit them.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <RiskAlertsConfig
+            selectedCountries={formData.alertCountries || []}
+            onUpdate={countries => updateFormData('alertCountries', countries)}
+          />
+        </CardContent>
+      </>;
     case 'branding':
       return <>
           <CardHeader>

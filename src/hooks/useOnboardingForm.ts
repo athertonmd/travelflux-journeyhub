@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -44,6 +43,7 @@ export interface OnboardingFormData {
     blurb: string;
     contacts: Contact[];
   };
+  alertCountries: string[];
 }
 
 export const initialFormData: OnboardingFormData = {
@@ -73,14 +73,14 @@ export const initialFormData: OnboardingFormData = {
   contactInfo: {
     blurb: 'We are here to help. Please use any of the contact details below.',
     contacts: []
-  }
+  },
+  alertCountries: []
 };
 
 export const useOnboardingForm = (userId: string | undefined) => {
   const [formData, setFormData] = useState<OnboardingFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Fetch existing configuration if available
   useEffect(() => {
     const fetchConfig = async () => {
       if (!userId) return;
@@ -96,7 +96,6 @@ export const useOnboardingForm = (userId: string | undefined) => {
         if (error) throw error;
 
         if (data) {
-          // Only update fields that exist in the database
           const newFormData = { ...formData };
           
           if (data.products) newFormData.products = data.products as OnboardingFormData['products'];
