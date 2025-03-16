@@ -21,6 +21,7 @@ export type Database = {
           products: Json | null
           selected_trip_tiles: string[] | null
           setup_completed: boolean | null
+          trip_briefs_enabled: boolean | null
           updated_at: string | null
           user_id: string
         }
@@ -35,6 +36,7 @@ export type Database = {
           products?: Json | null
           selected_trip_tiles?: string[] | null
           setup_completed?: boolean | null
+          trip_briefs_enabled?: boolean | null
           updated_at?: string | null
           user_id: string
         }
@@ -49,6 +51,7 @@ export type Database = {
           products?: Json | null
           selected_trip_tiles?: string[] | null
           setup_completed?: boolean | null
+          trip_briefs_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
         }
