@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -173,7 +172,7 @@ const RiskAlertsConfig: React.FC<RiskAlertsConfigProps> = ({
         
         <div className="mt-4 space-y-2">
           <label htmlFor="alert-email" className="text-sm font-medium">
-            Additional Risk Alert Email
+            Additional Email Address Recipients
           </label>
           <Input
             id="alert-email"
