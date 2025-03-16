@@ -12,6 +12,7 @@ export type Database = {
       agency_configurations: {
         Row: {
           alert_countries: string[] | null
+          alert_email: string | null
           branding: Json | null
           contact_info: Json | null
           created_at: string | null
@@ -27,6 +28,7 @@ export type Database = {
         }
         Insert: {
           alert_countries?: string[] | null
+          alert_email?: string | null
           branding?: Json | null
           contact_info?: Json | null
           created_at?: string | null
@@ -42,6 +44,7 @@ export type Database = {
         }
         Update: {
           alert_countries?: string[] | null
+          alert_email?: string | null
           branding?: Json | null
           contact_info?: Json | null
           created_at?: string | null
