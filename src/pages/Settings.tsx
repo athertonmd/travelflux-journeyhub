@@ -41,6 +41,9 @@ const Settings = () => {
     navigate('/dashboard');
   };
 
+  // Check if Mobile App is selected
+  const isMobileAppEnabled = formData.products.mobile;
+
   if (!user || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -81,7 +84,7 @@ const Settings = () => {
                   <TabsTrigger value="products">Products</TabsTrigger>
                   <TabsTrigger value="gds">GDS</TabsTrigger>
                   <TabsTrigger value="config">GDS Config</TabsTrigger>
-                  <TabsTrigger value="trips">Mobile Settings</TabsTrigger>
+                  <TabsTrigger value="trips" disabled={!isMobileAppEnabled}>Mobile Settings</TabsTrigger>
                   <TabsTrigger value="risk-alerts">Risk Alerts</TabsTrigger>
                   <TabsTrigger value="branding">Branding</TabsTrigger>
                 </TabsList>
