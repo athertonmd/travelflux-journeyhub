@@ -1,6 +1,8 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { OnboardingFormData } from './useOnboardingForm';
+import { Json } from '@/integrations/supabase/types';
 
 export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loading: boolean) => void) => {
   const saveConfiguration = async (formData: OnboardingFormData) => {
@@ -9,16 +11,18 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
     setIsLoading(true);
     
     try {
+      // Convert the form data to the expected database structure
+      // Explicitly convert complex objects to JSON compatible format
       const configData = {
-        products: formData.products,
+        products: formData.products as unknown as Json,
         gds_provider: formData.gdsProvider,
-        gds_config: formData.gdsConfig,
+        gds_config: formData.gdsConfig as unknown as Json,
         selected_trip_tiles: formData.selectedTripTiles,
         branding: {
           primaryColor: formData.branding.primaryColor,
           secondaryColor: formData.branding.secondaryColor
-        },
-        contact_info: formData.contactInfo,
+        } as unknown as Json,
+        contact_info: formData.contactInfo as unknown as Json,
         alert_countries: formData.alertCountries
       };
       

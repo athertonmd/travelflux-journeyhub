@@ -1,6 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Json } from '@/integrations/supabase/types';
 
 export interface ContactMethod {
   type: 'telephone' | 'email' | 'sms' | 'web';
@@ -105,6 +107,8 @@ export const useOnboardingForm = (userId: string | undefined) => {
             ...(data.gds_config as Partial<OnboardingFormData['gdsConfig']>)
           };
           if (data.selected_trip_tiles) newFormData.selectedTripTiles = data.selected_trip_tiles;
+          if (data.alert_countries) newFormData.alertCountries = data.alert_countries;
+          
           if (data.branding && typeof data.branding === 'object') {
             const brandingData = data.branding as Record<string, unknown>;
             newFormData.branding = {
@@ -113,8 +117,39 @@ export const useOnboardingForm = (userId: string | undefined) => {
               secondaryColor: typeof brandingData.secondaryColor === 'string' ? brandingData.secondaryColor : '#0FA0CE'
             };
           }
+          
+          // Handle contact_info with proper type checking
           if (data.contact_info && typeof data.contact_info === 'object') {
-            newFormData.contactInfo = data.contact_info as OnboardingFormData['contactInfo'];
+            // Convert from database JSON type to our app type
+            if (Array.isArray(data.contact_info)) {
+              // Handle unexpected array type by using default values
+              newFormData.contactInfo = initialFormData.contactInfo;
+            } else {
+              const contactInfoObj = data.contact_info as Record<string, unknown>;
+              
+              newFormData.contactInfo = {
+                blurb: typeof contactInfoObj.blurb === 'string' 
+                  ? contactInfoObj.blurb 
+                  : initialFormData.contactInfo.blurb,
+                contacts: Array.isArray(contactInfoObj.contacts) 
+                  ? contactInfoObj.contacts.map((contact: any) => ({
+                      id: typeof contact.id === 'string' ? contact.id : '',
+                      title: typeof contact.title === 'string' ? contact.title : '',
+                      details: typeof contact.details === 'string' ? contact.details : '',
+                      methods: Array.isArray(contact.methods) 
+                        ? contact.methods.map((method: any) => ({
+                            type: typeof method.type === 'string' && 
+                                  ['telephone', 'email', 'sms', 'web'].includes(method.type) 
+                              ? method.type as ContactMethod['type'] 
+                              : 'telephone',
+                            value: typeof method.value === 'string' ? method.value : '',
+                            linkUrl: typeof method.linkUrl === 'string' ? method.linkUrl : undefined
+                          }))
+                        : []
+                    }))
+                  : []
+              };
+            }
           }
           
           setFormData(newFormData);
