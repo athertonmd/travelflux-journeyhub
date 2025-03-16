@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -59,6 +58,18 @@ const RiskAlertsConfig: React.FC<RiskAlertsConfigProps> = ({
     onUpdate(selectedCountries.filter(c => c !== country));
   };
 
+  const selectAll = () => {
+    if (selectedCountries.length === COUNTRIES.length) {
+      // If all countries are selected, deselect all
+      onUpdate([]);
+    } else {
+      // Otherwise, select all countries
+      onUpdate([...COUNTRIES]);
+    }
+  };
+
+  const isAllSelected = selectedCountries.length === COUNTRIES.length;
+
   return (
     <div className="space-y-6">
       <div className="space-y-4">
@@ -93,23 +104,39 @@ const RiskAlertsConfig: React.FC<RiskAlertsConfigProps> = ({
           />
         </div>
 
+        <div className="flex items-center space-x-2 mb-2">
+          <Checkbox
+            id="select-all"
+            checked={isAllSelected}
+            onCheckedChange={selectAll}
+          />
+          <label
+            htmlFor="select-all"
+            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+          >
+            Select All Countries
+          </label>
+        </div>
+
         <ScrollArea className="h-[300px] border rounded-md">
-          <div className="p-4 space-y-2">
-            {filteredCountries.map(country => (
-              <div key={country} className="flex items-center space-x-2">
-                <Checkbox
-                  id={`country-${country}`}
-                  checked={selectedCountries.includes(country)}
-                  onCheckedChange={() => toggleCountry(country)}
-                />
-                <label
-                  htmlFor={`country-${country}`}
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  {country}
-                </label>
-              </div>
-            ))}
+          <div className="p-4">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+              {filteredCountries.map(country => (
+                <div key={country} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`country-${country}`}
+                    checked={selectedCountries.includes(country)}
+                    onCheckedChange={() => toggleCountry(country)}
+                  />
+                  <label
+                    htmlFor={`country-${country}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {country}
+                  </label>
+                </div>
+              ))}
+            </div>
           </div>
         </ScrollArea>
       </div>
