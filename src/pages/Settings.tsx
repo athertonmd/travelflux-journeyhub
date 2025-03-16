@@ -43,6 +43,9 @@ const Settings = () => {
 
   // Check if Mobile App is selected
   const isMobileAppEnabled = formData.products.mobile;
+  
+  // Check if Risk Management is selected
+  const isRiskManagementEnabled = formData.products.riskManagement;
 
   if (!user || isLoading) {
     return (
@@ -85,7 +88,7 @@ const Settings = () => {
                   <TabsTrigger value="gds">GDS</TabsTrigger>
                   <TabsTrigger value="config">GDS Config</TabsTrigger>
                   <TabsTrigger value="trips" disabled={!isMobileAppEnabled}>Mobile Settings</TabsTrigger>
-                  <TabsTrigger value="risk-alerts">Risk Alerts</TabsTrigger>
+                  <TabsTrigger value="risk-alerts" disabled={!isRiskManagementEnabled}>Risk Alerts</TabsTrigger>
                   <TabsTrigger value="branding">Branding</TabsTrigger>
                 </TabsList>
                 
