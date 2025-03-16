@@ -50,7 +50,7 @@ const BrandingConfig: React.FC<BrandingConfigProps> = ({ branding, onUpdate }) =
     <div className="space-y-8">
       <div className="text-sm text-gray-600 mb-4">
         Customize the appearance of your Tripscape experience with your brand colors and logo.
-        These elements will be used throughout the mobile app and traveler-facing interfaces.
+        These elements will be used throughout the mobile app and document delivery.
       </div>
 
       <div className="grid gap-8 sm:grid-cols-1 md:grid-cols-2">
