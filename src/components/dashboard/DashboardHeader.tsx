@@ -19,7 +19,7 @@ const DashboardHeader: React.FC<DashboardHeaderProps> = ({ pageTitle }) => {
       <div className="flex items-center space-x-4">
         {user && (
           <div className="text-sm text-gray-600">
-            Welcome, {user.user_metadata?.name || user.email}
+            Welcome, {user.email}
           </div>
         )}
         
