@@ -1,8 +1,7 @@
-
 import React from 'react';
 import SabreConfig from './SabreConfig';
 import TravelportConfig from './TravelportConfig';
-import { OnboardingFormData } from '@/hooks/useOnboardingForm';
+import { OnboardingFormData } from '@/types/onboarding.types';
 
 interface ApiIntegrationProps {
   gdsType: string;

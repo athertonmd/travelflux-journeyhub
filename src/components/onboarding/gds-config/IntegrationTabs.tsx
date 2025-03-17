@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiIntegration from './ApiIntegration';
 import EmailIntegration from './EmailIntegration';
 import ManualIntegration from './ManualIntegration';
-import { OnboardingFormData } from '@/hooks/useOnboardingForm';
+import { OnboardingFormData } from '@/types/onboarding.types';
 
 interface IntegrationTabsProps {
   integrationMethod: string;
