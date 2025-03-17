@@ -1,10 +1,9 @@
-
 import { useAuthState } from '@/hooks/auth/useAuthState';
 import { useSignUp } from '@/hooks/auth/useSignUp';
 import { useLogIn } from '@/hooks/auth/useLogIn';
 import { useLogOut } from '@/hooks/auth/useLogOut';
 import { useSetupStatus } from '@/hooks/auth/useSetupStatus';
-import { useState, useCallback, useEffect, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { AuthContextType } from '@/types/auth.types';
 import { clearAuthData } from '@/integrations/supabase/client';
@@ -117,35 +116,6 @@ export const useAuth = (): AuthContextType => {
       return false;
     }
   }, [updateSetupStatusFn]);
-  
-  // Effect to handle automatic session recovery
-  useEffect(() => {
-    let isMounted = true;
-    console.log('Running useAuth effect');
-    
-    // Check for auth errors and try to refresh if needed
-    const checkAndRefresh = async () => {
-      if (!isMounted) return;
-      
-      if (authError && !isAuthLoading && !isLoading && sessionChecked) {
-        console.log('Auth error detected, attempting session refresh');
-        
-        try {
-          await refreshSession();
-        } catch (error) {
-          console.error('Failed to refresh session:', error);
-        }
-      }
-    };
-    
-    checkAndRefresh();
-    
-    return () => {
-      console.log('Cleaning up useAuth effect');
-      isMounted = false;
-      setIsAuthLoading(false);
-    };
-  }, [authError, isAuthLoading, isLoading, refreshSession, sessionChecked]);
   
   // Use useMemo to prevent unnecessary re-renders
   return useMemo(() => ({
