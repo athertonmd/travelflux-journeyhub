@@ -11,7 +11,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [authError, setAuthError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
 
-  // Check for existing session on mount
   useEffect(() => {
     const checkSession = async () => {
       try {
@@ -38,7 +37,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     
     checkSession();
     
-    // Set up auth state listener
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
@@ -55,15 +53,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     );
     
     return () => {
-      // Clean up listener on unmount
       authListener.subscription.unsubscribe();
     };
   }, []);
   
-  // Helper to update user state from Supabase user
   const updateUserState = async (supabaseUser: any) => {
     try {
-      // Check setup status
       const { data, error } = await supabase
         .from('agency_configurations')
         .select('setup_completed')
@@ -90,7 +85,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
-  // Refresh session
   const refreshSession = async (): Promise<User | null> => {
     try {
       setIsLoading(true);
@@ -119,7 +113,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
-  // Sign up a new user
   const signUp = async (
     name: string,
     email: string,
@@ -175,7 +168,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
-  // Sign in with email and password
   const signIn = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
@@ -220,12 +212,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
-  // Alias for signIn to maintain compatibility
   const logIn = async (email: string, password: string): Promise<boolean> => {
     return signIn(email, password);
   };
   
-  // Sign out
   const signOut = async (): Promise<void> => {
     try {
       setIsLoading(true);
@@ -242,12 +232,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
-  // Alias for signOut to maintain compatibility
   const logOut = async (): Promise<void> => {
     return signOut();
   };
   
-  // Update setup status
   const updateSetupStatus = async (completed: boolean): Promise<boolean> => {
     if (!user) return false;
     
@@ -268,7 +256,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return false;
       }
       
-      // Update local state
       setUser(prev => prev ? { ...prev, setupCompleted: completed } : null);
       
       return true;
@@ -315,4 +302,4 @@ export const useAuth = () => {
   return context;
 };
 
-export { User };
+export type { User };

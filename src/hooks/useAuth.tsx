@@ -1,4 +1,3 @@
-
 import { useAuthState } from '@/hooks/auth/useAuthState';
 import { useSignUp } from '@/hooks/auth/useSignUp';
 import { useLogIn } from '@/hooks/auth/useLogIn';
@@ -118,13 +117,15 @@ export const useAuth = (): AuthContextType => {
     }
   }, [updateSetupStatusFn]);
   
-  // Use useMemo to prevent unnecessary re-renders
+  // Use useMemo to prevent unnecessary re-renders, adding signIn and signOut to match AuthContextType
   return useMemo(() => ({
     user,
     isLoading,
     authError,
     signUp,
+    signIn: logIn, // Add signIn as alias to logIn
     logIn,
+    signOut: logOut, // Add signOut as alias to logOut
     logOut,
     updateSetupStatus,
     refreshSession,
