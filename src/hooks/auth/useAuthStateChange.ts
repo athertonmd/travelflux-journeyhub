@@ -21,11 +21,20 @@ export const useAuthStateChange = () => {
   }: AuthStateChangeProps) => {
     console.log('Setting up auth state change listener');
     
+    // Skip processing events while manual clear is in progress
+    const isManualClearInProgress = () => sessionStorage.getItem('manual-clear-in-progress') === 'true';
+    
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
         
         if (!isMounted.current) return;
+        
+        // Check if a clear operation is in progress
+        if (isManualClearInProgress()) {
+          console.log('Ignoring auth state change during manual clear operation');
+          return;
+        }
         
         // Increment the change count
         authStateChangeCount.current += 1;
@@ -34,6 +43,12 @@ export const useAuthStateChange = () => {
         if (authStateChangeCount.current > 10) {
           console.warn('Too many auth state changes detected, possible refresh loop');
           // We'll still process the event but log a warning
+          
+          // If extremely high number of events, stop processing altogether
+          if (authStateChangeCount.current > 20) {
+            console.error('Excessive auth state changes detected, stopping processing');
+            return;
+          }
         }
         
         if (event === 'SIGNED_OUT') {

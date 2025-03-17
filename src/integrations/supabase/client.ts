@@ -37,10 +37,19 @@ export const supabase = createClient<Database>(
 export const clearAuthData = () => {
   console.log('Clearing all auth data with enhanced cleanup');
   
+  // Check if a clear operation is already in progress to prevent loops
+  if (sessionStorage.getItem('manual-clear-in-progress') === 'true') {
+    console.log('Clear operation already in progress, skipping duplicate call');
+    return;
+  }
+  
   try {
-    // First, try to sign out of Supabase to invalidate any server-side tokens
-    supabase.auth.signOut({ scope: 'global' }).catch(err => {
-      console.error('Error during forced signout:', err);
+    // Mark that we're starting a clear operation
+    sessionStorage.setItem('manual-clear-in-progress', 'true');
+    
+    // Temporarily remove auth listener to prevent cascading events
+    const unsubscribe = supabase.auth.onAuthStateChange(() => {
+      console.log('Auth state change during cleanup - ignoring');
     });
     
     // Clear ALL localStorage items related to auth
@@ -61,7 +70,7 @@ export const clearAuthData = () => {
     // Clear ALL sessionStorage similarly
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
-      if (key && (
+      if (key && key !== 'manual-clear-in-progress' && (
         key.includes('supabase') || 
         key.includes('auth') || 
         key.includes('token') || 
@@ -82,12 +91,26 @@ export const clearAuthData = () => {
       }
     });
     
-    // Force a complete refresh of the Supabase client's internal state
-    (supabase.auth as any).initialize();
+    // First, try to sign out of Supabase to invalidate any server-side tokens
+    // but catch errors to continue with cleanup
+    supabase.auth.signOut({ scope: 'global' }).catch(err => {
+      console.error('Error during forced signout, continuing cleanup:', err);
+    });
+    
+    // Unsubscribe from the temporary listener
+    unsubscribe.data.subscription.unsubscribe();
     
     console.log('Enhanced auth data cleanup complete');
+    
+    // Reset the manual-clear flag after a delay to prevent loops
+    setTimeout(() => {
+      sessionStorage.removeItem('manual-clear-in-progress');
+    }, 1500);
+    
   } catch (error) {
     console.error('Error during enhanced auth data clearing:', error);
+    // Still reset the flag in case of error
+    sessionStorage.removeItem('manual-clear-in-progress');
   }
 };
 

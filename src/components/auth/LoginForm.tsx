@@ -85,6 +85,30 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     }
   };
   
+  const handleClearStorage = () => {
+    // Prevent the button from being clicked during loading
+    if (isLoading) return;
+    
+    // Show toast to inform user
+    toast({
+      title: "Storage cleared",
+      description: "Auth data has been reset. The page will now reload.",
+    });
+    
+    // Add a flag to prevent multiple calls to clearAuthData during redirect
+    sessionStorage.setItem('manual-clear-in-progress', 'true');
+    
+    // Clear auth data
+    clearAuthData();
+    
+    // Add a slight delay before reloading to allow the toast to be seen
+    // and to prevent multiple auth state changes
+    setTimeout(() => {
+      // Use replace instead of href to avoid adding to browser history
+      window.location.replace('/login?cleared=true');
+    }, 1000);
+  };
+  
   return (
     <>
       <CardContent>
@@ -154,17 +178,7 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
               variant="outline"
               size="sm"
               className="text-xs"
-              onClick={() => {
-                clearAuthData();
-                toast({
-                  title: "Storage cleared",
-                  description: "Auth data has been reset. Try logging in again.",
-                });
-                // Add a slight delay before reloading to allow the toast to be seen
-                setTimeout(() => {
-                  window.location.href = '/login?cleared=true';
-                }, 1000);
-              }}
+              onClick={handleClearStorage}
               disabled={isLoading}
             >
               Reset session data

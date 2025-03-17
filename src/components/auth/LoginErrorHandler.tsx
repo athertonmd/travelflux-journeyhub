@@ -14,6 +14,7 @@ const LoginErrorHandler: React.FC<LoginErrorHandlerProps> = ({ children }) => {
   const [hasError, setHasError] = useState(false);
   const [refreshAttempts, setRefreshAttempts] = useState(0);
   const [showingErrorPage, setShowingErrorPage] = useState(false);
+  const hasCleanedStorage = useRef(false);
   
   // Add a timeout ref to track and clear timeouts
   const loadingTimeoutRef = useRef<number | null>(null);
@@ -31,8 +32,12 @@ const LoginErrorHandler: React.FC<LoginErrorHandlerProps> = ({ children }) => {
     setHasError(false);
     setShowingErrorPage(false);
     
-    // Clean auth data on page load to ensure fresh state
-    clearAuthData();
+    // Only clean auth data on page load once to prevent loops
+    if (!hasCleanedStorage.current && !sessionStorage.getItem('manual-clear-in-progress')) {
+      console.log('Performing initial auth cleanup');
+      clearAuthData();
+      hasCleanedStorage.current = true;
+    }
     
     // Check if URL contains cleared=true parameter
     if (window.location.href.includes('cleared=true')) {
@@ -47,7 +52,10 @@ const LoginErrorHandler: React.FC<LoginErrorHandlerProps> = ({ children }) => {
     const clearStuckSessions = async () => {
       if (window.location.href.includes('error=')) {
         console.log('Error detected in URL, clearing session state');
-        clearAuthData();
+        if (!hasCleanedStorage.current) {
+          clearAuthData();
+          hasCleanedStorage.current = true;
+        }
         setHasError(true);
         
         toast({
@@ -81,7 +89,7 @@ const LoginErrorHandler: React.FC<LoginErrorHandlerProps> = ({ children }) => {
       loadingTimeoutRef.current = window.setTimeout(() => {
         console.log('Loading timeout triggered, showing error state');
         setHasError(true);
-      }, 4000); // 4 seconds timeout (reduced from 5)
+      }, 5000); // 5 seconds timeout
     }
     
     return () => {
