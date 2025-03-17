@@ -4,22 +4,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import ApiIntegration from './ApiIntegration';
 import EmailIntegration from './EmailIntegration';
 import ManualIntegration from './ManualIntegration';
+import { OnboardingFormData } from '@/hooks/useOnboardingForm';
 
 interface IntegrationTabsProps {
   integrationMethod: string;
   setIntegrationMethod: (method: string) => void;
   gdsType: string;
-  config: {
-    endpoint: string;
-    apiKey: string;
-    pcc: string;
-    email: string;
-    pccList: string;
-    queueNumber: string;
-    sabreQueueAssignment: string;
-    fnbtsEntry: string;
-  };
-  onUpdate: (config: any) => void;
+  config: OnboardingFormData['gdsConfig'];
+  onUpdate: (config: OnboardingFormData['gdsConfig']) => void;
 }
 
 const IntegrationTabs: React.FC<IntegrationTabsProps> = ({

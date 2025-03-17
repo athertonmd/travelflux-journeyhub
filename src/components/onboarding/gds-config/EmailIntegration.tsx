@@ -3,13 +3,12 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { OnboardingFormData } from '@/hooks/useOnboardingForm';
 
 interface EmailIntegrationProps {
   gdsType: string;
-  config: {
-    email: string;
-  };
-  onUpdate: (config: any) => void;
+  config: OnboardingFormData['gdsConfig'];
+  onUpdate: (config: OnboardingFormData['gdsConfig']) => void;
 }
 
 const EmailIntegration: React.FC<EmailIntegrationProps> = ({ gdsType, config, onUpdate }) => {
@@ -29,7 +28,7 @@ const EmailIntegration: React.FC<EmailIntegrationProps> = ({ gdsType, config, on
             id="email" 
             type="email" 
             placeholder="pnr@youragency.com"
-            value={config.email}
+            value={config.email || ''}
             onChange={(e) => handleChange('email', e.target.value)}
           />
           <p className="text-xs text-gray-500">
