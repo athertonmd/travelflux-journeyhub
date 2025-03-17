@@ -32,7 +32,7 @@ export const useAuthStateChange = () => {
     
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event);
+        console.log('Auth state changed:', event, 'Session exists:', !!session);
         
         if (!isMounted.current) {
           console.log('Component not mounted, ignoring auth event:', event);
@@ -66,8 +66,8 @@ export const useAuthStateChange = () => {
           return;
         }
         
-        if (event === 'SIGNED_IN') {
-          console.log('User signed in, updating state with user data');
+        if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+          console.log('User signed in or updated, updating state with user data');
           setIsLoading(true); // Set loading while we update user state
           
           if (session?.user) {
@@ -77,12 +77,14 @@ export const useAuthStateChange = () => {
               setUser(userData);
             } catch (error) {
               console.error('Error updating user state after sign in:', error);
+              setUser(null); // Important: Clear user state if update fails
             } finally {
               setIsLoading(false);
               setSessionChecked(true);
             }
           } else {
-            console.warn('SIGNED_IN event but no user in session');
+            console.warn(event + ' event but no user in session');
+            setUser(null);
             setIsLoading(false);
             setSessionChecked(true);
           }
@@ -92,22 +94,33 @@ export const useAuthStateChange = () => {
         if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed, updating state');
           if (session?.user) {
-            const userData = await updateUserState(session.user);
-            setUser(userData);
+            try {
+              const userData = await updateUserState(session.user);
+              setUser(userData);
+            } catch (error) {
+              console.error('Error updating user state after token refresh:', error);
+              setUser(null); // Important: Clear user state if update fails
+            }
           }
+          setIsLoading(false);
           setSessionChecked(true);
           return;
         }
         
-        if (session?.user) {
-          console.log('User authenticated:', session.user.email);
-          const userData = await updateUserState(session.user);
-          setUser(userData);
-          setIsLoading(false);
-          setSessionChecked(true);
-        } else if (event === 'INITIAL_SESSION') {
-          console.log('Initial session with no user, marking as checked');
-          setUser(null);
+        // Fallback for INITIAL_SESSION or other events
+        try {
+          if (session?.user) {
+            console.log('User authenticated:', session.user.email);
+            const userData = await updateUserState(session.user);
+            setUser(userData);
+          } else {
+            console.log(event + ' with no user, clearing state');
+            setUser(null);
+          }
+        } catch (error) {
+          console.error('Error handling auth event:', event, error);
+          setUser(null); // Clear user state on error
+        } finally {
           setIsLoading(false);
           setSessionChecked(true);
         }

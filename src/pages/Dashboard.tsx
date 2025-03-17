@@ -12,72 +12,119 @@ import { toast } from '@/hooks/use-toast';
 import ResetSessionButton from '@/components/auth/ResetSessionButton';
 
 const Dashboard = () => {
-  const { user, isLoading: isAuthLoading, refreshSession } = useAuth();
+  const { user, isLoading: isAuthLoading, refreshSession, sessionChecked } = useAuth();
   const navigate = useNavigate();
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
   const [isRecovering, setIsRecovering] = useState(false);
   const [isMounted, setIsMounted] = useState(true);
+  const [sessionCheckAttempts, setSessionCheckAttempts] = useState(0);
 
   // Set isMounted state for cleanup
   useEffect(() => {
     setIsMounted(true);
-    console.log('Dashboard mounted, auth state:', { user, isAuthLoading });
+    console.log('Dashboard mounted, auth state:', { 
+      user, 
+      isAuthLoading, 
+      sessionChecked, 
+      loadingTimeout: loadingTimeoutReached 
+    });
     return () => {
       setIsMounted(false);
     };
   }, []);
 
+  // Critical debug information on every render
+  if (isAuthLoading) {
+    console.log('Dashboard rendering in loading state:', { 
+      isAuthLoading, 
+      sessionChecked, 
+      user: !!user, 
+      loadingTimeout: loadingTimeoutReached,
+      sessionCheckAttempts
+    });
+  }
+
   // Handle redirects based on auth state
   useEffect(() => {
-    console.log('Dashboard auth state updated:', { user, isAuthLoading });
+    console.log('Dashboard auth state updated:', { 
+      user, 
+      isAuthLoading, 
+      sessionChecked
+    });
     
-    // Use a shorter timeout for better UX
+    // Don't redirect if we're still loading
+    if (isAuthLoading) {
+      return;
+    }
+    
     const redirectTimeout = window.setTimeout(() => {
       if (!isMounted) return;
       
-      if (!isAuthLoading && !user) {
+      if (!user) {
         console.log('Dashboard: No user found, redirecting to login');
         navigate('/login');
       } else if (user && !user.setupCompleted) {
         console.log('Dashboard: User setup not completed, redirecting to welcome');
         navigate('/welcome');
       }
-    }, 300); // Reduced from 500ms to 300ms for faster redirect
+    }, 300);
     
     return () => {
       window.clearTimeout(redirectTimeout);
     };
-  }, [user, isAuthLoading, navigate, isMounted]);
+  }, [user, isAuthLoading, sessionChecked, navigate, isMounted]);
 
   // Force timeout to prevent infinite loading
   useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      if (isMounted && isAuthLoading) {
-        console.log('Dashboard: Loading timeout reached');
-        setLoadingTimeoutReached(true);
-      }
-    }, 3000); // Reduced from 5 seconds to 3 seconds for better UX
+    if (!isMounted) return;
     
-    return () => {
-      window.clearTimeout(timeout);
-    };
-  }, [isAuthLoading, isMounted]);
+    // If we're not checked, the loading state might be frozen
+    if (sessionChecked === false && sessionCheckAttempts === 0) {
+      console.log('Dashboard: Session not checked yet, will retry if it takes too long');
+      
+      const timeout = window.setTimeout(() => {
+        if (isMounted && isAuthLoading) {
+          console.log('Dashboard: Loading timeout reached, session still not checked');
+          setLoadingTimeoutReached(true);
+          setSessionCheckAttempts(prev => prev + 1);
+        }
+      }, 3000);
+      
+      return () => {
+        window.clearTimeout(timeout);
+      };
+    }
+    
+    // If we're still loading after session check, set another timeout
+    if (sessionChecked && isAuthLoading) {
+      const loadingTimeout = window.setTimeout(() => {
+        if (isMounted && isAuthLoading) {
+          console.log('Dashboard: Still loading after session check timeout reached');
+          setLoadingTimeoutReached(true);
+        }
+      }, 2000);
+      
+      return () => {
+        window.clearTimeout(loadingTimeout);
+      };
+    }
+  }, [isAuthLoading, isMounted, sessionChecked, sessionCheckAttempts]);
 
   // Handle manual refresh 
   const handleRefreshConnection = async () => {
     if (!isMounted) return;
     
     setIsRecovering(true);
+    setLoadingTimeoutReached(false); // Reset timeout flag
     
     try {
-      // First try to refresh the session
       console.log('Dashboard: Attempting to refresh session');
       const refreshedUser = await refreshSession();
       
       if (refreshedUser) {
         console.log('Dashboard: Session refreshed successfully');
         setIsRecovering(false);
-        setLoadingTimeoutReached(false);
+        setSessionCheckAttempts(0);
         toast({
           title: "Connection restored",
           description: "Your session has been refreshed.",
@@ -124,10 +171,14 @@ const Dashboard = () => {
   };
 
   // If auth is still loading after timeout, show a retry button
-  if (isAuthLoading && loadingTimeoutReached) {
+  if ((isAuthLoading && loadingTimeoutReached) || (sessionChecked === false && loadingTimeoutReached)) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <p className="mb-4 text-muted-foreground">Loading is taking longer than expected...</p>
+        <p className="text-lg font-semibold mb-2">Loading is taking longer than expected</p>
+        <p className="mb-4 text-muted-foreground">
+          {sessionChecked ? 'Your session is verified but we\'re having trouble loading your data.' 
+                          : 'We\'re having trouble verifying your session.'}
+        </p>
         <div className="flex flex-col gap-4 w-full max-w-md">
           <Button 
             onClick={handleRefreshConnection} 
@@ -149,6 +200,7 @@ const Dashboard = () => {
           
           <div className="mt-4 text-xs text-muted-foreground text-center">
             <p>If you continue to experience issues, please contact support.</p>
+            <p className="mt-1">Session checked: {sessionChecked ? 'Yes' : 'No'} | Load attempts: {sessionCheckAttempts}</p>
           </div>
         </div>
       </div>
@@ -162,6 +214,9 @@ const Dashboard = () => {
         <LoadingSpinner size={16} />
         <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
         <p className="mt-2 text-xs text-muted-foreground">(This may take a moment)</p>
+        {sessionCheckAttempts > 0 && (
+          <p className="mt-2 text-xs text-muted-foreground">Session check attempts: {sessionCheckAttempts}</p>
+        )}
       </div>
     );
   }
