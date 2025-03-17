@@ -12,6 +12,8 @@ export type AuthContextType = {
   isLoading: boolean;
   authError: string | null;
   signUp: (name: string, email: string, password: string, agencyName?: string) => Promise<boolean>;
+  signIn: (email: string, password: string) => Promise<boolean>;
+  signOut: () => Promise<void>;
   logIn: (email: string, password: string) => Promise<boolean>;
   logOut: () => Promise<void>;
   updateSetupStatus: (completed: boolean) => Promise<boolean>;

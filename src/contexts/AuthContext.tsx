@@ -1,30 +1,15 @@
-
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, isTokenExpired } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-
-export type User = {
-  id: string;
-  email: string;
-  name: string;
-  agencyName?: string;
-  setupCompleted?: boolean;
-};
-
-type AuthContextType = {
-  user: User | null;
-  isLoading: boolean;
-  signUp: (name: string, email: string, password: string, agencyName?: string) => Promise<boolean>;
-  signIn: (email: string, password: string) => Promise<boolean>;
-  signOut: () => Promise<void>;
-  updateSetupStatus: (completed: boolean) => Promise<boolean>;
-};
+import { User, AuthContextType } from '@/types/auth.types';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   // Check for existing session on mount
   useEffect(() => {
@@ -35,14 +20,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         
         if (error) {
           console.error('Session check error:', error.message);
+          setAuthError(error.message);
           return;
         }
         
         if (data.session?.user) {
           await updateUserState(data.session.user);
         }
-      } catch (error) {
+        setSessionChecked(true);
+      } catch (error: any) {
         console.error('Error checking session:', error);
+        setAuthError(error.message);
       } finally {
         setIsLoading(false);
       }
@@ -98,6 +86,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return userData;
     } catch (error) {
       console.error('Error updating user state:', error);
+      return null;
+    }
+  };
+  
+  // Refresh session
+  const refreshSession = async (): Promise<User | null> => {
+    try {
+      setIsLoading(true);
+      const { data, error } = await supabase.auth.refreshSession();
+      
+      if (error) {
+        console.error('Session refresh error:', error.message);
+        setAuthError(error.message);
+        setIsLoading(false);
+        return null;
+      }
+      
+      if (data.session?.user) {
+        const userData = await updateUserState(data.session.user);
+        setIsLoading(false);
+        return userData;
+      }
+      
+      setIsLoading(false);
+      return null;
+    } catch (error: any) {
+      console.error('Error refreshing session:', error);
+      setAuthError(error.message);
+      setIsLoading(false);
       return null;
     }
   };
@@ -203,6 +220,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
   
+  // Alias for signIn to maintain compatibility
+  const logIn = async (email: string, password: string): Promise<boolean> => {
+    return signIn(email, password);
+  };
+  
   // Sign out
   const signOut = async (): Promise<void> => {
     try {
@@ -218,6 +240,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } finally {
       setIsLoading(false);
     }
+  };
+  
+  // Alias for signOut to maintain compatibility
+  const logOut = async (): Promise<void> => {
+    return signOut();
   };
   
   // Update setup status
@@ -262,10 +289,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       value={{
         user,
         isLoading,
+        authError,
         signUp,
         signIn,
         signOut,
-        updateSetupStatus
+        logIn,
+        logOut,
+        updateSetupStatus,
+        refreshSession,
+        sessionChecked
       }}
     >
       {children}
@@ -282,3 +314,5 @@ export const useAuth = () => {
   
   return context;
 };
+
+export { User };

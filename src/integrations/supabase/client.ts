@@ -17,6 +17,32 @@ export const supabase = createClient<Database>(
   }
 );
 
+// Check if the current session token is expired
+export const isTokenExpired = async (): Promise<boolean> => {
+  try {
+    const { data } = await supabase.auth.getSession();
+    
+    if (!data.session) {
+      return true;
+    }
+    
+    // Check if the session has an expiry timestamp
+    if (data.session.expires_at) {
+      // Convert expires_at to milliseconds (it's in seconds)
+      const expiresAt = data.session.expires_at * 1000;
+      const now = Date.now();
+      
+      // Return true if current time is past expiry
+      return now >= expiresAt;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error checking token expiry:', error);
+    return true; // Assume expired if we can't check
+  }
+};
+
 // Simple helper to clear auth state (no automatic callbacks)
 export const clearAuthData = () => {
   localStorage.clear();
