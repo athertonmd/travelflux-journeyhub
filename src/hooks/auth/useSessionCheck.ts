@@ -27,16 +27,16 @@ export const useSessionCheck = () => {
       // Set a hard timeout to prevent hanging in the initial session check
       initialCheckTimeoutRef.current = setTimeout(() => {
         if (isMounted.current) {
-          console.log('Initial session check timed out after 5 seconds, forcing completion');
+          console.log('Initial session check timed out after 3 seconds, forcing completion');
           setUser(null);
           setIsLoading(false);
           setSessionChecked(true);
         }
-      }, 5000);
+      }, 3000); // Reduced from 5s to 3s
       
       // Use Promise.race to add a timeout
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Session check timeout')), 4000);
+        setTimeout(() => reject(new Error('Session check timeout')), 2500); // Reduced from 4s to 2.5s
       });
       
       const sessionPromise = supabase.auth.getSession();
@@ -74,8 +74,19 @@ export const useSessionCheck = () => {
       
       if (data.session?.user) {
         console.log('Session exists, updating user state');
-        const userData = await updateUserState(data.session.user);
-        setUser(userData);
+        try {
+          // Add another timeout for user state update
+          const userUpdatePromise = updateUserState(data.session.user);
+          const userUpdateTimeout = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error('User update timeout')), 2000);
+          });
+          
+          const userData = await Promise.race([userUpdatePromise, userUpdateTimeout]);
+          setUser(userData);
+        } catch (error) {
+          console.error('User state update error or timeout:', error);
+          setUser(null);
+        }
       } else {
         console.log('No session found');
         setUser(null);

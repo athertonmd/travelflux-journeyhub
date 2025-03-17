@@ -32,6 +32,12 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
     }
   }, [loginAttempts]);
 
+  // Clear auth data when component mounts to avoid stale state
+  useEffect(() => {
+    console.log('Login form mounted, clearing auth data');
+    clearAuthData();
+  }, []);
+
   const handleSubmit = async (email: string, password: string, remember: boolean) => {
     try {
       console.log('Login form submitted - ensuring clean auth state');

@@ -8,7 +8,7 @@ export const useAuthDebounce = () => {
   const createDebounceController = () => {
     let lastHandledEvent = '';
     let lastHandledTime = 0;
-    const debounceTime = 1000; // 1 second
+    const debounceTime = 500; // Reduced from 1000ms to 500ms to prevent hanging
     
     const shouldDebounce = (event: string) => {
       const now = Date.now();
