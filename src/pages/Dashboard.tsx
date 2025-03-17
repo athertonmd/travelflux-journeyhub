@@ -21,6 +21,7 @@ const Dashboard = () => {
   // Set isMounted state for cleanup
   useEffect(() => {
     setIsMounted(true);
+    console.log('Dashboard mounted, auth state:', { user, isAuthLoading });
     return () => {
       setIsMounted(false);
     };
@@ -28,6 +29,9 @@ const Dashboard = () => {
 
   // Handle redirects based on auth state
   useEffect(() => {
+    console.log('Dashboard auth state updated:', { user, isAuthLoading });
+    
+    // Use a shorter timeout for better UX
     const redirectTimeout = window.setTimeout(() => {
       if (!isMounted) return;
       
@@ -38,7 +42,7 @@ const Dashboard = () => {
         console.log('Dashboard: User setup not completed, redirecting to welcome');
         navigate('/welcome');
       }
-    }, 500);
+    }, 300); // Reduced from 500ms to 300ms for faster redirect
     
     return () => {
       window.clearTimeout(redirectTimeout);
@@ -52,7 +56,7 @@ const Dashboard = () => {
         console.log('Dashboard: Loading timeout reached');
         setLoadingTimeoutReached(true);
       }
-    }, 5000); // Reduced from 8 seconds to 5 seconds for better UX
+    }, 3000); // Reduced from 5 seconds to 3 seconds for better UX
     
     return () => {
       window.clearTimeout(timeout);
@@ -151,7 +155,7 @@ const Dashboard = () => {
     );
   }
 
-  // If we're still loading auth, show loading spinner with additional context
+  // Handle initial loading state better - show loading for less time
   if (isAuthLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
@@ -162,24 +166,26 @@ const Dashboard = () => {
     );
   }
 
-  // If no user and not loading, redirect (the useEffect will handle this)
-  if (!user) {
+  // If user is properly loaded, render the dashboard
+  if (user) {
+    console.log('Dashboard: Rendering dashboard for user', user.email);
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Redirecting to login...</p>
+      <div className="min-h-screen bg-background">
+        <DashboardHeader pageTitle="Dashboard" />
+
+        <main className="container mx-auto py-8 px-4">
+          <DashboardMetrics />
+          <DashboardContent />
+        </main>
       </div>
     );
   }
 
-  // Now we know we have a user and auth is not loading
+  // If no user and not loading, show redirecting message
+  console.log('Dashboard: No user found, showing redirect message');
   return (
-    <div className="min-h-screen bg-background">
-      <DashboardHeader pageTitle="Dashboard" />
-
-      <main className="container mx-auto py-8 px-4">
-        <DashboardMetrics />
-        <DashboardContent />
-      </main>
+    <div className="min-h-screen flex items-center justify-center">
+      <p>Redirecting to login...</p>
     </div>
   );
 };

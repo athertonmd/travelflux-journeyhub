@@ -34,9 +34,12 @@ export const useAuthStateChange = () => {
       async (event, session) => {
         console.log('Auth state changed:', event);
         
-        if (!isMounted.current) return;
+        if (!isMounted.current) {
+          console.log('Component not mounted, ignoring auth event:', event);
+          return;
+        }
         
-        // VERY IMPORTANT: Check if a clear operation is in progress
+        // Check if a clear operation is in progress
         if (isManualClearInProgress()) {
           console.log('Ignoring auth state change during manual clear operation');
           return;
@@ -63,6 +66,29 @@ export const useAuthStateChange = () => {
           return;
         }
         
+        if (event === 'SIGNED_IN') {
+          console.log('User signed in, updating state with user data');
+          setIsLoading(true); // Set loading while we update user state
+          
+          if (session?.user) {
+            try {
+              const userData = await updateUserState(session.user);
+              console.log('User state updated after sign in:', userData);
+              setUser(userData);
+            } catch (error) {
+              console.error('Error updating user state after sign in:', error);
+            } finally {
+              setIsLoading(false);
+              setSessionChecked(true);
+            }
+          } else {
+            console.warn('SIGNED_IN event but no user in session');
+            setIsLoading(false);
+            setSessionChecked(true);
+          }
+          return;
+        }
+        
         if (event === 'TOKEN_REFRESHED') {
           console.log('Token refreshed, updating state');
           if (session?.user) {
@@ -77,6 +103,7 @@ export const useAuthStateChange = () => {
           console.log('User authenticated:', session.user.email);
           const userData = await updateUserState(session.user);
           setUser(userData);
+          setIsLoading(false);
           setSessionChecked(true);
         } else if (event === 'INITIAL_SESSION') {
           console.log('Initial session with no user, marking as checked');
