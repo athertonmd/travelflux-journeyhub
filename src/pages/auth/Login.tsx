@@ -21,14 +21,15 @@ const Login = () => {
     sessionChecked
   });
   
-  // Clear auth data on initial load - but only once
+  // Clear auth data on initial load but check if a manual operation is in progress
   useEffect(() => {
-    const cleanupFn = () => {
+    // Check if we're already in a manual clear operation
+    if (sessionStorage.getItem('manual-clear-in-progress') !== 'true') {
+      console.log('Login page mounted, doing initial auth cleanup');
       clearAuthData();
-    };
-    
-    cleanupFn();
-    // Don't include clearAuthData in the dependency array
+    } else {
+      console.log('Manual clear already in progress, skipping initial cleanup');
+    }
   }, []);
   
   // Timeout for session check to prevent infinite loading
@@ -50,7 +51,11 @@ const Login = () => {
     if (user) {
       console.log('User logged in, redirecting to dashboard');
       const destination = user.setupCompleted ? '/dashboard' : '/welcome';
-      navigate(destination);
+      
+      // Add a small delay to ensure state is stable before navigation
+      setTimeout(() => {
+        navigate(destination);
+      }, 200);
     }
   }, [user, navigate]);
 

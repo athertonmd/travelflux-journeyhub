@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,7 +21,6 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
   onReloadPage,
 }) => {
   const clearStorageAndReload = () => {
-    // Show toast
     // Set clear in progress flag to prevent loops
     sessionStorage.setItem('manual-clear-in-progress', 'true');
     
@@ -29,9 +29,9 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
     clearAuthData();
     
     // Add a slight delay to ensure the clear operation completes
+    // Use a direct reload instead of changing location to prevent routing issues
     setTimeout(() => {
-      // Use replace instead of href to avoid adding to browser history
-      window.location.replace('/login?cleared=true');
+      window.location.reload();
     }, 1000);
   };
   

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -101,11 +100,10 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     // Clear auth data
     clearAuthData();
     
-    // Add a slight delay before reloading to allow the toast to be seen
-    // and to prevent multiple auth state changes
+    // IMPORTANT: Use a more direct page reload approach instead of changing location
+    // This prevents the auth state loop issues
     setTimeout(() => {
-      // Use replace instead of href to avoid adding to browser history
-      window.location.replace('/login?cleared=true');
+      window.location.reload();
     }, 1000);
   };
   

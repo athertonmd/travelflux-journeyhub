@@ -47,10 +47,8 @@ export const clearAuthData = () => {
     // Mark that we're starting a clear operation
     sessionStorage.setItem('manual-clear-in-progress', 'true');
     
-    // Temporarily remove auth listener to prevent cascading events
-    const unsubscribe = supabase.auth.onAuthStateChange(() => {
-      console.log('Auth state change during cleanup - ignoring');
-    });
+    // Don't attempt to sign out programmatically as this can cause the loop
+    // Just directly clear all storage
     
     // Clear ALL localStorage items related to auth
     for (let i = 0; i < localStorage.length; i++) {
@@ -91,21 +89,12 @@ export const clearAuthData = () => {
       }
     });
     
-    // First, try to sign out of Supabase to invalidate any server-side tokens
-    // but catch errors to continue with cleanup
-    supabase.auth.signOut({ scope: 'global' }).catch(err => {
-      console.error('Error during forced signout, continuing cleanup:', err);
-    });
-    
-    // Unsubscribe from the temporary listener
-    unsubscribe.data.subscription.unsubscribe();
-    
     console.log('Enhanced auth data cleanup complete');
     
     // Reset the manual-clear flag after a delay to prevent loops
     setTimeout(() => {
       sessionStorage.removeItem('manual-clear-in-progress');
-    }, 1500);
+    }, 2000);
     
   } catch (error) {
     console.error('Error during enhanced auth data clearing:', error);

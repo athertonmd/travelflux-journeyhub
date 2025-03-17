@@ -89,7 +89,7 @@ const LoginErrorHandler: React.FC<LoginErrorHandlerProps> = ({ children }) => {
       loadingTimeoutRef.current = window.setTimeout(() => {
         console.log('Loading timeout triggered, showing error state');
         setHasError(true);
-      }, 5000); // 5 seconds timeout
+      }, 8000); // Increased to 8 seconds to allow more time for auth
     }
     
     return () => {
@@ -103,6 +103,8 @@ const LoginErrorHandler: React.FC<LoginErrorHandlerProps> = ({ children }) => {
   
   // Handle page reload
   const handleReloadPage = () => {
+    // Set the flag to prevent loops during reload
+    sessionStorage.setItem('manual-clear-in-progress', 'true');
     window.location.reload();
   };
 

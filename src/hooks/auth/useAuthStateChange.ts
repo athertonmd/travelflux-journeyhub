@@ -30,7 +30,7 @@ export const useAuthStateChange = () => {
         
         if (!isMounted.current) return;
         
-        // Check if a clear operation is in progress
+        // Very important: Check if a clear operation is in progress
         if (isManualClearInProgress()) {
           console.log('Ignoring auth state change during manual clear operation');
           return;
@@ -42,8 +42,6 @@ export const useAuthStateChange = () => {
         // If we get too many changes in a short period, there might be a loop
         if (authStateChangeCount.current > 10) {
           console.warn('Too many auth state changes detected, possible refresh loop');
-          // We'll still process the event but log a warning
-          
           // If extremely high number of events, stop processing altogether
           if (authStateChangeCount.current > 20) {
             console.error('Excessive auth state changes detected, stopping processing');
