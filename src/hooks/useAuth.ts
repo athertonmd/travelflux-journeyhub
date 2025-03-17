@@ -1,3 +1,4 @@
+
 import { useAuthState } from '@/hooks/auth/useAuthState';
 import { useSignUp } from '@/hooks/auth/useSignUp';
 import { useLogIn } from '@/hooks/auth/useLogIn';
@@ -9,7 +10,7 @@ import { AuthContextType } from '@/types/auth.types';
 import { clearAuthData } from '@/integrations/supabase/client';
 
 export const useAuth = (): AuthContextType => {
-  // Initialize all state first
+  // Initialize loading state
   const [isAuthLoading, setIsAuthLoading] = useState(false);
   
   // Get auth state management
@@ -31,13 +32,13 @@ export const useAuth = (): AuthContextType => {
   const isLoading = stateLoading || isAuthLoading;
   
   // Define all callbacks - ensure these are always defined in the same order
-  const signUp = useCallback(async (email: string, password: string, name: string, agencyName: string) => {
+  const signUp = useCallback(async (name: string, email: string, password: string, agencyName?: string) => {
     try {
       // Clear any existing auth data before signup
       clearAuthData();
       
       setIsAuthLoading(true);
-      const result = await signUpFn(email, password, name, agencyName);
+      const result = await signUpFn(name, email, password, agencyName);
       setIsAuthLoading(false);
       return result;
     } catch (error: any) {
