@@ -1,10 +1,10 @@
 
 import React from 'react';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import DashboardMetrics from '@/components/dashboard/DashboardMetrics';
 import DashboardContent from '@/components/dashboard/DashboardContent';
 import DashboardErrorState from '@/components/dashboard/DashboardErrorState';
 import DashboardLoadingState from '@/components/dashboard/DashboardLoadingState';
+import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useDashboardState } from '@/hooks/dashboard/useDashboardState';
 
 const Dashboard = () => {
@@ -48,14 +48,12 @@ const Dashboard = () => {
   if (user) {
     console.log('Dashboard: Rendering dashboard for user', user.email);
     return (
-      <div className="min-h-screen bg-background">
-        <DashboardHeader pageTitle="Dashboard" />
-
-        <main className="container mx-auto py-8 px-4">
+      <DashboardLayout title="Dashboard">
+        <div className="space-y-6">
           <DashboardMetrics />
           <DashboardContent />
-        </main>
-      </div>
+        </div>
+      </DashboardLayout>
     );
   }
 
