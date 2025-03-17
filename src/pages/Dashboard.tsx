@@ -18,38 +18,53 @@ const Dashboard = () => {
   const [isRecovering, setIsRecovering] = useState(false);
   const [isMounted, setIsMounted] = useState(true);
   const [sessionCheckAttempts, setSessionCheckAttempts] = useState(0);
+  const [timeSinceMount, setTimeSinceMount] = useState(0);
 
   // Set isMounted state for cleanup
   useEffect(() => {
+    const mountTime = Date.now();
     setIsMounted(true);
+    
     console.log('Dashboard mounted, auth state:', { 
-      user, 
+      userExists: !!user, 
       isAuthLoading, 
-      sessionChecked, 
-      loadingTimeout: loadingTimeoutReached 
+      sessionChecked
     });
+    
+    // Track time since mount for debugging
+    const timer = setInterval(() => {
+      setTimeSinceMount(Math.floor((Date.now() - mountTime) / 1000));
+    }, 1000);
+    
     return () => {
       setIsMounted(false);
+      clearInterval(timer);
     };
   }, []);
 
-  // Critical debug information on every render
-  if (isAuthLoading) {
-    console.log('Dashboard rendering in loading state:', { 
-      isAuthLoading, 
-      sessionChecked, 
-      user: !!user, 
-      loadingTimeout: loadingTimeoutReached,
-      sessionCheckAttempts
-    });
-  }
+  // Force redirection after a reasonable timeout if still loading
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    const forceRedirectTimeout = window.setTimeout(() => {
+      if (isMounted && isAuthLoading && timeSinceMount > 10) {
+        console.log('Dashboard: Force redirect to login after timeout');
+        navigate('/login?error=timeout');
+      }
+    }, 12000);
+    
+    return () => {
+      window.clearTimeout(forceRedirectTimeout);
+    };
+  }, [isAuthLoading, isMounted, navigate, timeSinceMount]);
 
   // Handle redirects based on auth state
   useEffect(() => {
     console.log('Dashboard auth state updated:', { 
-      user, 
+      userExists: !!user, 
       isAuthLoading, 
-      sessionChecked
+      sessionChecked,
+      timeSinceMount
     });
     
     // Don't redirect if we're still loading
@@ -132,9 +147,10 @@ const Dashboard = () => {
         return;
       }
       
-      // If refresh fails, reload the page
-      console.log('Dashboard: Session refresh failed, reloading page');
-      window.location.reload();
+      // If refresh fails, take user to login page
+      console.log('Dashboard: Session refresh failed, redirecting to login');
+      sessionStorage.setItem('manual-clear-in-progress', 'true');
+      navigate('/login?error=refresh_failed');
     } catch (error) {
       console.error('Dashboard: Refresh error:', error);
       if (isMounted) {
@@ -201,6 +217,7 @@ const Dashboard = () => {
           <div className="mt-4 text-xs text-muted-foreground text-center">
             <p>If you continue to experience issues, please contact support.</p>
             <p className="mt-1">Session checked: {sessionChecked ? 'Yes' : 'No'} | Load attempts: {sessionCheckAttempts}</p>
+            <p className="mt-1">Time since page load: {timeSinceMount} seconds</p>
           </div>
         </div>
       </div>
@@ -213,9 +230,23 @@ const Dashboard = () => {
       <div className="min-h-screen flex flex-col items-center justify-center p-4">
         <LoadingSpinner size={16} />
         <p className="mt-4 text-muted-foreground">Loading your dashboard...</p>
-        <p className="mt-2 text-xs text-muted-foreground">(This may take a moment)</p>
+        <p className="mt-2 text-xs text-muted-foreground">
+          {timeSinceMount > 5 ? 
+            "This is taking longer than expected. Please wait..." : 
+            "(This may take a moment)"}
+        </p>
         {sessionCheckAttempts > 0 && (
           <p className="mt-2 text-xs text-muted-foreground">Session check attempts: {sessionCheckAttempts}</p>
+        )}
+        {timeSinceMount > 8 && (
+          <Button
+            onClick={handleClearAndReload}
+            variant="outline"
+            size="sm"
+            className="mt-4"
+          >
+            Restart Login Process
+          </Button>
         )}
       </div>
     );

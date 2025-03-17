@@ -21,6 +21,11 @@ export const useAuthStateChange = () => {
   }: AuthStateChangeProps) => {
     console.log('Setting up auth state change listener');
     
+    // Debounce control - prevent handling multiple events in quick succession
+    let lastHandledEvent = '';
+    let lastHandledTime = 0;
+    const debounceTime = 1000; // 1 second
+    
     // Skip processing events while manual clear is in progress
     const isManualClearInProgress = () => {
       const status = sessionStorage.getItem('manual-clear-in-progress') === 'true';
@@ -44,6 +49,17 @@ export const useAuthStateChange = () => {
           console.log('Ignoring auth state change during manual clear operation');
           return;
         }
+        
+        // Debounce handler to prevent multiple rapid state changes
+        const now = Date.now();
+        if (event === lastHandledEvent && now - lastHandledTime < debounceTime) {
+          console.log(`Debouncing duplicate ${event} event`);
+          return;
+        }
+        
+        // Update debounce tracking
+        lastHandledEvent = event;
+        lastHandledTime = now;
         
         // Increment the change count
         authStateChangeCount.current += 1;
@@ -75,10 +91,11 @@ export const useAuthStateChange = () => {
               const userData = await updateUserState(session.user);
               console.log('User state updated after sign in:', userData);
               setUser(userData);
+              setIsLoading(false); // Make sure to stop loading
+              setSessionChecked(true);
             } catch (error) {
               console.error('Error updating user state after sign in:', error);
               setUser(null); // Important: Clear user state if update fails
-            } finally {
               setIsLoading(false);
               setSessionChecked(true);
             }
