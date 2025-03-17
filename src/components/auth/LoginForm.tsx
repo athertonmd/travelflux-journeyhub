@@ -24,7 +24,9 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
   
   // Clear any stale auth data when form is initially mounted
   useEffect(() => {
-    console.log('Login form mounted, performing preventive cleanup of auth data');
+    console.log('Login form mounted, performing complete cleanup of auth data');
+    
+    // Perform enhanced cleanup immediately on mount
     clearAuthData();
     
     // Check if there was a previous auth error from URL
@@ -65,9 +67,13 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     }
     
     try {
-      console.log('Submitting login form');
-      // Clear auth data again just before login attempt
+      console.log('Submitting login form - performing fresh auth cleanup first');
+      // Clear auth data again just before login attempt for a clean state
       clearAuthData();
+      
+      // Slight delay to ensure cleanup completes
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       await onLogin(formData.email, formData.password, formData.remember);
     } catch (error: any) {
       console.error('Error during login:', error.message);

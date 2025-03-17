@@ -33,61 +33,61 @@ export const supabase = createClient<Database>(
   }
 );
 
-// Improved helper function to completely clear auth data
+// Enhanced helper function to completely clear auth data
 export const clearAuthData = () => {
-  console.log('Clearing all auth data');
+  console.log('Clearing all auth data with enhanced cleanup');
   
   try {
-    // Clear Supabase auth tokens from local storage using a comprehensive approach
+    // First, try to sign out of Supabase to invalidate any server-side tokens
+    supabase.auth.signOut({ scope: 'global' }).catch(err => {
+      console.error('Error during forced signout:', err);
+    });
+    
+    // Clear ALL localStorage items related to auth
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
       if (key && (
         key.includes('supabase') || 
         key.includes('auth') || 
         key.includes('token') || 
-        key.includes('tripscape')
+        key.includes('tripscape') ||
+        key.includes('sb-')
       )) {
         console.log(`Removing localStorage key: ${key}`);
         localStorage.removeItem(key);
       }
     }
     
-    // Clear session storage as well - do a full sweep
+    // Clear ALL sessionStorage similarly
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
       if (key && (
         key.includes('supabase') || 
         key.includes('auth') || 
         key.includes('token') || 
-        key.includes('tripscape')
+        key.includes('tripscape') ||
+        key.includes('sb-')
       )) {
         console.log(`Removing sessionStorage key: ${key}`);
         sessionStorage.removeItem(key);
       }
     }
     
-    // Clear all cookies related to authentication
+    // Clear all cookies including hidden ones
     document.cookie.split(";").forEach(function(c) {
       const cookieName = c.trim().split("=")[0];
-      if (cookieName && (
-        cookieName.includes('supabase') || 
-        cookieName.includes('auth') || 
-        cookieName.includes('token') || 
-        cookieName.includes('tripscape')
-      )) {
-        console.log(`Removing cookie: ${cookieName}`);
+      if (cookieName) {
         document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`;
       }
     });
     
-    // Force the session to be cleared in Supabase
-    supabase.auth.signOut({ scope: 'global' }).catch(err => {
-      console.error('Error during forced signout:', err);
-    });
+    // Force a complete refresh of the Supabase client's internal state
+    (supabase.auth as any).initialize();
     
-    console.log('Auth data cleanup complete');
+    console.log('Enhanced auth data cleanup complete');
   } catch (error) {
-    console.error('Error clearing auth data:', error);
+    console.error('Error during enhanced auth data clearing:', error);
   }
 };
 

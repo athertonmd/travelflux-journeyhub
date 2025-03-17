@@ -31,10 +31,13 @@ const Login = () => {
     sessionChecked
   });
   
-  // Reset error state when component mounts and check URL for parameters
+  // Reset error state when component mounts and perform cleanup
   useEffect(() => {
     setHasError(false);
     setShowingErrorPage(false);
+    
+    // Clean auth data on page load to ensure fresh state
+    clearAuthData();
     
     // Check if URL contains cleared=true parameter
     if (window.location.href.includes('cleared=true')) {
@@ -71,7 +74,7 @@ const Login = () => {
     };
   }, []);
   
-  // Set timeout for stuck loading state
+  // Set timeout for stuck loading state - reduced timeout for better UX
   useEffect(() => {
     if (loadingTimeoutRef.current) {
       window.clearTimeout(loadingTimeoutRef.current);
@@ -83,7 +86,7 @@ const Login = () => {
       loadingTimeoutRef.current = window.setTimeout(() => {
         console.log('Loading timeout triggered, showing error state');
         setHasError(true);
-      }, 5000); // 5 seconds timeout (reduced from 8)
+      }, 4000); // 4 seconds timeout (reduced from 5)
     }
     
     return () => {
@@ -167,9 +170,12 @@ const Login = () => {
 
   const handleSubmit = async (email: string, password: string, remember: boolean) => {
     try {
-      console.log('Login form submitted');
+      console.log('Login form submitted - ensuring clean auth state');
       setIsSubmitting(true);
       setHasError(false);
+      
+      // Clear auth data before login attempt
+      clearAuthData();
       
       const success = await logIn(email, password);
       console.log('Login result:', success ? 'success' : 'failed');
