@@ -26,14 +26,21 @@ export interface OnboardingFormData {
   };
   gdsProvider: string;
   gdsConfig: {
-    endpoint: string;
-    apiKey: string;
-    pcc: string;
-    email: string;
+    // Common fields
+    endpoint?: string;
+    apiKey?: string;
+    pcc?: string;
+    email?: string;
+    // Sabre fields
     pccList: string;
     queueNumber: string;
     sabreQueueAssignment: string;
     fnbtsEntry: string;
+    // Travelport fields
+    tmcPccList: string;
+    tripscapeGwsQueue: string;
+    manticPointPcc: string;
+    manticPointQueue: string;
   };
   selectedTripTiles: string[];
   branding: {
@@ -67,7 +74,11 @@ export const initialFormData: OnboardingFormData = {
     pccList: '',
     queueNumber: '',
     sabreQueueAssignment: '',
-    fnbtsEntry: ''
+    fnbtsEntry: '',
+    tmcPccList: '',
+    tripscapeGwsQueue: '',
+    manticPointPcc: 'RI7', // Default value for Travelport
+    manticPointQueue: ''
   },
   selectedTripTiles: [],
   branding: {

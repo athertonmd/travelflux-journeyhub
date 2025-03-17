@@ -2,11 +2,12 @@
 import React from 'react';
 import SabreConfig from './SabreConfig';
 import TravelportConfig from './TravelportConfig';
+import { OnboardingFormData } from '@/hooks/useOnboardingForm';
 
 interface ApiIntegrationProps {
   gdsType: string;
-  config: any;
-  onUpdate: (config: any) => void;
+  config: OnboardingFormData['gdsConfig'];
+  onUpdate: (config: OnboardingFormData['gdsConfig']) => void;
 }
 
 const ApiIntegration: React.FC<ApiIntegrationProps> = ({ gdsType, config, onUpdate }) => {

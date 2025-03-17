@@ -1,22 +1,12 @@
 
 import React from 'react';
 import ApiIntegration from './gds-config/ApiIntegration';
+import { OnboardingFormData } from '@/hooks/useOnboardingForm';
 
 interface GdsConfigFormProps {
   gdsType: string;
-  config: {
-    // Sabre config fields
-    pccList: string;
-    queueNumber: string;
-    sabreQueueAssignment: string;
-    fnbtsEntry: string;
-    // Travelport config fields
-    tmcPccList: string;
-    tripscapeGwsQueue: string;
-    manticPointPcc: string;
-    manticPointQueue: string;
-  };
-  onUpdate: (config: any) => void;
+  config: OnboardingFormData['gdsConfig'];
+  onUpdate: (config: OnboardingFormData['gdsConfig']) => void;
 }
 
 const GdsConfigForm: React.FC<GdsConfigFormProps> = ({ gdsType, config, onUpdate }) => {

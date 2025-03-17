@@ -1,18 +1,13 @@
-
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertCircle, Info } from 'lucide-react';
+import { OnboardingFormData } from '@/hooks/useOnboardingForm';
 
 interface TravelportConfigProps {
-  config: {
-    tmcPccList: string;
-    tripscapeGwsQueue: string;
-    manticPointPcc: string;
-    manticPointQueue: string;
-  };
-  onUpdate: (config: any) => void;
+  config: OnboardingFormData['gdsConfig'];
+  onUpdate: (config: OnboardingFormData['gdsConfig']) => void;
 }
 
 const TravelportConfig: React.FC<TravelportConfigProps> = ({ config, onUpdate }) => {
