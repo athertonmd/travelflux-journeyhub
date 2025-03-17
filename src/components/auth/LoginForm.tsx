@@ -1,21 +1,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { CardContent, CardFooter } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
 import SubmitButton from '@/components/auth/SubmitButton';
 import { clearAuthData } from '@/integrations/supabase/client';
+import LoginFormControls from '@/components/auth/LoginFormControls';
+import ResetSessionButton from '@/components/auth/ResetSessionButton';
 
 interface LoginFormProps {
   isLoading: boolean;
   onLogin: (email: string, password: string, remember: boolean) => Promise<boolean>;
 }
 
-const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
+const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -113,58 +111,12 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     <>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              name="email"
-              type="email"
-              placeholder="you@example.com"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              disabled={isLoading}
-              className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
-              autoComplete="email"
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
-              <Link 
-                to="/forgot-password" 
-                className="text-xs text-primary hover:underline"
-              >
-                Forgot password?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              name="password"
-              type="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              disabled={isLoading}
-              className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
-              autoComplete="current-password"
-            />
-          </div>
-          
-          <div className="flex items-center space-x-2">
-            <Checkbox 
-              id="remember" 
-              name="remember"
-              checked={formData.remember}
-              onCheckedChange={(checked) => 
-                setFormData(prev => ({ ...prev, remember: checked === true }))
-              }
-              disabled={isLoading}
-            />
-            <Label htmlFor="remember" className="text-sm">Remember me</Label>
-          </div>
+          <LoginFormControls
+            formData={formData}
+            isLoading={isLoading}
+            handleChange={handleChange}
+            setFormData={setFormData}
+          />
           
           <SubmitButton 
             isLoading={isLoading}
@@ -172,18 +124,10 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
             loadingText="Signing in..."
           />
           
-          <div className="text-center mt-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={handleClearStorage}
-              disabled={isLoading}
-            >
-              Reset session data
-            </Button>
-          </div>
+          <ResetSessionButton
+            isLoading={isLoading}
+            onReset={handleClearStorage}
+          />
         </form>
       </CardContent>
       <CardFooter className="flex flex-col">

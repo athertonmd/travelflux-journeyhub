@@ -1,69 +1,45 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { User } from '@/types/auth.types';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthContext';
-import { Settings, LogOut, CreditCard } from 'lucide-react';
+import { LogOut } from 'lucide-react';
+import LoadingSpinner from '@/components/auth/LoadingSpinner';
+import { useAuth } from '@/hooks/useAuth';
 
 interface DashboardHeaderProps {
-  user: User;
+  pageTitle: string;
 }
 
-const DashboardHeader: React.FC<DashboardHeaderProps> = ({ user }) => {
-  const { logOut } = useAuth();
-  const navigate = useNavigate();
-  
-  const handleLogOut = async () => {
-    await logOut();
-    navigate('/login');
-  };
+const DashboardHeader: React.FC<DashboardHeaderProps> = ({ pageTitle }) => {
+  const { user, logOut, isLoading } = useAuth();
   
   return (
-    <header className="bg-card border-b border-border">
-      <div className="container mx-auto py-4 px-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-semibold">Welcome, {user.name}</h1>
-            <p className="text-muted-foreground">{user.agencyName || 'Your Dashboard'}</p>
+    <div className="flex justify-between items-center mb-6">
+      <h1 className="text-2xl font-semibold">{pageTitle}</h1>
+      
+      <div className="flex items-center space-x-4">
+        {user && (
+          <div className="text-sm text-gray-600">
+            Welcome, {user.user_metadata?.name || user.email}
           </div>
-          
-          <div className="flex items-center gap-3">
-            <Button 
-              variant="outline" 
-              size="sm"
-              asChild
-            >
-              <Link to="/credits" className="flex items-center gap-2">
-                <CreditCard className="h-4 w-4" />
-                Credits
-              </Link>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              asChild
-            >
-              <Link to="/settings" className="flex items-center gap-2">
-                <Settings className="h-4 w-4" />
-                Settings
-              </Link>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={handleLogOut}
-              className="flex items-center gap-2"
-            >
-              <LogOut className="h-4 w-4" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
+        )}
+        
+        <Button 
+          size="sm" 
+          variant="outline"
+          onClick={logOut}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <LoadingSpinner size={4} />
+          ) : (
+            <>
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </>
+          )}
+        </Button>
       </div>
-    </header>
+    </div>
   );
 };
 
