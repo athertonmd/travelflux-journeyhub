@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { FileText, MessageSquare, ShieldAlert, Smartphone } from 'lucide-react';
+import { FileText, MessageSquare, ShieldAlert, Smartphone, Settings } from 'lucide-react';
 import { FeatureSubItem, NavLink } from './types.tsx';
 
 export const useNavbar = () => {
@@ -84,6 +84,9 @@ export const useNavbar = () => {
   }, {
     name: 'Documents',
     path: '/documents'
+  }, {
+    name: 'Settings',
+    path: '/settings'
   }, {
     name: 'Blog',
     path: '/blog'

@@ -141,7 +141,7 @@ const Dashboard = () => {
   // Now we know we have a user and auth is not loading
   return (
     <div className="min-h-screen bg-background">
-      <DashboardHeader user={user} />
+      <DashboardHeader pageTitle="Dashboard" />
 
       <main className="container mx-auto py-8 px-4">
         <DashboardMetrics />
