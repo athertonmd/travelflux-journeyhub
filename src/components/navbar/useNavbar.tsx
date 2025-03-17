@@ -85,6 +85,9 @@ export const useNavbar = () => {
     name: 'Documents',
     path: '/documents'
   }, {
+    name: 'Credits',
+    path: '/credits'
+  }, {
     name: 'Settings',
     path: '/settings'
   }, {
