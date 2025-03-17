@@ -29,7 +29,15 @@ export const useSetupStatusUpdate = (
         return false;
       }
       
-      setUser(prev => prev ? { ...prev, setupCompleted: completed } : null);
+      // Create a new user object with the updated setup status
+      // instead of using a function that returns a new object
+      if (user) {
+        const updatedUser: User = {
+          ...user,
+          setupCompleted: completed
+        };
+        setUser(updatedUser);
+      }
       
       return true;
     } catch (error: any) {
