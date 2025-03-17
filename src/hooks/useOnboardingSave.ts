@@ -11,6 +11,30 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
     setIsLoading(true);
     
     try {
+      // Handle logo upload if a new file was selected
+      let logoUrl = formData.branding.logoUrl;
+      
+      if (formData.branding.logo) {
+        const file = formData.branding.logo;
+        const fileExt = file.name.split('.').pop();
+        const filePath = `${userId}/${Date.now()}.${fileExt}`;
+        
+        // Upload the file to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('agency_logos')
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: true
+          });
+          
+        if (uploadError) {
+          throw new Error(`Error uploading logo: ${uploadError.message}`);
+        }
+        
+        // Update the logo URL
+        logoUrl = filePath;
+      }
+      
       // Convert the form data to the expected database structure
       // Explicitly convert complex objects to JSON compatible format
       const configData = {
@@ -20,7 +44,8 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         selected_trip_tiles: formData.selectedTripTiles,
         branding: {
           primaryColor: formData.branding.primaryColor,
-          secondaryColor: formData.branding.secondaryColor
+          secondaryColor: formData.branding.secondaryColor,
+          logoUrl: logoUrl
         } as unknown as Json,
         contact_info: formData.contactInfo as unknown as Json,
         alert_countries: formData.alertCountries,

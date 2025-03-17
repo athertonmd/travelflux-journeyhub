@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -10,17 +10,26 @@ interface BrandingConfigProps {
     primaryColor: string;
     secondaryColor: string;
     logo: File | null;
+    logoUrl?: string;
   };
   onUpdate: (branding: {
     primaryColor: string;
     secondaryColor: string;
     logo: File | null;
+    logoUrl?: string;
   }) => void;
 }
 
 const BrandingConfig: React.FC<BrandingConfigProps> = ({ branding, onUpdate }) => {
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Set the logo preview from logoUrl when component mounts or when logoUrl changes
+  useEffect(() => {
+    if (branding.logoUrl) {
+      setLogoPreview(branding.logoUrl);
+    }
+  }, [branding.logoUrl]);
 
   const handleColorChange = (key: 'primaryColor' | 'secondaryColor', value: string) => {
     onUpdate({

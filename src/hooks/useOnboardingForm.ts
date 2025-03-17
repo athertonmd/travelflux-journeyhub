@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
@@ -39,6 +40,7 @@ export interface OnboardingFormData {
     primaryColor: string;
     secondaryColor: string;
     logo: File | null;
+    logoUrl?: string;
   };
   contactInfo: {
     blurb: string;
@@ -71,7 +73,8 @@ export const initialFormData: OnboardingFormData = {
   branding: {
     primaryColor: '#1EAEDB',
     secondaryColor: '#0FA0CE',
-    logo: null
+    logo: null,
+    logoUrl: undefined
   },
   contactInfo: {
     blurb: 'We are here to help. Please use any of the contact details below.',
@@ -121,8 +124,24 @@ export const useOnboardingForm = (userId: string | undefined) => {
             newFormData.branding = {
               ...newFormData.branding,
               primaryColor: typeof brandingData.primaryColor === 'string' ? brandingData.primaryColor : '#1EAEDB',
-              secondaryColor: typeof brandingData.secondaryColor === 'string' ? brandingData.secondaryColor : '#0FA0CE'
+              secondaryColor: typeof brandingData.secondaryColor === 'string' ? brandingData.secondaryColor : '#0FA0CE',
+              logoUrl: typeof brandingData.logoUrl === 'string' ? brandingData.logoUrl : undefined
             };
+            
+            // If logo URL exists, fetch the logo preview
+            if (newFormData.branding.logoUrl) {
+              try {
+                const { data: logoData } = await supabase.storage
+                  .from('agency_logos')
+                  .createSignedUrl(newFormData.branding.logoUrl, 60 * 60 * 24); // 24 hours expiry
+                
+                if (logoData && logoData.signedUrl) {
+                  newFormData.branding.logoUrl = logoData.signedUrl;
+                }
+              } catch (logoError) {
+                console.error('Error fetching logo:', logoError);
+              }
+            }
           }
           
           if (data.contact_info && typeof data.contact_info === 'object') {
