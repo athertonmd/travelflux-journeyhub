@@ -10,7 +10,7 @@ interface LoginFormHandlerProps {
 }
 
 const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) => {
-  const { logIn, refreshSession } = useAuth();
+  const { logIn } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   

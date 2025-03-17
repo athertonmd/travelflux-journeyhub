@@ -21,9 +21,14 @@ const Login = () => {
     sessionChecked
   });
   
-  // Clear auth data on initial load
+  // Clear auth data on initial load - but only once
   useEffect(() => {
-    clearAuthData();
+    const cleanupFn = () => {
+      clearAuthData();
+    };
+    
+    cleanupFn();
+    // Don't include clearAuthData in the dependency array
   }, []);
   
   // Timeout for session check to prevent infinite loading
@@ -40,7 +45,7 @@ const Login = () => {
     return () => clearTimeout(timer);
   }, [isLoading, sessionChecked]);
   
-  // Redirect if already logged in
+  // Redirect if already logged in - but only when we have a user
   useEffect(() => {
     if (user) {
       console.log('User logged in, redirecting to dashboard');

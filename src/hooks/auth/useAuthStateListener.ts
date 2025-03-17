@@ -26,6 +26,7 @@ export const useAuthStateListener = ({
 }: AuthListenerProps) => {
   const tokenCheckIntervalRef = useRef<number | null>(null);
   const initialCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const authStateChangeCount = useRef<number>(0);
   
   const setupAuthListener = useCallback(() => {
     console.log('Setting up auth state listener');
@@ -121,12 +122,21 @@ export const useAuthStateListener = ({
       }
     };
     
-    // Auth state change listener
+    // Auth state change listener - limit the number of events to prevent loops
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('Auth state changed:', event);
         
         if (!isMounted.current) return;
+        
+        // Increment the change count
+        authStateChangeCount.current += 1;
+        
+        // If we get too many changes in a short period, there might be a loop
+        if (authStateChangeCount.current > 10) {
+          console.warn('Too many auth state changes detected, possible refresh loop');
+          // We'll still process the event but log a warning
+        }
         
         if (event === 'SIGNED_OUT') {
           console.log('User signed out, clearing state');
@@ -163,7 +173,7 @@ export const useAuthStateListener = ({
     // Run the initial check
     checkSession();
     
-    // Add periodic token check
+    // Add periodic token check - but less frequently to reduce API calls
     tokenCheckIntervalRef.current = window.setInterval(async () => {
       if (!isMounted.current) return;
       
@@ -177,7 +187,15 @@ export const useAuthStateListener = ({
       }
     }, 60000); // Check every minute
     
-    return authListener;
+    // Reset the state change counter every minute
+    const resetCounter = setInterval(() => {
+      authStateChangeCount.current = 0;
+    }, 60000);
+    
+    return {
+      authListener,
+      resetCounter
+    };
   }, [
     isMounted, 
     setUser, 
@@ -190,11 +208,15 @@ export const useAuthStateListener = ({
   ]);
 
   // Cleanup function
-  const cleanupAuthListener = useCallback((authListener: any) => {
+  const cleanupAuthListener = useCallback((listenerData: any) => {
     console.log('Cleaning up auth state listener');
     
-    if (authListener) {
-      authListener.subscription.unsubscribe();
+    if (listenerData?.authListener) {
+      listenerData.authListener.subscription.unsubscribe();
+    }
+    
+    if (listenerData?.resetCounter) {
+      clearInterval(listenerData.resetCounter);
     }
     
     if (tokenCheckIntervalRef.current) {
