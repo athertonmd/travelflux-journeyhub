@@ -5,14 +5,16 @@ import ApiIntegration from './gds-config/ApiIntegration';
 interface GdsConfigFormProps {
   gdsType: string;
   config: {
-    endpoint: string;
-    apiKey: string;
-    pcc: string;
-    email: string;
+    // Sabre config fields
     pccList: string;
     queueNumber: string;
     sabreQueueAssignment: string;
     fnbtsEntry: string;
+    // Travelport config fields
+    tmcPccList: string;
+    tripscapeGwsQueue: string;
+    manticPointPcc: string;
+    manticPointQueue: string;
   };
   onUpdate: (config: any) => void;
 }

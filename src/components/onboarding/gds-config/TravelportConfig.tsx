@@ -7,10 +7,10 @@ import { AlertCircle, Info } from 'lucide-react';
 
 interface TravelportConfigProps {
   config: {
-    endpoint: string;
-    apiKey: string;
-    pcc: string;
-    email: string;
+    tmcPccList: string;
+    tripscapeGwsQueue: string;
+    manticPointPcc: string;
+    manticPointQueue: string;
   };
   onUpdate: (config: any) => void;
 }
@@ -29,81 +29,83 @@ const TravelportConfig: React.FC<TravelportConfigProps> = ({ config, onUpdate })
         <div className="flex">
           <Info className="h-6 w-6 text-blue-500 mr-2" />
           <div>
-            <h3 className="font-medium text-blue-800">Travelport Configuration</h3>
+            <h3 className="font-medium text-blue-800">Travelport – Galileo Configuration</h3>
             <p className="text-sm text-blue-700">
-              Follow these steps to set up Travelport access for PNR data processing via Galileo, Apollo, or Worldspan.
+              Follow these steps to set up a process sharing agreement with Travelport for PNR data access.
             </p>
           </div>
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">1. Travelport API Setup</h3>
+        <h3 className="text-lg font-medium">1. Travelport Access Setup</h3>
         <p className="text-sm text-gray-600">
-          Configure your Travelport access to connect with <span className="font-medium text-blue-600">Tripscape</span> for seamless PNR data integration.
+          The TMC will set up a process sharing agreement with Travelport for all required PCCs with the <span className="font-medium text-blue-600">Mantic Point</span> PCC: 
+          <span className="bg-yellow-200 px-1 font-medium">RI7</span> (Roger-India-Seven) to allow access to read PNR data (suggested level 404).
         </p>
         
         <div className="space-y-2">
-          <Label htmlFor="endpoint">API Endpoint</Label>
-          <Input 
-            id="endpoint" 
-            placeholder="e.g., https://api.travelport.com/B2BGateway/connect/uAPI"
-            value={config.endpoint}
-            onChange={(e) => handleChange('endpoint', e.target.value)}
-            className="bg-cyan-50"
+          <Label htmlFor="tmcPccList">TMC PCC List</Label>
+          <Textarea 
+            id="tmcPccList" 
+            placeholder="List your PCCs here"
+            value={config.tmcPccList}
+            onChange={(e) => handleChange('tmcPccList', e.target.value)}
+            className="min-h-[100px] bg-cyan-50"
           />
           <p className="text-xs text-gray-500">
-            Enter your Travelport API endpoint URL.
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="apiKey">API Key</Label>
-          <Input 
-            id="apiKey" 
-            placeholder="Your Travelport API key"
-            value={config.apiKey}
-            onChange={(e) => handleChange('apiKey', e.target.value)}
-            className="bg-cyan-50"
-            type="password"
-          />
-          <p className="text-xs text-gray-500">
-            Enter your Travelport API key for authentication.
+            List all PCCs that need access to Mantic Point.
           </p>
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">2. PCC Configuration</h3>
+        <h3 className="text-lg font-medium">2. Queue Assignment</h3>
+        <p className="text-sm text-gray-600">
+          After the process is completed, Mantic Point will assign a Tripscape queue for your PNRs.
+        </p>
+        
         <div className="space-y-2">
-          <Label htmlFor="pcc">Pseudo City Code (PCC)</Label>
+          <Label htmlFor="tripscapeGwsQueue">Tripscape GWS Queue Assignment</Label>
           <Input 
-            id="pcc" 
-            placeholder="e.g., AB12"
-            value={config.pcc}
-            onChange={(e) => handleChange('pcc', e.target.value)}
+            id="tripscapeGwsQueue" 
+            placeholder="Will be provided by Mantic Point after setup"
+            value={config.tripscapeGwsQueue}
+            onChange={(e) => handleChange('tripscapeGwsQueue', e.target.value)}
             className="bg-cyan-50"
           />
           <p className="text-xs text-gray-500">
-            Enter your agency's Pseudo City Code (PCC).
+            This will be provided by Mantic Point after access has been granted by Travelport.
           </p>
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">3. Notification Settings</h3>
+        <h3 className="text-lg font-medium">3. Mantic Point PCC Configuration</h3>
         <div className="space-y-2">
-          <Label htmlFor="email">Notification Email</Label>
+          <Label htmlFor="manticPointPcc">Mantic Point's PCC</Label>
           <Input 
-            id="email" 
-            placeholder="e.g., notifications@youragency.com"
-            value={config.email}
-            onChange={(e) => handleChange('email', e.target.value)}
-            className="bg-cyan-50"
-            type="email"
+            id="manticPointPcc" 
+            value="RI7"
+            readOnly
+            className="bg-gray-100"
           />
           <p className="text-xs text-gray-500">
-            Enter an email address to receive PNR processing notifications.
+            Mantic Point's PCC for Galileo (Roger-India-Seven).
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="manticPointQueue">Queue for Mantic Point's PCC</Label>
+          <Input 
+            id="manticPointQueue" 
+            placeholder="e.g., Q5"
+            value={config.manticPointQueue}
+            onChange={(e) => handleChange('manticPointQueue', e.target.value)}
+            className="bg-cyan-50"
+          />
+          <p className="text-xs text-gray-500">
+            The TMC will queue all or specific client PNRs to this queue.
           </p>
         </div>
       </div>
@@ -112,13 +114,13 @@ const TravelportConfig: React.FC<TravelportConfigProps> = ({ config, onUpdate })
         <div className="flex">
           <AlertCircle className="h-5 w-5 text-amber-500 mr-2" />
           <div>
-            <p className="font-medium">Important Note:</p>
-            <p className="mt-1">After completing this configuration:</p>
+            <p className="font-medium">Important Process Steps:</p>
             <ol className="list-decimal ml-5 mt-2 space-y-1">
-              <li>Tripscape will validate your Travelport API credentials</li>
-              <li>You'll receive a confirmation email once the connection is established</li>
-              <li>PNR data will start flowing automatically through the configured API</li>
-              <li>You can test the connection using the "Test Connection" button in Settings</li>
+              <li>The TMC will set up a process sharing agreement with Travelport</li>
+              <li>The TMC will advise Mantic Point once the sharing agreement is set up</li>
+              <li>Mantic Point will submit request to Travelport via email</li>
+              <li>Mantic Point will assign a Tripscape queue and advise the TMC</li>
+              <li>The TMC will queue PNRs to Mantic Point's PCC (RI7) using the assigned queue</li>
             </ol>
           </div>
         </div>
