@@ -1,30 +1,29 @@
 
+import { useState, useCallback } from 'react';
 import { useFormDataFetcher } from './useFormDataFetcher';
 import { OnboardingFormData } from '@/types/onboarding.types';
 import { initialFormData } from './initialFormData';
 
-export type { OnboardingFormData };
-export { initialFormData };
-
 export const useOnboardingForm = (userId: string | undefined) => {
-  const {
-    formData,
-    setFormData,
-    isLoading,
-    setIsLoading
-  } = useFormDataFetcher(userId);
+  const [isLocalLoading, setIsLocalLoading] = useState(false);
+  const { formData, setFormData, isLoading: isFetchLoading, setIsLoading: setIsFetchLoading } = useFormDataFetcher(userId);
 
-  const updateFormData = (section: keyof OnboardingFormData, data: any) => {
-    setFormData(prev => ({
-      ...prev,
-      [section]: typeof data === 'function' ? data(prev[section]) : data
+  const updateFormData = useCallback((key: keyof OnboardingFormData, value: any) => {
+    setFormData(prevState => ({
+      ...prevState,
+      [key]: value
     }));
-  };
+  }, [setFormData]);
+
+  const setIsLoading = useCallback((loading: boolean) => {
+    setIsLocalLoading(loading);
+    setIsFetchLoading(loading);
+  }, [setIsFetchLoading]);
 
   return {
     formData,
-    isLoading,
-    setIsLoading,
-    updateFormData
+    updateFormData,
+    isLoading: isLocalLoading || isFetchLoading,
+    setIsLoading
   };
 };
