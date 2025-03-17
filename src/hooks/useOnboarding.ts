@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { OnboardingFormData, useOnboardingForm } from './useOnboardingForm';
 import { useOnboardingSave } from './useOnboardingSave';

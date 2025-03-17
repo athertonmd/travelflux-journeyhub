@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardFooter } from '@/components/ui/card';
@@ -9,7 +8,7 @@ import { useOnboarding } from '@/hooks/useOnboarding';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { RefreshCw } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 
 const steps: Step[] = [
   { id: 'welcome', title: 'Welcome' },
@@ -27,7 +26,6 @@ const Welcome = () => {
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
   const { user, isLoading: authLoading } = useAuth();
   
-  // Initialize the onboarding hook
   const {
     user: onboardingUser,
     currentStep,
@@ -40,9 +38,7 @@ const Welcome = () => {
     handleComplete
   } = useOnboarding();
 
-  // If no user and not loading, redirect to login
   useEffect(() => {
-    // Only redirect after initial auth check is complete
     if (!authLoading && !initialAuthCheck) {
       setInitialAuthCheck(true);
       
@@ -54,18 +50,16 @@ const Welcome = () => {
     }
   }, [user, authLoading, navigate, initialAuthCheck]);
 
-  // Shorter timeout to prevent infinite loading
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (isLoading || authLoading) {
         setLoadingTimeoutReached(true);
       }
-    }, 5000); // 5 seconds timeout
+    }, 5000);
     
     return () => clearTimeout(timeout);
   }, [isLoading, authLoading]);
 
-  // If loading after timeout, show a retry button
   if ((isLoading || authLoading) && loadingTimeoutReached) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -82,7 +76,6 @@ const Welcome = () => {
     );
   }
 
-  // If loading and not timed out, show loading spinner
   if (isLoading || authLoading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center">
@@ -92,7 +85,6 @@ const Welcome = () => {
     );
   }
 
-  // If no user, redirect will happen via the useEffect
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -108,7 +100,6 @@ const Welcome = () => {
     }
   };
 
-  // Only render the main content if we have a user and setup is not completed
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b border-border">

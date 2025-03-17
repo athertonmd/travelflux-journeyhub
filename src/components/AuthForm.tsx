@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import AuthFormHeader from './auth/AuthFormHeader';
 import AuthFormFooter from './auth/AuthFormFooter';
 import AuthFormInputs from './auth/AuthFormInputs';

@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { clearAuthData } from '@/integrations/supabase/client';
 import LoginPageContent from '@/components/auth/LoginPageContent';
 import { toast } from '@/hooks/use-toast';
