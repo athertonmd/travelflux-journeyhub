@@ -21,14 +21,27 @@ const Login = () => {
     sessionChecked
   });
   
-  // Clear auth data on initial load but check if a manual operation is in progress
+  // Handle URL search params for special actions
   useEffect(() => {
-    // Check if we're already in a manual clear operation
-    if (sessionStorage.getItem('manual-clear-in-progress') !== 'true') {
-      console.log('Login page mounted, doing initial auth cleanup');
-      clearAuthData();
+    const url = new URL(window.location.href);
+    const clearedParam = url.searchParams.get('cleared');
+    
+    // If this is a load after a manual clear, clean the URL
+    if (clearedParam === 'true') {
+      console.log('Cleared parameter detected, this is a fresh load after clearing storage');
+      // Remove the cleared parameter from URL after a brief delay
+      setTimeout(() => {
+        const cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete('cleared');
+        cleanUrl.searchParams.delete('t');
+        window.history.replaceState({}, document.title, cleanUrl.toString());
+      }, 100);
     } else {
-      console.log('Manual clear already in progress, skipping initial cleanup');
+      // Only do initial cleanup if not a post-cleared load
+      console.log('Login page mounted, doing initial auth cleanup');
+      if (sessionStorage.getItem('manual-clear-in-progress') !== 'true') {
+        clearAuthData();
+      }
     }
   }, []);
   

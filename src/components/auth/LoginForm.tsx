@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -91,19 +92,20 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     // Show toast to inform user
     toast({
       title: "Storage cleared",
-      description: "Auth data has been reset. The page will now reload.",
+      description: "Auth data has been reset. The page will now reload with cleared parameters.",
     });
     
     // Add a flag to prevent multiple calls to clearAuthData during redirect
     sessionStorage.setItem('manual-clear-in-progress', 'true');
     
-    // Clear auth data
+    // Clear auth data without using Supabase methods
     clearAuthData();
     
-    // IMPORTANT: Use a more direct page reload approach instead of changing location
-    // This prevents the auth state loop issues
+    // IMPORTANT: Use a completely different approach - hard reload to a special URL
+    // This avoids auth state loops entirely
     setTimeout(() => {
-      window.location.reload();
+      // Use replace to avoid adding to history
+      window.location.href = `${window.location.origin}/login?cleared=true&t=${Date.now()}`;
     }, 1000);
   };
   

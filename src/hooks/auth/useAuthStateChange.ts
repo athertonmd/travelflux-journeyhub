@@ -22,7 +22,13 @@ export const useAuthStateChange = () => {
     console.log('Setting up auth state change listener');
     
     // Skip processing events while manual clear is in progress
-    const isManualClearInProgress = () => sessionStorage.getItem('manual-clear-in-progress') === 'true';
+    const isManualClearInProgress = () => {
+      const status = sessionStorage.getItem('manual-clear-in-progress') === 'true';
+      if (status) {
+        console.log('Manual clear is in progress, ignoring auth events');
+      }
+      return status;
+    };
     
     const { data: authListener } = supabase.auth.onAuthStateChange(
       async (event, session) => {
@@ -30,7 +36,7 @@ export const useAuthStateChange = () => {
         
         if (!isMounted.current) return;
         
-        // Very important: Check if a clear operation is in progress
+        // VERY IMPORTANT: Check if a clear operation is in progress
         if (isManualClearInProgress()) {
           console.log('Ignoring auth state change during manual clear operation');
           return;

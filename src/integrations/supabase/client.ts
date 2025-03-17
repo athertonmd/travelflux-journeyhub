@@ -47,40 +47,21 @@ export const clearAuthData = () => {
     // Mark that we're starting a clear operation
     sessionStorage.setItem('manual-clear-in-progress', 'true');
     
-    // Don't attempt to sign out programmatically as this can cause the loop
-    // Just directly clear all storage
+    // IMPORTANT: DO NOT make any Supabase API calls during this process
+    // This avoids potential auth loops with callbacks firing
     
-    // Clear ALL localStorage items related to auth
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key && (
-        key.includes('supabase') || 
-        key.includes('auth') || 
-        key.includes('token') || 
-        key.includes('tripscape') ||
-        key.includes('sb-')
-      )) {
-        console.log(`Removing localStorage key: ${key}`);
-        localStorage.removeItem(key);
-      }
-    }
+    // Clear ALL localStorage items without filtering
+    localStorage.clear();
     
-    // Clear ALL sessionStorage similarly
+    // Clear ALL sessionStorage items except our flag
     for (let i = 0; i < sessionStorage.length; i++) {
       const key = sessionStorage.key(i);
-      if (key && key !== 'manual-clear-in-progress' && (
-        key.includes('supabase') || 
-        key.includes('auth') || 
-        key.includes('token') || 
-        key.includes('tripscape') ||
-        key.includes('sb-')
-      )) {
-        console.log(`Removing sessionStorage key: ${key}`);
+      if (key && key !== 'manual-clear-in-progress') {
         sessionStorage.removeItem(key);
       }
     }
     
-    // Clear all cookies including hidden ones
+    // Clear all cookies by setting expired dates
     document.cookie.split(";").forEach(function(c) {
       const cookieName = c.trim().split("=")[0];
       if (cookieName) {
@@ -91,15 +72,18 @@ export const clearAuthData = () => {
     
     console.log('Enhanced auth data cleanup complete');
     
-    // Reset the manual-clear flag after a delay to prevent loops
+    // Reset the manual-clear flag after a longer delay to prevent loops
     setTimeout(() => {
+      console.log('Removing manual-clear-in-progress flag');
       sessionStorage.removeItem('manual-clear-in-progress');
-    }, 2000);
+    }, 5000); // Extended to 5 seconds
     
   } catch (error) {
     console.error('Error during enhanced auth data clearing:', error);
     // Still reset the flag in case of error
-    sessionStorage.removeItem('manual-clear-in-progress');
+    setTimeout(() => {
+      sessionStorage.removeItem('manual-clear-in-progress');
+    }, 5000);
   }
 };
 
