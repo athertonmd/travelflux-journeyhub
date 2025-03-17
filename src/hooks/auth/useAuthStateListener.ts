@@ -25,6 +25,7 @@ export const useAuthStateListener = ({
   refreshSession
 }: AuthListenerProps) => {
   const tokenCheckIntervalRef = useRef<number | null>(null);
+  const initialCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   const setupAuthListener = useCallback(() => {
     console.log('Setting up auth state listener');
@@ -33,6 +34,16 @@ export const useAuthStateListener = ({
     const checkSession = async () => {
       try {
         console.log('Checking initial session');
+        
+        // Set a hard timeout to prevent hanging in the initial session check
+        initialCheckTimeoutRef.current = setTimeout(() => {
+          if (isMounted.current) {
+            console.log('Initial session check timed out after 5 seconds, forcing completion');
+            setUser(null);
+            setIsLoading(false);
+            setSessionChecked(true);
+          }
+        }, 5000);
         
         // Check if token is about to expire
         const expired = await checkSessionExpiry();
@@ -48,7 +59,7 @@ export const useAuthStateListener = ({
         
         // Use Promise.race to add a timeout
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Session check timeout')), 5000);
+          setTimeout(() => reject(new Error('Session check timeout')), 4000);
         });
         
         const sessionPromise = supabase.auth.getSession();
@@ -57,6 +68,12 @@ export const useAuthStateListener = ({
           sessionPromise,
           timeoutPromise
         ]) as { data: any, error: any } | Error;
+        
+        // Clear the timeout since we got a result (either success or error)
+        if (initialCheckTimeoutRef.current) {
+          clearTimeout(initialCheckTimeoutRef.current);
+          initialCheckTimeoutRef.current = null;
+        }
         
         if (!isMounted.current) return;
         
@@ -82,15 +99,20 @@ export const useAuthStateListener = ({
           console.log('Session exists, updating user state');
           const userData = await updateUserState(data.session.user);
           setUser(userData);
-          setIsLoading(false);
         } else {
           console.log('No session found');
           setUser(null);
-          setIsLoading(false);
         }
         
+        setIsLoading(false);
         setSessionChecked(true);
       } catch (error: any) {
+        // Clear the timeout if we catch an error
+        if (initialCheckTimeoutRef.current) {
+          clearTimeout(initialCheckTimeoutRef.current);
+          initialCheckTimeoutRef.current = null;
+        }
+        
         if (!isMounted.current) return;
         console.error('Session check error:', error.message);
         setAuthError(error.message);
@@ -178,6 +200,11 @@ export const useAuthStateListener = ({
     if (tokenCheckIntervalRef.current) {
       clearInterval(tokenCheckIntervalRef.current);
       tokenCheckIntervalRef.current = null;
+    }
+    
+    if (initialCheckTimeoutRef.current) {
+      clearTimeout(initialCheckTimeoutRef.current);
+      initialCheckTimeoutRef.current = null;
     }
   }, []);
 

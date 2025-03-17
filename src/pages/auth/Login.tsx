@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ import { clearAuthData } from '@/integrations/supabase/client';
 const Login = () => {
   const navigate = useNavigate();
   const { user, isLoading, sessionChecked } = useAuth();
+  const [sessionCheckTimeout, setSessionCheckTimeout] = useState(false);
   
   console.log('Login page: Current state', { 
     user, 
@@ -24,6 +25,20 @@ const Login = () => {
   useEffect(() => {
     clearAuthData();
   }, []);
+  
+  // Timeout for session check to prevent infinite loading
+  useEffect(() => {
+    // If still loading after 8 seconds and session hasn't been checked, 
+    // force the form to display anyway
+    const timer = setTimeout(() => {
+      if (isLoading && !sessionChecked) {
+        console.log('Session check timed out, forcing display of login form');
+        setSessionCheckTimeout(true);
+      }
+    }, 8000);
+    
+    return () => clearTimeout(timer);
+  }, [isLoading, sessionChecked]);
   
   // Redirect if already logged in
   useEffect(() => {
@@ -39,8 +54,9 @@ const Login = () => {
     // Navigation happens automatically via the user effect above
   };
 
-  // Show loading spinner only during initial auth check
-  if (isLoading && !sessionChecked) {
+  // Show loading spinner only during initial auth check,
+  // unless we've timed out waiting for the session check
+  if (isLoading && !sessionChecked && !sessionCheckTimeout) {
     return <LoginInitialLoading />;
   }
 
