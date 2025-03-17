@@ -34,6 +34,9 @@ export const useAuth = (): AuthContextType => {
   // Define all callbacks - ensure these are always defined in the same order
   const signUp = useCallback(async (email: string, password: string, name: string, agencyName: string) => {
     try {
+      // Clear any existing auth data before signup
+      clearAuthData();
+      
       setIsAuthLoading(true);
       const result = await signUpFn(email, password, name, agencyName);
       setIsAuthLoading(false);
@@ -52,11 +55,9 @@ export const useAuth = (): AuthContextType => {
   
   const logIn = useCallback(async (email: string, password: string) => {
     try {
-      // Clear any existing auth state before login to avoid conflicts
-      if (authError) {
-        console.log('Clearing auth data before login due to previous errors');
-        clearAuthData();
-      }
+      // Always clear any existing auth state before login to prevent conflicts
+      console.log('Clearing auth data before login to ensure clean state');
+      clearAuthData();
       
       setIsAuthLoading(true);
       const result = await logInFn(email, password);
@@ -72,14 +73,15 @@ export const useAuth = (): AuthContextType => {
       setIsAuthLoading(false);
       return false;
     }
-  }, [logInFn, authError]);
+  }, [logInFn]);
   
   const logOut = useCallback(async () => {
     try {
       setIsAuthLoading(true);
       await logOutFn();
       
-      // Always clear auth data on logout to prevent stale tokens
+      // Always clear auth data thoroughly on logout to prevent stale tokens
+      console.log('Performing complete auth data cleanup on logout');
       clearAuthData();
       
       setIsAuthLoading(false);

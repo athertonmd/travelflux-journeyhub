@@ -25,8 +25,11 @@ const LoginErrorState: React.FC<LoginErrorStateProps> = ({
     console.log('Clearing all storage and reloading page');
     clearAuthData();
     
-    // Reload the page
-    window.location.href = '/login?cleared=true';
+    // Add a slight delay to ensure the clear operation completes
+    setTimeout(() => {
+      // Reload the page with a parameter to indicate storage was cleared
+      window.location.href = '/login?cleared=true';
+    }, 500);
   };
   
   return (

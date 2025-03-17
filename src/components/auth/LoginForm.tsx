@@ -24,14 +24,16 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
   
   // Clear any stale auth data when form is initially mounted
   useEffect(() => {
+    console.log('Login form mounted, performing preventive cleanup of auth data');
+    clearAuthData();
+    
     // Check if there was a previous auth error from URL
-    if (window.location.href.includes('error=')) {
-      console.log('Error parameter detected in URL, clearing session state');
-      clearAuthData();
+    if (window.location.href.includes('error=') || window.location.href.includes('cleared=')) {
+      console.log('Error or cleared parameter detected in URL, ensuring session state is clean');
       
       toast({
         title: "Session reset",
-        description: "Previous login session was cleared due to errors.",
+        description: "Previous login session was cleared for a fresh start.",
         variant: "default"
       });
     }
@@ -64,6 +66,8 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
     
     try {
       console.log('Submitting login form');
+      // Clear auth data again just before login attempt
+      clearAuthData();
       await onLogin(formData.email, formData.password, formData.remember);
     } catch (error: any) {
       console.error('Error during login:', error.message);
@@ -150,6 +154,10 @@ const LoginForm = ({ isLoading, onLogin }: LoginFormProps) => {
                   title: "Storage cleared",
                   description: "Auth data has been reset. Try logging in again.",
                 });
+                // Add a slight delay before reloading to allow the toast to be seen
+                setTimeout(() => {
+                  window.location.href = '/login?cleared=true';
+                }, 1000);
               }}
               disabled={isLoading}
             >

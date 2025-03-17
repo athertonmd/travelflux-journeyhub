@@ -38,33 +38,54 @@ export const clearAuthData = () => {
   console.log('Clearing all auth data');
   
   try {
-    // Clear Supabase auth tokens from storage
-    localStorage.removeItem('tripscape-auth-token');
-    localStorage.removeItem('supabase.auth.token');
-    localStorage.removeItem('supabase.auth.expires_at');
-    localStorage.removeItem('supabase.auth.refresh_token');
-    
-    // Clear session storage as well
-    sessionStorage.removeItem('supabase.auth.token');
-    sessionStorage.removeItem('tripscape-auth-token');
-    
-    // Clear all Supabase-related items
+    // Clear Supabase auth tokens from local storage using a comprehensive approach
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && (key.includes('supabase') || key.includes('auth') || key.includes('tripscape'))) {
+      if (key && (
+        key.includes('supabase') || 
+        key.includes('auth') || 
+        key.includes('token') || 
+        key.includes('tripscape')
+      )) {
+        console.log(`Removing localStorage key: ${key}`);
         localStorage.removeItem(key);
       }
     }
     
-    // Clear cookies
+    // Clear session storage as well - do a full sweep
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && (
+        key.includes('supabase') || 
+        key.includes('auth') || 
+        key.includes('token') || 
+        key.includes('tripscape')
+      )) {
+        console.log(`Removing sessionStorage key: ${key}`);
+        sessionStorage.removeItem(key);
+      }
+    }
+    
+    // Clear all cookies related to authentication
     document.cookie.split(";").forEach(function(c) {
-      document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+      const cookieName = c.trim().split("=")[0];
+      if (cookieName && (
+        cookieName.includes('supabase') || 
+        cookieName.includes('auth') || 
+        cookieName.includes('token') || 
+        cookieName.includes('tripscape')
+      )) {
+        console.log(`Removing cookie: ${cookieName}`);
+        document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      }
     });
     
     // Force the session to be cleared in Supabase
-    supabase.auth.signOut({ scope: 'local' }).catch(err => {
+    supabase.auth.signOut({ scope: 'global' }).catch(err => {
       console.error('Error during forced signout:', err);
     });
+    
+    console.log('Auth data cleanup complete');
   } catch (error) {
     console.error('Error clearing auth data:', error);
   }
