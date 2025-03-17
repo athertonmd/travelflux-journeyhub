@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import IntegrationTabs from './gds-config/IntegrationTabs';
+import React from 'react';
+import ApiIntegration from './gds-config/ApiIntegration';
 
 interface GdsConfigFormProps {
   gdsType: string;
@@ -18,8 +18,6 @@ interface GdsConfigFormProps {
 }
 
 const GdsConfigForm: React.FC<GdsConfigFormProps> = ({ gdsType, config, onUpdate }) => {
-  const [integrationMethod, setIntegrationMethod] = useState('api');
-
   return (
     <div className="space-y-6">
       <div className="text-sm text-gray-600 mb-6">
@@ -27,9 +25,7 @@ const GdsConfigForm: React.FC<GdsConfigFormProps> = ({ gdsType, config, onUpdate
         This will allow us to automatically process booking data.
       </div>
 
-      <IntegrationTabs
-        integrationMethod={integrationMethod}
-        setIntegrationMethod={setIntegrationMethod}
+      <ApiIntegration
         gdsType={gdsType}
         config={config}
         onUpdate={onUpdate}
