@@ -1,6 +1,5 @@
 
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 
@@ -32,8 +31,8 @@ const GdsSelection: React.FC<GdsSelectionProps> = ({ selected, onSelect }) => {
       {gdsOptions.map((gds) => (
         <div
           key={gds.id}
-          className={`flex items-start space-x-3 cursor-pointer ${
-            selected === gds.name ? 'border-primary' : 'border-border'
+          className={`flex items-start space-x-3 p-4 border rounded-md cursor-pointer ${
+            selected === gds.name ? 'border-primary bg-primary/5' : 'border-border'
           }`}
           onClick={() => onSelect(gds.name)}
         >
