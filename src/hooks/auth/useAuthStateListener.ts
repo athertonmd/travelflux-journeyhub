@@ -1,7 +1,10 @@
 
 import { useEffect, useRef, useCallback } from 'react';
-import { supabase, clearAuthData } from '@/integrations/supabase/client';
+import { clearAuthData } from '@/integrations/supabase/client';
 import { User } from '@/types/auth.types';
+import { useSessionCheck } from './useSessionCheck';
+import { useAuthStateChange } from './useAuthStateChange';
+import { useTokenChecker } from './useTokenChecker';
 
 type AuthListenerProps = {
   isMounted: React.MutableRefObject<boolean>;
@@ -28,164 +31,43 @@ export const useAuthStateListener = ({
   const initialCheckTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const authStateChangeCount = useRef<number>(0);
   
+  // Initialize our custom hooks
+  const { checkSession } = useSessionCheck();
+  const { setupAuthChangeListener } = useAuthStateChange();
+  const { setupTokenChecker } = useTokenChecker();
+  
   const setupAuthListener = useCallback(() => {
     console.log('Setting up auth state listener');
     
-    // Initial session check with timeout
-    const checkSession = async () => {
-      try {
-        console.log('Checking initial session');
-        
-        // Set a hard timeout to prevent hanging in the initial session check
-        initialCheckTimeoutRef.current = setTimeout(() => {
-          if (isMounted.current) {
-            console.log('Initial session check timed out after 5 seconds, forcing completion');
-            setUser(null);
-            setIsLoading(false);
-            setSessionChecked(true);
-          }
-        }, 5000);
-        
-        // Check if token is about to expire
-        const expired = await checkSessionExpiry();
-        if (expired) {
-          console.log('Token is expired or about to expire, attempting refresh');
-          
-          // Clear any existing auth data if we know it's expired
-          // This helps prevent using stale tokens
-          if (window.location.pathname === '/login') {
-            clearAuthData();
-          }
-        }
-        
-        // Use Promise.race to add a timeout
-        const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Session check timeout')), 4000);
-        });
-        
-        const sessionPromise = supabase.auth.getSession();
-        
-        const result = await Promise.race([
-          sessionPromise,
-          timeoutPromise
-        ]) as { data: any, error: any } | Error;
-        
-        // Clear the timeout since we got a result (either success or error)
-        if (initialCheckTimeoutRef.current) {
-          clearTimeout(initialCheckTimeoutRef.current);
-          initialCheckTimeoutRef.current = null;
-        }
-        
-        if (!isMounted.current) return;
-        
-        if (result instanceof Error) {
-          console.error('Session check timed out');
-          setAuthError('Session check timed out. Please try again.');
-          setIsLoading(false);
-          setSessionChecked(true);
-          return;
-        }
-        
-        const { data, error } = result;
-        
-        if (error) {
-          console.error('Error checking session:', error.message);
-          setAuthError(error.message);
-          setIsLoading(false);
-          setSessionChecked(true);
-          return;
-        }
-        
-        if (data.session?.user) {
-          console.log('Session exists, updating user state');
-          const userData = await updateUserState(data.session.user);
-          setUser(userData);
-        } else {
-          console.log('No session found');
-          setUser(null);
-        }
-        
-        setIsLoading(false);
-        setSessionChecked(true);
-      } catch (error: any) {
-        // Clear the timeout if we catch an error
-        if (initialCheckTimeoutRef.current) {
-          clearTimeout(initialCheckTimeoutRef.current);
-          initialCheckTimeoutRef.current = null;
-        }
-        
-        if (!isMounted.current) return;
-        console.error('Session check error:', error.message);
-        setAuthError(error.message);
-        setIsLoading(false);
-        setSessionChecked(true);
-      }
-    };
+    // Check initial session
+    checkSession({
+      isMounted,
+      setUser,
+      setIsLoading,
+      setAuthError,
+      setSessionChecked,
+      updateUserState,
+      initialCheckTimeoutRef
+    });
     
-    // Auth state change listener - limit the number of events to prevent loops
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event);
-        
-        if (!isMounted.current) return;
-        
-        // Increment the change count
-        authStateChangeCount.current += 1;
-        
-        // If we get too many changes in a short period, there might be a loop
-        if (authStateChangeCount.current > 10) {
-          console.warn('Too many auth state changes detected, possible refresh loop');
-          // We'll still process the event but log a warning
-        }
-        
-        if (event === 'SIGNED_OUT') {
-          console.log('User signed out, clearing state');
-          setUser(null);
-          setIsLoading(false);
-          setSessionChecked(true);
-          return;
-        }
-        
-        if (event === 'TOKEN_REFRESHED') {
-          console.log('Token refreshed, updating state');
-          if (session?.user) {
-            const userData = await updateUserState(session.user);
-            setUser(userData);
-          }
-          setSessionChecked(true);
-          return;
-        }
-        
-        if (session?.user) {
-          console.log('User authenticated:', session.user.email);
-          const userData = await updateUserState(session.user);
-          setUser(userData);
-          setSessionChecked(true);
-        } else if (event === 'INITIAL_SESSION') {
-          console.log('Initial session with no user, marking as checked');
-          setUser(null);
-          setIsLoading(false);
-          setSessionChecked(true);
-        }
-      }
-    );
+    // Set up auth state change listener
+    const authListener = setupAuthChangeListener({
+      isMounted,
+      setUser,
+      setIsLoading,
+      setSessionChecked,
+      updateUserState,
+      authStateChangeCount
+    });
     
-    // Run the initial check
-    checkSession();
-    
-    // Add periodic token check - but less frequently to reduce API calls
-    tokenCheckIntervalRef.current = window.setInterval(async () => {
-      if (!isMounted.current) return;
-      
-      // Only perform check if we're not already loading
-      if (!setIsLoading && setUser) {
-        const expired = await checkSessionExpiry();
-        if (expired) {
-          console.log('Token is about to expire, refreshing session');
-          await refreshSession();
-        }
-      }
-    }, 60000); // Check every minute
+    // Set up token checker
+    tokenCheckIntervalRef.current = setupTokenChecker({
+      isMounted,
+      checkSessionExpiry,
+      refreshSession,
+      setIsLoading,
+      setUser
+    });
     
     // Reset the state change counter every minute
     const resetCounter = setInterval(() => {
