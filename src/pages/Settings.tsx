@@ -10,8 +10,9 @@ import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings as SettingsIcon, Save } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
-const Settings = () => {
+const SettingsContent = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('products');
@@ -147,6 +148,14 @@ const Settings = () => {
         </CardFooter>
       </Card>
     </DashboardLayout>
+  );
+};
+
+const Settings = () => {
+  return (
+    <ErrorBoundary>
+      <SettingsContent />
+    </ErrorBoundary>
   );
 };
 

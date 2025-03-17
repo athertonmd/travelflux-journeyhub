@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { OnboardingFormData } from '@/types/onboarding.types';
+import { OnboardingFormData, ContactMethod } from '@/types/onboarding.types';
 import { initialFormData } from './initialFormData';
 import { Json } from '@/integrations/supabase/types';
 
