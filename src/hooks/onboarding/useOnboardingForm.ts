@@ -6,7 +6,12 @@ import { initialFormData } from './initialFormData';
 
 export const useOnboardingForm = (userId: string | undefined) => {
   const [isLocalLoading, setIsLocalLoading] = useState(false);
-  const { formData, setFormData, isLoading: isFetchLoading, setIsLoading: setIsFetchLoading } = useFormDataFetcher(userId);
+  const { 
+    formData, 
+    setFormData, 
+    isLoading: isFetchLoading, 
+    setIsLoading: setIsFetchLoading 
+  } = useFormDataFetcher(userId);
 
   const updateFormData = useCallback((key: keyof OnboardingFormData, value: any) => {
     setFormData(prevState => ({

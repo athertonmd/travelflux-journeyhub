@@ -3,38 +3,32 @@ import { OnboardingFormData } from '@/types/onboarding.types';
 
 export const initialFormData: OnboardingFormData = {
   userName: '',
-  products: {
-    mobile: false,
-    documentDelivery: false,
-    riskManagement: false
-  },
+  products: [],
   gdsProvider: '',
   gdsConfig: {
-    endpoint: '',
     apiKey: '',
-    pcc: '',
-    email: '',
+    secretKey: '',
+    endpointUrl: '',
     pccList: '',
-    queueNumber: '',
     sabreQueueAssignment: '',
+    queueNumber: '',
     fnbtsEntry: '',
-    tmcPccList: '',
-    tripscapeGwsQueue: '',
-    manticPointPcc: 'RI7', // Default value for Travelport
-    manticPointQueue: ''
+    emailForward: '',
+    emailTemplate: '',
+    username: '',
+    password: '',
   },
   selectedTripTiles: [],
+  alertCountries: [],
+  tripBriefsEnabled: false,
+  alertEmail: '',
   branding: {
     primaryColor: '#1EAEDB',
     secondaryColor: '#0FA0CE',
-    logo: null,
-    logoUrl: undefined
+    logoUrl: undefined,
   },
   contactInfo: {
-    blurb: 'We are here to help. Please use any of the contact details below.',
+    blurb: '',
     contacts: []
-  },
-  alertCountries: [],
-  tripBriefsEnabled: false,
-  alertEmail: ''
+  }
 };
