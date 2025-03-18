@@ -31,6 +31,12 @@ export interface OnboardingFormData {
     queueNumber: string;
     sabreQueueAssignment: string;
     fnbtsEntry: string;
+    // Email integration fields
+    emailForward?: string;
+    emailTemplate?: string;
+    // Credentials
+    username?: string;
+    password?: string;
     // Travelport fields
     tmcPccList: string;
     tripscapeGwsQueue: string;

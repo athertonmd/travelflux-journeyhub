@@ -10,18 +10,23 @@ export const initialFormData: OnboardingFormData = {
   },
   gdsProvider: '',
   gdsConfig: {
+    // Common fields
     apiKey: '',
     endpoint: '',
     pcc: '',
     email: '',
+    // Sabre fields
     pccList: '',
     queueNumber: '',
     sabreQueueAssignment: '',
     fnbtsEntry: '',
+    // Email integration fields
     emailForward: '',
     emailTemplate: '',
+    // Credentials
     username: '',
     password: '',
+    // Travelport fields
     tmcPccList: '',
     tripscapeGwsQueue: '',
     manticPointPcc: '',
@@ -34,7 +39,7 @@ export const initialFormData: OnboardingFormData = {
   branding: {
     primaryColor: '#1EAEDB',
     secondaryColor: '#0FA0CE',
-    logo: undefined as unknown as File,
+    logo: null,
     logoUrl: undefined,
   },
   contactInfo: {
