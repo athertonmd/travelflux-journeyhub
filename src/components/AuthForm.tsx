@@ -103,7 +103,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ mode }) => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12">
       <div className="w-full max-w-md space-y-8">
         <Card className="glass-card animate-fade-in">
           <AuthFormHeader mode={mode} />

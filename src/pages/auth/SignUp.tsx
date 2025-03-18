@@ -59,7 +59,7 @@ const SignUp = () => {
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+      <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12">
         <div className="w-full max-w-md space-y-8">
           <Card className="glass-card animate-fade-in">
             <CardHeader>
