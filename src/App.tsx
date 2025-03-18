@@ -29,13 +29,33 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/welcome" element={<Welcome />} />
+          <Route path="/login" element={
+            <ErrorBoundary>
+              <Login />
+            </ErrorBoundary>
+          } />
+          <Route path="/signup" element={
+            <ErrorBoundary>
+              <SignUp />
+            </ErrorBoundary>
+          } />
+          <Route path="/dashboard" element={
+            <ErrorBoundary>
+              <Dashboard />
+            </ErrorBoundary>
+          } />
+          <Route path="/welcome" element={
+            <ErrorBoundary>
+              <Welcome />
+            </ErrorBoundary>
+          } />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:id" element={<BlogPost />} />
-          <Route path="/settings" element={<Settings />} />
+          <Route path="/settings" element={
+            <ErrorBoundary>
+              <Settings />
+            </ErrorBoundary>
+          } />
           <Route path="/credits" element={<Credits />} />
           <Route path="/users" element={<Users />} />
           <Route path="/trip-log" element={<TripLog />} />
