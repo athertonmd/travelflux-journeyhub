@@ -17,8 +17,10 @@ export const useSetupStatusUpdate = (
       
       const { error } = await supabase
         .from('agency_configurations')
-        .update({ setup_completed: completed })
-        .eq('user_id', user.id);
+        .update({
+          setup_completed: completed
+        } as any)
+        .eq('user_id', user.id as any);
       
       if (error) {
         toast({

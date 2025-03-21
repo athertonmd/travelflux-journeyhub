@@ -73,8 +73,8 @@ const VideoUploadForm: React.FC<VideoUploadFormProps> = ({ onUploadSuccess }) =>
         title: videoFile.name.split('.')[0],
         description: 'Uploaded from admin panel',
         storage_path: filePath,
-        thumbnail_path: null,
-      });
+        thumbnail_path: null
+      } as any);
 
       if (insertError) {
         throw insertError;

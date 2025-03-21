@@ -50,8 +50,8 @@ export function useProductCredits() {
         .update({ 
           used_credits: creditInfo.usedCredits + 1,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', creditInfo.id);
+        } as any)
+        .eq('id', creditInfo.id as any);
       
       if (error) {
         console.error('Error using credit:', error);

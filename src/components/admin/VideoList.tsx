@@ -70,7 +70,7 @@ const VideoList: React.FC<VideoListProps> = ({ videos, onVideoAction }) => {
       const { error: dbError } = await supabase
         .from('videos')
         .delete()
-        .eq('id', videoId);
+        .eq('id', videoId as any);
 
       if (dbError) {
         throw dbError;

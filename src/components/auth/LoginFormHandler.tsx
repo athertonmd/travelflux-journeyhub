@@ -11,7 +11,7 @@ interface LoginFormHandlerProps {
 const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) => {
   const { logIn } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [hasError, setHasError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Clear auth data when component mounts to ensure a clean state
   useEffect(() => {
@@ -19,12 +19,12 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
     clearAuthData();
     
     // Reset error state
-    setHasError(false);
+    setError(null);
     
     // Set a timeout to show error state if login takes too long
     const errorTimeout = setTimeout(() => {
       if (isSubmitting) {
-        setHasError(true);
+        setError('Login is taking too long. Please try again or use the reset session button.');
         setIsSubmitting(false);
         toast({
           title: 'Login taking too long',
@@ -49,7 +49,7 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
       }
       
       setIsSubmitting(true);
-      setHasError(false);
+      setError(null);
       
       // Do a final auth data clear right before login to ensure clean state
       clearAuthData();
@@ -67,13 +67,13 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
         return true;
       } else {
         setIsSubmitting(false);
-        setHasError(true);
+        setError('Login failed. Please check your credentials and try again.');
         return false;
       }
     } catch (error: any) {
       console.error('Login error in handleSubmit:', error.message);
       setIsSubmitting(false);
-      setHasError(true);
+      setError(error.message || 'An unexpected error occurred');
       
       toast({
         title: 'Login error',
@@ -89,7 +89,7 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
     <LoginPageContent 
       isLoading={isSubmitting}
       onLogin={handleSubmit}
-      hasError={hasError}
+      errorMessage={error}
     />
   );
 };

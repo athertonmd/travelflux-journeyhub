@@ -51,12 +51,12 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         alert_countries: formData.alertCountries,
         trip_briefs_enabled: formData.tripBriefsEnabled,
         alert_email: formData.alertEmail
-      };
+      } as any;
       
       const { error } = await supabase
         .from('agency_configurations')
         .update(configData)
-        .eq('user_id', userId);
+        .eq('user_id', userId as any);
       
       if (error) throw error;
       
@@ -83,8 +83,8 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
       
       const { error } = await supabase
         .from('agency_configurations')
-        .update({ setup_completed: true })
-        .eq('user_id', userId);
+        .update({ setup_completed: true } as any)
+        .eq('user_id', userId as any);
       
       if (error) throw error;
       

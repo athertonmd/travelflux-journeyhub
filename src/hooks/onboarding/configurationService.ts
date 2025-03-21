@@ -20,7 +20,7 @@ export const fetchUserConfiguration = async (userId: string): Promise<FetchConfi
     const { data, error } = await supabase
       .from('agency_configurations')
       .select('*')
-      .eq('user_id', userId)
+      .eq('user_id', userId as any)
       .maybeSingle();
 
     if (error) {

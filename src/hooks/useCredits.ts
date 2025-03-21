@@ -35,7 +35,7 @@ export const useCredits = () => {
       const { data, error } = await supabase
         .from('credits')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.id as any)
         .maybeSingle();
       
       if (error) {
@@ -46,19 +46,24 @@ export const useCredits = () => {
       
       console.log('Credit data received:', data);
       if (data) {
-        const remaining = Math.max(0, data.total_credits - data.used_credits);
-        const percentage = data.total_credits > 0 
-          ? Math.min(Math.round((data.used_credits / data.total_credits) * 100), 100)
-          : 0;
-        
-        setCreditInfo({
-          id: data.id,
-          totalCredits: data.total_credits,
-          usedCredits: data.used_credits,
-          isFreeTier: data.is_free_tier,
-          remainingCredits: remaining,
-          usagePercentage: percentage
-        });
+        // Check if data has the expected properties
+        if ('total_credits' in data && 'used_credits' in data && 'is_free_tier' in data && 'id' in data) {
+          const remaining = Math.max(0, data.total_credits - data.used_credits);
+          const percentage = data.total_credits > 0 
+            ? Math.min(Math.round((data.used_credits / data.total_credits) * 100), 100)
+            : 0;
+          
+          setCreditInfo({
+            id: data.id,
+            totalCredits: data.total_credits,
+            usedCredits: data.used_credits,
+            isFreeTier: data.is_free_tier,
+            remainingCredits: remaining,
+            usagePercentage: percentage
+          });
+        } else {
+          throw new Error('Invalid credit data structure');
+        }
       } else {
         console.log('No credit data found, checking if user exists:', user.id);
         // If no credit record exists, create a new one
@@ -70,7 +75,7 @@ export const useCredits = () => {
               total_credits: 30,
               used_credits: 0,
               is_free_tier: true
-            })
+            } as any)
             .select()
             .single();
           
@@ -80,7 +85,7 @@ export const useCredits = () => {
             throw insertError;
           }
 
-          if (newCreditData) {
+          if (newCreditData && 'total_credits' in newCreditData) {
             console.log('New credit record created:', newCreditData);
             setCreditInfo({
               id: newCreditData.id,
@@ -136,8 +141,8 @@ export const useCredits = () => {
           total_credits: creditInfo.totalCredits + amount,
           is_free_tier: false,
           updated_at: new Date().toISOString()
-        })
-        .eq('id', creditInfo.id);
+        } as any)
+        .eq('id', creditInfo.id as any);
       
       if (error) {
         console.error('Error purchasing credits:', error);

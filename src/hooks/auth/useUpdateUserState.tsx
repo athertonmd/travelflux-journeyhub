@@ -24,7 +24,7 @@ export const useUpdateUserState = () => {
         email: supabaseUser.email || '',
         name: supabaseUser.user_metadata?.name || supabaseUser.email?.split('@')[0] || '',
         agencyName: supabaseUser.user_metadata?.agencyName,
-        setupCompleted: data?.setup_completed || false
+        setupCompleted: data && 'setup_completed' in data ? data.setup_completed : false
       };
       
       if (setUser) {

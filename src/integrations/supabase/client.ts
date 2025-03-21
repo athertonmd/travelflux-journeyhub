@@ -17,14 +17,18 @@ export const supabase = createClient<Database>(
       flowType: 'implicit', // Use implicit flow for more reliable auth
     },
     global: {
-      fetch: (...args) => {
+      headers: {
+        'x-application-name': 'tripscape',
+      },
+      // Fix the fetch typing
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => {
         // Add timeout to all fetch requests
-        return new Promise((resolve, reject) => {
+        return new Promise<Response>((resolve, reject) => {
           const timeoutId = setTimeout(() => {
             reject(new Error('Request timeout'));
           }, 10000);
           
-          fetch(...args)
+          fetch(input, init)
             .then(response => {
               clearTimeout(timeoutId);
               resolve(response);
@@ -65,7 +69,7 @@ export const isTokenExpired = async (): Promise<boolean> => {
   }
 };
 
-// Simple helper to clear auth state
+// Simple helper to clear auth data
 export const clearAuthData = () => {
   try {
     // Clear session flag
