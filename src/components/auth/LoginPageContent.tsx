@@ -6,9 +6,10 @@ import LoginForm from '@/components/auth/LoginForm';
 interface LoginPageContentProps {
   isLoading: boolean;
   onLogin: (email: string, password: string, remember: boolean) => Promise<boolean>;
+  errorMessage?: string | null;
 }
 
-const LoginPageContent: React.FC<LoginPageContentProps> = ({ isLoading, onLogin }) => {
+const LoginPageContent: React.FC<LoginPageContentProps> = ({ isLoading, onLogin, errorMessage }) => {
   return (
     <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
       <div className="w-full max-w-md space-y-8">
@@ -20,6 +21,11 @@ const LoginPageContent: React.FC<LoginPageContentProps> = ({ isLoading, onLogin 
             <CardDescription className="text-center">
               Enter your credentials to access your account
             </CardDescription>
+            {errorMessage && (
+              <div className="mt-2 text-sm text-red-600 text-center">
+                {errorMessage}
+              </div>
+            )}
           </CardHeader>
           <LoginForm 
             isLoading={isLoading}
