@@ -1,51 +1,53 @@
 
 import React from 'react';
-import { Check } from 'lucide-react';
-
-export interface Step {
-  id: string;
-  title: string;
-}
+import { cn } from '@/lib/utils';
 
 interface StepIndicatorProps {
-  steps: Step[];
+  steps: { id: string; title: string }[];
   currentStep: string;
+  className?: string;
 }
 
-const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep }) => {
+const StepIndicator: React.FC<StepIndicatorProps> = ({ 
+  steps, 
+  currentStep,
+  className
+}) => {
+  const currentIndex = steps.findIndex(step => step.id === currentStep);
+  
   return (
-    <div className="mb-8">
-      <div className="flex items-center justify-center">
-        {steps.map((step, index) => (
-          <React.Fragment key={step.id}>
+    <div className={cn("flex w-full items-center justify-between", className)}>
+      {steps.map((step, index) => {
+        const isCompleted = index < currentIndex;
+        const isCurrent = index === currentIndex;
+        
+        return (
+          <div key={step.id} className="flex flex-col items-center">
             <div 
-              className={`flex items-center justify-center rounded-full w-10 h-10 
-                ${currentStep === step.id 
-                  ? 'bg-primary text-white' 
-                  : steps.findIndex(s => s.id === currentStep) > index 
-                    ? 'bg-primary/20 text-primary' 
-                    : 'bg-gray-200 text-gray-500'}`}
+              className={cn(
+                "rounded-full h-10 w-10 flex items-center justify-center mb-2",
+                isCompleted ? "bg-primary text-white" : 
+                isCurrent ? "bg-primary-foreground border-2 border-primary text-primary" : 
+                "bg-muted text-muted-foreground"
+              )}
             >
-              {steps.findIndex(s => s.id === currentStep) > index ? (
-                <Check className="h-5 w-5" />
+              {isCompleted ? (
+                <span className="text-sm">✓</span>
               ) : (
-                <span>{index + 1}</span>
+                <span className="text-sm">{index + 1}</span>
               )}
             </div>
-            {index < steps.length - 1 && (
-              <div 
-                className={`h-1 w-12 
-                  ${steps.findIndex(s => s.id === currentStep) > index 
-                    ? 'bg-primary/20' 
-                    : 'bg-gray-200'}`}
-              ></div>
-            )}
-          </React.Fragment>
-        ))}
-      </div>
-      <div className="flex justify-center mt-2">
-        <p className="text-sm font-medium">{steps.find(step => step.id === currentStep)?.title}</p>
-      </div>
+            <span 
+              className={cn(
+                "text-xs text-center",
+                isCurrent ? "font-semibold text-primary" : "text-muted-foreground"
+              )}
+            >
+              {step.title}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };
