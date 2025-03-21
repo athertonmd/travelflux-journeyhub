@@ -2,7 +2,8 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { OnboardingFormData, useOnboardingForm } from './onboarding/useOnboardingForm';
+import { useOnboardingForm } from './onboarding/useOnboardingForm';
+import { OnboardingFormData } from '@/types/onboarding.types';
 import { useOnboardingSave } from './useOnboardingSave';
 import { OnboardingStep, useOnboardingNavigation } from './useOnboardingNavigation';
 import { toast } from '@/hooks/use-toast';
