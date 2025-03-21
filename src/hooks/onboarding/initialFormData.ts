@@ -3,12 +3,28 @@ import { OnboardingFormData } from '@/types/onboarding.types';
 
 export const initialFormData: OnboardingFormData = {
   userName: '',
+  agencyInfo: {
+    name: '',
+    address: '',
+    website: '',
+    contactEmail: '',
+    contactPhone: '',
+  },
   products: {
-    mobile: false,
+    mobile: true,
     documentDelivery: false,
     riskManagement: false
   },
+  subscription: {
+    tier: 'free',
+    credits: 10,
+    autoRenew: false,
+    autoRenewThreshold: 0
+  },
   gdsProvider: '',
+  pnrIntegration: {
+    method: 'api', // 'api', 'email', 'manual'
+  },
   gdsConfig: {
     // Common fields
     apiKey: '',
@@ -41,6 +57,8 @@ export const initialFormData: OnboardingFormData = {
     secondaryColor: '#0FA0CE',
     logo: null,
     logoUrl: undefined,
+    termsAndConditionsUrl: '',
+    brandingGuidelinesUrl: '',
   },
   contactInfo: {
     blurb: '',

@@ -12,14 +12,34 @@ export interface Contact {
   details: string;
 }
 
+export interface AgencyInfo {
+  name: string;
+  address: string;
+  website: string;
+  contactEmail: string;
+  contactPhone: string;
+}
+
+export interface Subscription {
+  tier: 'free' | 'paid' | 'enterprise';
+  credits: number;
+  autoRenew: boolean;
+  autoRenewThreshold: number;
+}
+
 export interface OnboardingFormData {
   userName?: string;
+  agencyInfo: AgencyInfo;
   products: {
     mobile: boolean;
     documentDelivery: boolean;
     riskManagement: boolean;
   };
+  subscription: Subscription;
   gdsProvider: string;
+  pnrIntegration: {
+    method: 'api' | 'email' | 'manual';
+  };
   gdsConfig: {
     // Common fields
     endpoint?: string;
@@ -49,6 +69,8 @@ export interface OnboardingFormData {
     secondaryColor: string;
     logo: File | null;
     logoUrl?: string;
+    termsAndConditionsUrl?: string;
+    brandingGuidelinesUrl?: string;
   };
   contactInfo: {
     blurb: string;

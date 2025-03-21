@@ -4,6 +4,29 @@ import { initialFormData } from './initialFormData';
 import { supabase } from '@/integrations/supabase/client';
 
 export const mapDatabaseToFormData = (data: any, newFormData: OnboardingFormData) => {
+  // Process agency info
+  if (data.agency_info) {
+    newFormData.agencyInfo = {
+      ...initialFormData.agencyInfo,
+      ...(data.agency_info as Partial<OnboardingFormData['agencyInfo']>)
+    };
+  }
+  
+  // Process subscription data
+  if (data.subscription) {
+    newFormData.subscription = {
+      ...initialFormData.subscription,
+      ...(data.subscription as Partial<OnboardingFormData['subscription']>)
+    };
+  }
+  
+  // Process PNR integration method
+  if (data.pnr_integration && data.pnr_integration.method) {
+    newFormData.pnrIntegration = {
+      method: data.pnr_integration.method
+    };
+  }
+  
   // Process products
   if (data.products) {
     newFormData.products = data.products as OnboardingFormData['products'];
@@ -56,7 +79,9 @@ export const processFormBranding = async (data: any, newFormData: OnboardingForm
       ...newFormData.branding,
       primaryColor: typeof brandingData.primaryColor === 'string' ? brandingData.primaryColor : '#1EAEDB',
       secondaryColor: typeof brandingData.secondaryColor === 'string' ? brandingData.secondaryColor : '#0FA0CE',
-      logoUrl: typeof brandingData.logoUrl === 'string' ? brandingData.logoUrl : undefined
+      logoUrl: typeof brandingData.logoUrl === 'string' ? brandingData.logoUrl : undefined,
+      termsAndConditionsUrl: typeof brandingData.termsAndConditionsUrl === 'string' ? brandingData.termsAndConditionsUrl : undefined,
+      brandingGuidelinesUrl: typeof brandingData.brandingGuidelinesUrl === 'string' ? brandingData.brandingGuidelinesUrl : undefined,
     };
     
     // If logo URL exists, fetch the logo preview
