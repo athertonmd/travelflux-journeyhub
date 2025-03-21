@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
@@ -12,6 +13,7 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       storageKey: 'tripscape-auth',
+      detectSessionInUrl: false, // Disable automatic detection to prevent loops
     }
   }
 );
@@ -45,12 +47,15 @@ export const isTokenExpired = async (): Promise<boolean> => {
 // Simple helper to clear auth state
 export const clearAuthData = () => {
   try {
-    // Sign out from Supabase first (don't wait for it to complete to avoid hanging)
+    // Clear session flag
+    sessionStorage.removeItem('manual-clear-in-progress');
+    
+    // Sign out from Supabase first
     supabase.auth.signOut().catch(err => {
       console.error('Error signing out from Supabase:', err);
     });
     
-    // Then clear local storage items
+    // Then clear all local storage items related to auth
     const storageKeys = [
       'tripscape-auth',
       'sb-' + SUPABASE_URL.replace(/^(https?:\/\/)/, '').replace(/\./g, '-') + '-auth-token'
