@@ -2,8 +2,14 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
+// Export the Step interface so it can be imported by other components
+export interface Step {
+  id: string;
+  title: string;
+}
+
 interface StepIndicatorProps {
-  steps: { id: string; title: string }[];
+  steps: Step[];
   currentStep: string;
   className?: string;
 }

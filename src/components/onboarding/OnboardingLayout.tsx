@@ -51,8 +51,8 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
                 currentStep={currentStep}
                 isLoading={isLoading}
                 steps={steps}
-                handleBack={() => handleBack(steps)}
-                handleNext={() => handleNext(steps)}
+                handleBack={handleBack}
+                handleNext={handleNext}
                 handleComplete={handleComplete}
               />
             </CardFooter>
