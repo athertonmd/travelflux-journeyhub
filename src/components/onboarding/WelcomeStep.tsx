@@ -18,10 +18,9 @@ const WelcomeStep: React.FC<WelcomeStepProps> = ({ userName }) => {
       <CardContent className="space-y-4">
         <p>Hello, {userName}! Thank you for choosing Tripscape for your travel management needs.</p>
         <p>During this setup process, you will:</p>
-        <ul className="list-disc pl-5 space-y-2">
+        <ul className="list-disc pl-5 text-left space-y-2">
           <li>Select which Tripscape products you want to activate</li>
           <li>Connect your Global Distribution System (GDS)</li>
-          <li>Configure your GDS settings</li>
           <li>Select trip tiles for your mobile app</li>
           <li>Customize the look and feel with your brand colors and logo</li>
         </ul>
