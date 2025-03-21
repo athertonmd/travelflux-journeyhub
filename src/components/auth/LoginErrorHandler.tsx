@@ -19,6 +19,7 @@ const LoginErrorHandler: React.FC<LoginErrorHandlerProps> = ({ children }) => {
   // Add a timeout ref to track and clear timeouts
   const loadingTimeoutRef = useRef<number | null>(null);
 
+  // Debug log
   console.log('LoginErrorHandler: Current state', { 
     isLoading, 
     hasError, 
@@ -86,10 +87,11 @@ const LoginErrorHandler: React.FC<LoginErrorHandlerProps> = ({ children }) => {
     
     if (isLoading && !hasError && !showingErrorPage) {
       console.log('Setting timeout for loading state');
+      // Use window.setTimeout to avoid type issues
       loadingTimeoutRef.current = window.setTimeout(() => {
         console.log('Loading timeout triggered, showing error state');
         setHasError(true);
-      }, 8000); // Increased to 8 seconds to allow more time for auth
+      }, 12000); // Increased timeout to give more time for auth operations
     }
     
     return () => {

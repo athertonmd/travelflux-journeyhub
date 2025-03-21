@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
@@ -46,14 +45,24 @@ export const isTokenExpired = async (): Promise<boolean> => {
 // Simple helper to clear auth state
 export const clearAuthData = () => {
   try {
-    // Sign out from Supabase first
+    // Sign out from Supabase first (don't wait for it to complete to avoid hanging)
     supabase.auth.signOut().catch(err => {
       console.error('Error signing out from Supabase:', err);
     });
     
-    // Then clear storage
-    localStorage.removeItem('sb-' + SUPABASE_URL.replace(/^(https?:\/\/)/, '').replace(/\./g, '-') + '-auth-token');
-    localStorage.removeItem('tripscape-auth');
+    // Then clear local storage items
+    const storageKeys = [
+      'tripscape-auth',
+      'sb-' + SUPABASE_URL.replace(/^(https?:\/\/)/, '').replace(/\./g, '-') + '-auth-token'
+    ];
+    
+    storageKeys.forEach(key => {
+      try {
+        localStorage.removeItem(key);
+      } catch (e) {
+        console.error(`Error removing ${key} from localStorage:`, e);
+      }
+    });
     
     console.log('Auth data cleared successfully');
   } catch (error) {

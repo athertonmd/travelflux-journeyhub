@@ -19,6 +19,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
     password: '',
     remember: false,
   });
+  const [localIsLoading, setLocalIsLoading] = useState(false);
   
   // Clear any stale auth data when form is initially mounted
   useEffect(() => {
@@ -38,6 +39,11 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
       });
     }
   }, []);
+
+  // Sync the isLoading prop with local state
+  useEffect(() => {
+    setLocalIsLoading(isLoading);
+  }, [isLoading]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
@@ -50,7 +56,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (isLoading) {
+    if (localIsLoading) {
       return;
     }
     
@@ -66,13 +72,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
     
     try {
       console.log('Submitting login form - performing fresh auth cleanup first');
+      setLocalIsLoading(true);
+      
       // Clear auth data again just before login attempt for a clean state
       clearAuthData();
       
       // Slight delay to ensure cleanup completes
       await new Promise(resolve => setTimeout(resolve, 100));
       
-      await onLogin(formData.email, formData.password, formData.remember);
+      const success = await onLogin(formData.email, formData.password, formData.remember);
+      if (!success) {
+        // Reset loading state only on failure (success will navigate away)
+        setLocalIsLoading(false);
+      }
     } catch (error: any) {
       console.error('Error during login:', error.message);
       toast({
@@ -80,12 +92,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
         description: error.message || "An unexpected error occurred",
         variant: "destructive"
       });
+      setLocalIsLoading(false);
     }
   };
   
   const handleClearStorage = () => {
     // Prevent the button from being clicked during loading
-    if (isLoading) return;
+    if (localIsLoading) return;
     
     // Show toast to inform user
     toast({
@@ -113,19 +126,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
         <form onSubmit={handleSubmit} className="space-y-4">
           <LoginFormControls
             formData={formData}
-            isLoading={isLoading}
+            isLoading={localIsLoading}
             handleChange={handleChange}
             setFormData={setFormData}
           />
           
           <SubmitButton 
-            isLoading={isLoading}
+            isLoading={localIsLoading}
             text="Sign in"
             loadingText="Signing in..."
           />
           
           <ResetSessionButton
-            isLoading={isLoading}
+            isLoading={localIsLoading}
             onReset={handleClearStorage}
           />
         </form>

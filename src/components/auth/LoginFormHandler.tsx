@@ -44,21 +44,17 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
       setIsSubmitting(true);
       setLoginAttempts(prev => prev + 1);
       
-      // Clear auth data before login attempt
-      clearAuthData();
-      
-      // Add a slight delay to ensure cleanup completes
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
+      // Perform the login operation
       const success = await logIn(email, password);
       console.log('Login result:', success ? 'success' : 'failed');
       
       if (success) {
-        // Add a short delay before success callback
-        // This helps prevent timing issues with auth state updates
+        // Add a short delay to ensure auth state is properly updated before redirect
         setTimeout(() => {
           onLoginSuccess();
-        }, 500);
+          // Ensure we reset the submission state
+          setIsSubmitting(false);
+        }, 800);
         return true;
       } else {
         setIsSubmitting(false);
@@ -67,13 +63,8 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
     } catch (error: any) {
       console.error('Login error in handleSubmit:', error.message);
       
-      // Force cleanup on error
-      clearAuthData();
-      
-      // Reset submission state after a short delay
-      setTimeout(() => {
-        setIsSubmitting(false);
-      }, 1000);
+      // Reset submission state
+      setIsSubmitting(false);
       
       return false;
     }
