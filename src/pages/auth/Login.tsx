@@ -8,67 +8,34 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
-import { clearAuthData } from '@/integrations/supabase/client';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, signIn, isLoading } = useAuth();
+  const { user, logIn, isLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [initialCleanup, setInitialCleanup] = useState(false);
-  
-  // Clear auth data on mount to fix stuck states
-  useEffect(() => {
-    console.log('Login page mounted, performing auth cleanup');
-    
-    // Check URL for error or cleared parameters
-    const searchParams = new URLSearchParams(location.search);
-    const hasError = searchParams.has('error');
-    const wasCleared = searchParams.has('cleared');
-    
-    // Set flag to prevent auth loops
-    sessionStorage.setItem('manual-clear-in-progress', 'true');
-    
-    // Clear auth data
-    clearAuthData();
-    
-    // Small delay to ensure cleanup is complete
-    setTimeout(() => {
-      sessionStorage.removeItem('manual-clear-in-progress');
-      setInitialCleanup(true);
-      
-      if (hasError) {
-        const errorType = searchParams.get('error');
-        toast({
-          title: "Authentication Error",
-          description: errorType === 'timeout' 
-            ? "Session timed out. Please log in again." 
-            : "There was a problem with your session. Please log in again.",
-          variant: "destructive"
-        });
-      } else if (wasCleared) {
-        toast({
-          title: "Session Reset",
-          description: "Your session data has been cleared. Please log in again.",
-        });
-      }
-    }, 500);
-  }, [location.search]);
+  const [remember, setRemember] = useState(false);
+  const [localLoading, setLocalLoading] = useState(false);
   
   // Redirect if already logged in
   useEffect(() => {
-    if (user && initialCleanup) {
+    if (user) {
       console.log('User already logged in, redirecting');
       const destination = user.setupCompleted ? '/dashboard' : '/welcome';
       navigate(destination);
     }
-  }, [user, navigate, initialCleanup]);
+  }, [user, navigate]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (localLoading || isLoading) {
+      return;
+    }
     
     if (!email || !password) {
       toast({
@@ -79,30 +46,42 @@ const Login = () => {
       return;
     }
     
-    const success = await signIn(email, password);
-    if (success) {
-      // Navigation will happen automatically via the useEffect
-      console.log('Login successful');
+    setLocalLoading(true);
+    
+    try {
+      console.log('Attempting login with credentials');
+      const success = await logIn(email, password);
+      
+      if (success) {
+        toast({
+          title: "Login successful",
+          description: "Welcome back!"
+        });
+        // Navigation will happen via the useEffect when user state updates
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Please check your credentials and try again",
+          variant: "destructive"
+        });
+      }
+    } catch (error: any) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login error",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive"
+      });
+    } finally {
+      setLocalLoading(false);
     }
   };
-  
-  // Show loading state during initial cleanup
-  if (!initialCleanup) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center">
-          <LoadingSpinner size={16} />
-          <p className="mt-4 text-muted-foreground">Preparing login page...</p>
-        </div>
-      </div>
-    );
-  }
   
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
       
-      <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">
+      <div className="flex-grow flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20 pb-12">
         <div className="w-full max-w-md space-y-8">
           <Card className="glass-card animate-fade-in">
             <CardHeader>
@@ -125,7 +104,7 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    disabled={isLoading}
+                    disabled={localLoading || isLoading}
                     className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                     autoComplete="email"
                   />
@@ -148,18 +127,28 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    disabled={isLoading}
+                    disabled={localLoading || isLoading}
                     className="transition-all duration-200 focus:ring-2 focus:ring-primary/30"
                     autoComplete="current-password"
                   />
                 </div>
                 
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="remember" 
+                    checked={remember}
+                    onCheckedChange={(checked) => setRemember(checked === true)}
+                    disabled={localLoading || isLoading}
+                  />
+                  <Label htmlFor="remember" className="text-sm">Remember me</Label>
+                </div>
+                
                 <Button 
                   type="submit" 
-                  className="w-full" 
-                  disabled={isLoading}
+                  className="w-full animated-border-button" 
+                  disabled={localLoading || isLoading}
                 >
-                  {isLoading ? (
+                  {(localLoading || isLoading) ? (
                     <span className="flex items-center justify-center">
                       <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

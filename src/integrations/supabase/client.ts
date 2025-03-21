@@ -11,8 +11,8 @@ export const supabase = createClient<Database>(
   {
     auth: {
       persistSession: true,
+      autoRefreshToken: true,
       storageKey: 'tripscape-auth',
-      autoRefreshToken: false
     }
   }
 );
@@ -43,8 +43,20 @@ export const isTokenExpired = async (): Promise<boolean> => {
   }
 };
 
-// Simple helper to clear auth state (no automatic callbacks)
+// Simple helper to clear auth state
 export const clearAuthData = () => {
-  localStorage.clear();
-  sessionStorage.clear();
+  try {
+    // Sign out from Supabase first
+    supabase.auth.signOut().catch(err => {
+      console.error('Error signing out from Supabase:', err);
+    });
+    
+    // Then clear storage
+    localStorage.removeItem('sb-' + SUPABASE_URL.replace(/^(https?:\/\/)/, '').replace(/\./g, '-') + '-auth-token');
+    localStorage.removeItem('tripscape-auth');
+    
+    console.log('Auth data cleared successfully');
+  } catch (error) {
+    console.error('Error clearing auth data:', error);
+  }
 };

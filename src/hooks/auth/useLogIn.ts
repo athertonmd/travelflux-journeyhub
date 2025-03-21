@@ -20,6 +20,9 @@ export const useLogIn = () => {
         return false;
       }
       
+      // Clear any existing session before login
+      await supabase.auth.signOut();
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -36,11 +39,7 @@ export const useLogIn = () => {
       }
       
       if (data?.user) {
-        console.log('Login successful');
-        toast({
-          title: 'Login successful',
-          description: 'Welcome back!'
-        });
+        console.log('Login successful for user:', data.user.id);
         return true;
       }
       
