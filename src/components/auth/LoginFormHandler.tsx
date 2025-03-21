@@ -12,6 +12,7 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
   const { logIn } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [loginTimeout, setLoginTimeout] = useState<NodeJS.Timeout | null>(null);
   
   // Clear auth data when component mounts to ensure a clean state
   useEffect(() => {
@@ -21,21 +22,11 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
     // Reset error state
     setError(null);
     
-    // Set a timeout to show error state if login takes too long
-    const errorTimeout = setTimeout(() => {
-      if (isSubmitting) {
-        setError('Login is taking too long. Please try again or use the reset session button.');
-        setIsSubmitting(false);
-        toast({
-          title: 'Login taking too long',
-          description: 'Please try again or use the reset session button',
-          variant: 'destructive'
-        });
-      }
-    }, 10000);
-    
     return () => {
-      clearTimeout(errorTimeout);
+      // Clear any pending timeouts when component unmounts
+      if (loginTimeout) {
+        clearTimeout(loginTimeout);
+      }
     };
   }, []);
 
@@ -54,8 +45,27 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
       // Do a final auth data clear right before login to ensure clean state
       clearAuthData();
       
-      // Perform the login operation with a short delay to ensure auth state is reset
+      // Set a timeout to automatically fail the login if it takes too long
+      const timeout = setTimeout(() => {
+        console.log('Login took too long, aborting');
+        setIsSubmitting(false);
+        setError('Login timed out. Please try again.');
+        toast({
+          title: 'Login timeout',
+          description: 'The login process took too long. Please try again.',
+          variant: 'destructive'
+        });
+      }, 8000); // 8 seconds timeout
+      
+      setLoginTimeout(timeout);
+      
+      // Perform the login operation
       const success = await logIn(email, password);
+      
+      // Clear the timeout since we got a response
+      clearTimeout(timeout);
+      setLoginTimeout(null);
+      
       console.log('Login result:', success ? 'success' : 'failed');
       
       if (success) {
@@ -72,6 +82,13 @@ const LoginFormHandler: React.FC<LoginFormHandlerProps> = ({ onLoginSuccess }) =
       }
     } catch (error: any) {
       console.error('Login error in handleSubmit:', error.message);
+      
+      // Clear any pending timeout
+      if (loginTimeout) {
+        clearTimeout(loginTimeout);
+        setLoginTimeout(null);
+      }
+      
       setIsSubmitting(false);
       setError(error.message || 'An unexpected error occurred');
       

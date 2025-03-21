@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { CardContent, CardFooter } from '@/components/ui/card';
@@ -19,6 +20,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
     remember: false,
   });
   const [localIsLoading, setLocalIsLoading] = useState(false);
+  const [loginTimeout, setLoginTimeout] = useState<NodeJS.Timeout | null>(null);
   
   // Clear any stale auth data when form is initially mounted
   useEffect(() => {
@@ -37,6 +39,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
         variant: "default"
       });
     }
+    
+    return () => {
+      // Clear any pending timeouts when component unmounts
+      if (loginTimeout) {
+        clearTimeout(loginTimeout);
+      }
+    };
   }, []);
 
   // Sync the isLoading prop with local state
@@ -76,16 +85,41 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
       // Clear auth data again just before login attempt for a clean state
       clearAuthData();
       
+      // Set a timeout for the login process
+      const timeout = setTimeout(() => {
+        console.log('Login UI timeout triggered');
+        setLocalIsLoading(false);
+        toast({
+          title: "Login is taking too long",
+          description: "The process seems to be stuck. Please try again or use the Reset Session button.",
+          variant: "destructive"
+        });
+      }, 10000); // 10 second UI timeout
+      
+      setLoginTimeout(timeout);
+      
       // Slight delay to ensure cleanup completes
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const success = await onLogin(formData.email, formData.password, formData.remember);
+      
+      // Clear the timeout since we got a response
+      clearTimeout(timeout);
+      setLoginTimeout(null);
+      
       if (!success) {
         // Reset loading state only on failure (success will navigate away)
         setLocalIsLoading(false);
       }
     } catch (error: any) {
       console.error('Error during login:', error.message);
+      
+      // Clear any pending timeout
+      if (loginTimeout) {
+        clearTimeout(loginTimeout);
+        setLoginTimeout(null);
+      }
+      
       toast({
         title: "Login failed",
         description: error.message || "An unexpected error occurred",

@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase, clearAuthData, isTokenExpired } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { User, AuthContextType } from '@/types/auth.types';
@@ -14,6 +14,12 @@ export const useAuthProvider = (): AuthContextType => {
   const [authError, setAuthError] = useState<string | null>(null);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [checkAttempts, setCheckAttempts] = useState(0);
+  
+  // Add reference to track if component is still mounted
+  const isMounted = useRef(true);
+  
+  // Add reference to track active timeouts
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Custom hooks
   const { updateUserState } = useUpdateUserState();
@@ -22,8 +28,6 @@ export const useAuthProvider = (): AuthContextType => {
 
   // Initial session check and auth state change listener
   useEffect(() => {
-    let isMounted = true;
-    
     console.log('Setting up auth listener and checking session');
     
     // First set up the auth change listener
@@ -31,7 +35,7 @@ export const useAuthProvider = (): AuthContextType => {
       async (event, session) => {
         console.log('Auth state changed:', event);
         
-        if (!isMounted) return;
+        if (!isMounted.current) return;
         
         if (event === 'SIGNED_OUT') {
           console.log('User signed out, clearing user state');
@@ -42,15 +46,48 @@ export const useAuthProvider = (): AuthContextType => {
         if (session?.user) {
           console.log('Session available, updating user state');
           try {
-            const userData = await updateUserState(session.user, setUser);
-            if (isMounted) {
+            // Add a timeout for the user state update
+            const userUpdatePromise = updateUserState(session.user, setUser);
+            
+            // Create a timeout promise
+            const timeoutPromise = new Promise<null>((_, reject) => {
+              timeoutRef.current = setTimeout(() => {
+                reject(new Error('User state update timed out during auth change'));
+              }, 3000);
+            });
+            
+            // Race between the update and the timeout
+            await Promise.race([userUpdatePromise, timeoutPromise]);
+            
+            // Clear the timeout if the operation completed
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+              timeoutRef.current = null;
+            }
+            
+            if (isMounted.current) {
               setAuthError(null);
               setSessionChecked(true);
             }
           } catch (error) {
-            if (isMounted) {
+            if (isMounted.current) {
               console.error('Error updating user state from auth change:', error);
+              
+              // Even on error, we need to update the session checked state
+              // to prevent the app from getting stuck in a loading state
+              setSessionChecked(true);
               setAuthError(error instanceof Error ? error.message : 'Error updating user state');
+              
+              // Create a basic user object to prevent hanging
+              if (session.user) {
+                const fallbackUser: User = {
+                  id: session.user.id,
+                  email: session.user.email || '',
+                  name: session.user.user_metadata?.name || session.user.email?.split('@')[0] || '',
+                  setupCompleted: false
+                };
+                setUser(fallbackUser);
+              }
             }
           }
         }
@@ -60,31 +97,39 @@ export const useAuthProvider = (): AuthContextType => {
     // Then check for existing session with timeout protection
     const checkSession = async () => {
       try {
-        if (!isMounted) return;
+        if (!isMounted.current) return;
         
         setIsLoading(true);
         console.log(`Checking for existing session (attempt ${checkAttempts + 1})`);
         
         // Add timeout for getSession call
         const timeoutPromise = new Promise((_, reject) => {
-          setTimeout(() => reject(new Error('Session check timed out')), 5000);
+          timeoutRef.current = setTimeout(() => {
+            reject(new Error('Session check timed out'));
+          }, 3000); // Reduced from 5s to 3s for faster feedback
         });
         
         const sessionPromise = supabase.auth.getSession();
         
         // Race between actual API call and timeout
-        const result = await Promise.race([sessionPromise, timeoutPromise]);
+        const result = await Promise.race([sessionPromise, timeoutPromise]) as any;
         
-        if (!isMounted) return;
+        // Clear the timeout if we got a result
+        if (timeoutRef.current) {
+          clearTimeout(timeoutRef.current);
+          timeoutRef.current = null;
+        }
         
-        const { data, error } = result as any;
+        if (!isMounted.current) return;
+        
+        const { data, error } = result;
         
         if (error) {
           console.error('Session check error:', error.message);
           setAuthError(error.message);
           
-          // If we had a timeout or network error, retry up to 2 times
-          if (checkAttempts < 2 && (error.message.includes('timeout') || error.message.includes('network'))) {
+          // If we had a timeout or network error, retry up to 1 time (reduced from 2)
+          if (checkAttempts < 1 && (error.message.includes('timeout') || error.message.includes('network'))) {
             setCheckAttempts(prev => prev + 1);
             setIsLoading(false);
             return;
@@ -101,6 +146,17 @@ export const useAuthProvider = (): AuthContextType => {
             await updateUserState(data.session.user, setUser);
           } catch (error) {
             console.error('Error updating user state from session check:', error);
+            
+            // Even on error, create a basic user object
+            if (data.session.user) {
+              const fallbackUser: User = {
+                id: data.session.user.id,
+                email: data.session.user.email || '',
+                name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || '',
+                setupCompleted: false
+              };
+              setUser(fallbackUser);
+            }
           }
         } else {
           console.log('No existing session found');
@@ -109,7 +165,7 @@ export const useAuthProvider = (): AuthContextType => {
         setSessionChecked(true);
         setIsLoading(false);
       } catch (error: any) {
-        if (!isMounted) return;
+        if (!isMounted.current) return;
         
         console.error('Error checking session:', error);
         setAuthError(error.message);
@@ -122,7 +178,7 @@ export const useAuthProvider = (): AuthContextType => {
     
     // Set up session expiry check interval
     const checkSessionExpiry = setInterval(async () => {
-      if (!isMounted || !user) return;
+      if (!isMounted.current || !user) return;
       
       try {
         const expired = await isTokenExpired();
@@ -137,14 +193,20 @@ export const useAuthProvider = (): AuthContextType => {
     
     // Cleanup
     return () => {
-      isMounted = false;
+      isMounted.current = false;
       console.log('Cleaning up auth listener');
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      
       authListener.subscription.unsubscribe();
       clearInterval(checkSessionExpiry);
     };
   }, [updateUserState, checkAttempts]);
   
-  // Refresh session functionality
+  // Refresh session functionality - streamlined to prevent hanging
   const refreshSession = useCallback(async (): Promise<User | null> => {
     try {
       console.log('Attempting to refresh session');
@@ -159,7 +221,29 @@ export const useAuthProvider = (): AuthContextType => {
         return null;
       }
       
-      const { data, error } = await supabase.auth.refreshSession();
+      // Create a timeout promise
+      const timeoutPromise = new Promise<{data: null, error: any}>((_, reject) => {
+        timeoutRef.current = setTimeout(() => {
+          reject({
+            data: null, 
+            error: { message: 'Session refresh timed out, please try again' }
+          });
+        }, 3000);
+      });
+      
+      // Create the refresh promise
+      const refreshPromise = supabase.auth.refreshSession();
+      
+      // Race between actual operation and timeout
+      const result = await Promise.race([refreshPromise, timeoutPromise]);
+      
+      // Clear the timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      
+      const { data, error } = result;
       
       if (error) {
         console.error('Session refresh error:', error.message);
@@ -175,11 +259,28 @@ export const useAuthProvider = (): AuthContextType => {
         return null;
       }
       
-      if (data.session?.user) {
+      if (data?.session?.user) {
         console.log('Session refreshed successfully');
-        const userData = await updateUserState(data.session.user, setUser);
-        setIsLoading(false);
-        return userData;
+        
+        try {
+          const userData = await updateUserState(data.session.user, setUser);
+          setIsLoading(false);
+          return userData;
+        } catch (error) {
+          console.error('Error updating user state after refresh:', error);
+          
+          // Create a basic user object on error
+          const fallbackUser: User = {
+            id: data.session.user.id,
+            email: data.session.user.email || '',
+            name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || '',
+            setupCompleted: false
+          };
+          
+          setUser(fallbackUser);
+          setIsLoading(false);
+          return fallbackUser;
+        }
       }
       
       console.log('No session available after refresh');
@@ -201,7 +302,12 @@ export const useAuthProvider = (): AuthContextType => {
       const result = await signIn(email, password);
       return result;
     } finally {
-      setIsLoading(false);
+      // Ensure loading state is always reset
+      setTimeout(() => {
+        if (isMounted.current) {
+          setIsLoading(false);
+        }
+      }, 500);
     }
   }, [signIn]);
   
