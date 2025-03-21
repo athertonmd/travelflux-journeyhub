@@ -10,19 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
-
-interface Itinerary {
-  id: string;
-  title: string;
-  customer: string;
-  customerEmail?: string;
-  recordLocator: string;
-  startDate: string;
-  endDate: string;
-  dateReceived: string;
-  status: 'active' | 'upcoming' | 'completed';
-  destination: string;
-}
+import { Itinerary } from '@/types/itinerary.types';
 
 interface ItineraryTableProps {
   itineraries: Itinerary[];
