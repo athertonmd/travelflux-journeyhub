@@ -40,6 +40,7 @@ const Welcome = () => {
     formData,
     isLoading,
     authCheckComplete,
+    error: onboardingError,
     updateFormData,
     handleNext,
     handleBack,
@@ -65,6 +66,13 @@ const Welcome = () => {
       }
     }
   }, [user, authLoading, navigate, initialAuthCheck]);
+
+  // Set error from onboarding hook error
+  useEffect(() => {
+    if (onboardingError) {
+      setError(onboardingError);
+    }
+  }, [onboardingError, setError]);
 
   // Handle loading timeout
   useEffect(() => {
@@ -98,6 +106,7 @@ const Welcome = () => {
       }
     } catch (err) {
       console.error('Welcome: Error completing setup:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error during completion');
       toast({
         title: "Setup Error",
         description: "There was a problem completing your setup. Please try again.",

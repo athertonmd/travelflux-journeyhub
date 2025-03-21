@@ -11,8 +11,13 @@ const OnboardingLoading: React.FC<OnboardingLoadingProps> = ({ retryCount }) => 
     <div className="min-h-screen flex flex-col items-center justify-center">
       <LoadingSpinner />
       <p className="mt-4 text-muted-foreground">Loading your setup wizard...</p>
-      <p className="mt-2 text-xs text-muted-foreground">
-        {retryCount > 0 ? `Retry attempt: ${retryCount}` : "This may take a moment..."}
+      {retryCount > 0 && (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Retry attempt: {retryCount}
+        </p>
+      )}
+      <p className="mt-4 text-xs text-muted-foreground max-w-md text-center">
+        This loads your agency information and configuration settings.
       </p>
     </div>
   );
