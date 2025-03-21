@@ -10,10 +10,12 @@ export const useOnboardingForm = (userId: string | undefined) => {
     formData, 
     setFormData, 
     isLoading: isFetchLoading, 
-    setIsLoading: setIsFetchLoading 
+    setIsLoading: setIsFetchLoading,
+    error: fetchError
   } = useFormDataFetcher(userId);
 
   const updateFormData = useCallback((key: keyof OnboardingFormData, value: any) => {
+    console.log(`OnboardingForm: Updating ${key} with:`, value);
     setFormData(prevState => ({
       ...prevState,
       [key]: value
@@ -29,6 +31,7 @@ export const useOnboardingForm = (userId: string | undefined) => {
     formData,
     updateFormData,
     isLoading: isLocalLoading || isFetchLoading,
+    error: fetchError,
     setIsLoading
   };
 };

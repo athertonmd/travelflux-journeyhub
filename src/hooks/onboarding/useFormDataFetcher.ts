@@ -8,51 +8,125 @@ import { Json } from '@/integrations/supabase/types';
 export const useFormDataFetcher = (userId: string | undefined) => {
   const [formData, setFormData] = useState<OnboardingFormData>(initialFormData);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [fetchAttempts, setFetchAttempts] = useState(0);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchConfig = async () => {
       if (!userId) return;
 
       try {
         setIsLoading(true);
+        setError(null);
+        console.log(`FormDataFetcher: Fetching config for user ${userId} (attempt ${fetchAttempts + 1})`);
+        
         const { data, error } = await supabase
           .from('agency_configurations')
           .select('*')
           .eq('user_id', userId)
-          .single();
+          .maybeSingle();
 
-        if (error) throw error;
-
-        if (data) {
-          const newFormData = { ...formData };
+        if (!isMounted) return;
+        
+        if (error) {
+          console.error('FormDataFetcher: Error fetching configuration:', error);
           
-          if (data.products) newFormData.products = data.products as OnboardingFormData['products'];
-          if (data.gds_provider) newFormData.gdsProvider = data.gds_provider;
-          if (data.gds_config) newFormData.gdsConfig = {
-            ...initialFormData.gdsConfig,
-            ...(data.gds_config as Partial<OnboardingFormData['gdsConfig']>)
-          };
-          if (data.selected_trip_tiles) newFormData.selectedTripTiles = data.selected_trip_tiles;
-          if (data.alert_countries) newFormData.alertCountries = data.alert_countries;
-          if (data.trip_briefs_enabled !== null && data.trip_briefs_enabled !== undefined) {
-            newFormData.tripBriefsEnabled = data.trip_briefs_enabled;
+          // If the error is a network error or timeout, we can retry
+          if (fetchAttempts < 2 && (error.message.includes('network') || error.message.includes('timeout'))) {
+            setFetchAttempts(prev => prev + 1);
+            setIsLoading(false);
+            return;
           }
-          if (data.alert_email) newFormData.alertEmail = data.alert_email;
           
-          await processFormBranding(data, newFormData);
-          processContactInfo(data, newFormData);
-          
-          setFormData(newFormData);
+          setError(`Error loading configuration: ${error.message}`);
+          setIsLoading(false);
+          return;
         }
-      } catch (error) {
-        console.error('Error fetching configuration:', error);
+
+        if (!data) {
+          console.error('FormDataFetcher: No configuration found for user');
+          setError('No configuration found for your account. Please contact support.');
+          setIsLoading(false);
+          return;
+        }
+
+        console.log('FormDataFetcher: Configuration loaded successfully');
+        const newFormData = { ...formData };
+        
+        // Map database fields to form data
+        try {
+          mapDatabaseToFormData(data, newFormData);
+          setFormData(newFormData);
+        } catch (mapError) {
+          console.error('FormDataFetcher: Error mapping data:', mapError);
+          setError('Error processing configuration data. Please try refreshing the page.');
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        
+        console.error('FormDataFetcher: Exception fetching configuration:', err);
+        setError(err instanceof Error ? err.message : 'Unknown error loading configuration');
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchConfig();
-  }, [userId]);
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [userId, fetchAttempts]);
+  
+  const mapDatabaseToFormData = (data: any, newFormData: OnboardingFormData) => {
+    // Process products
+    if (data.products) {
+      newFormData.products = data.products as OnboardingFormData['products'];
+    }
+    
+    // Process GDS provider
+    if (data.gds_provider) {
+      newFormData.gdsProvider = data.gds_provider;
+    }
+    
+    // Process GDS config with failsafe
+    if (data.gds_config) {
+      try {
+        newFormData.gdsConfig = {
+          ...initialFormData.gdsConfig,
+          ...(data.gds_config as Partial<OnboardingFormData['gdsConfig']>)
+        };
+      } catch (e) {
+        console.error('Error processing GDS config:', e);
+        // Fallback to initial data if parsing fails
+        newFormData.gdsConfig = initialFormData.gdsConfig;
+      }
+    }
+    
+    // Process trip tiles
+    if (data.selected_trip_tiles) {
+      newFormData.selectedTripTiles = data.selected_trip_tiles;
+    }
+    
+    // Process alert countries
+    if (data.alert_countries) {
+      newFormData.alertCountries = data.alert_countries;
+    }
+    
+    // Process trip briefs flag
+    if (data.trip_briefs_enabled !== null && data.trip_briefs_enabled !== undefined) {
+      newFormData.tripBriefsEnabled = data.trip_briefs_enabled;
+    }
+    
+    // Process alert email
+    if (data.alert_email) {
+      newFormData.alertEmail = data.alert_email;
+    }
+  };
 
   const processFormBranding = async (data: any, newFormData: OnboardingFormData) => {
     if (data.branding && typeof data.branding === 'object') {
@@ -67,15 +141,20 @@ export const useFormDataFetcher = (userId: string | undefined) => {
       // If logo URL exists, fetch the logo preview
       if (newFormData.branding.logoUrl) {
         try {
-          const { data: logoData } = await supabase.storage
+          const { data: logoData, error: logoError } = await supabase.storage
             .from('agency_logos')
             .createSignedUrl(newFormData.branding.logoUrl, 60 * 60 * 24); // 24 hours expiry
+          
+          if (logoError) {
+            console.error('Error getting logo signed URL:', logoError);
+            return;
+          }
           
           if (logoData && logoData.signedUrl) {
             newFormData.branding.logoUrl = logoData.signedUrl;
           }
         } catch (logoError) {
-          console.error('Error fetching logo:', logoError);
+          console.error('Exception fetching logo:', logoError);
         }
       }
     }
@@ -118,6 +197,7 @@ export const useFormDataFetcher = (userId: string | undefined) => {
     formData,
     setFormData,
     isLoading,
-    setIsLoading
+    setIsLoading,
+    error
   };
 };
