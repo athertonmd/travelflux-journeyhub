@@ -8,7 +8,6 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import ItinerarySearch from './itinerary/ItinerarySearch';
 import ItinerarySearchResults from './itinerary/ItinerarySearchResults';
 
 export interface ItineraryEvent {
@@ -28,7 +27,6 @@ interface ItineraryTimelineProps {
 }
 
 const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className }) => {
-  const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<ItineraryEvent[] | null>(null);
   const [showNoResults, setShowNoResults] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
@@ -43,7 +41,7 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
     }, {} as Record<string, ItineraryEvent[]>);
   };
   
-  const eventsToDisplay = searchResults || [];
+  const eventsToDisplay = searchResults || events; // If searchResults is null, display all events
   const eventsByDate = groupEventsByDate(eventsToDisplay);
   const sortedDates = Object.keys(eventsByDate).sort((a, b) => 
     new Date(a).getTime() - new Date(b).getTime()
@@ -58,51 +56,17 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
     }).format(date);
   };
   
-  const handleSearch = () => {
-    setHasSearched(true);
-    
-    if (!searchQuery.trim()) {
-      setSearchResults(null);
-      setShowNoResults(false);
-      return;
-    }
-    
-    const query = searchQuery.toLowerCase();
-    const filteredEvents = events.filter(event => 
-      event.title.toLowerCase().includes(query) ||
-      event.description?.toLowerCase().includes(query) ||
-      event.location?.toLowerCase().includes(query)
-    );
-    
-    setSearchResults(filteredEvents);
-    setShowNoResults(filteredEvents.length === 0);
-  };
-  
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchResults(null);
-    setShowNoResults(false);
-    setHasSearched(false);
-  };
-  
   return (
     <Card className={cn("glass-card", className)}>
       <CardHeader>
-        <CardTitle>Travel Itinerary Search</CardTitle>
-        <CardDescription>Find your travel details by record locator</CardDescription>
-        
-        <ItinerarySearch
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          handleSearch={handleSearch}
-          clearSearch={clearSearch}
-        />
+        <CardTitle>Travel Itinerary</CardTitle>
+        <CardDescription>Your upcoming travel details</CardDescription>
       </CardHeader>
       
       <CardContent className="px-2">
         <ItinerarySearchResults
           showNoResults={showNoResults}
-          searchQuery={searchQuery}
+          searchQuery=""
           searchResults={searchResults}
           hasSearched={hasSearched}
           eventsByDate={eventsByDate}
