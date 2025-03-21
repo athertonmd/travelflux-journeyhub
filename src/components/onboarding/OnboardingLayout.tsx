@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Card, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import StepIndicator, { Step } from '@/components/onboarding/StepIndicator';
 import StepController from '@/components/onboarding/StepController';
 import FooterButtons from '@/components/onboarding/FooterButtons';
@@ -37,14 +37,19 @@ const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({
       
       <main className="flex-grow py-8">
         <div className="container mx-auto px-4">
-          <StepIndicator steps={steps} currentStep={currentStep} />
+          <Card className="max-w-5xl mx-auto">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold mb-2">Agency Setup</CardTitle>
+              <StepIndicator steps={steps} currentStep={currentStep} className="pt-4" />
+            </CardHeader>
 
-          <Card className="max-w-4xl mx-auto">
-            <StepController 
-              currentStep={currentStep}
-              formData={formData}
-              updateFormData={updateFormData}
-            />
+            <CardContent>
+              <StepController 
+                currentStep={currentStep}
+                formData={formData}
+                updateFormData={updateFormData}
+              />
+            </CardContent>
 
             <CardFooter>
               <FooterButtons 

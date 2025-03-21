@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '@/hooks/useOnboarding';
@@ -13,7 +14,6 @@ const steps = [
   { id: 'welcome', title: 'Welcome' },
   { id: 'products', title: 'Products' },
   { id: 'gds', title: 'GDS' },
-  { id: 'config', title: 'GDS Config' },
   { id: 'trips', title: 'Mobile Settings' },
   { id: 'risk-alerts', title: 'Risk Alerts' },
   { id: 'branding', title: 'Branding' },

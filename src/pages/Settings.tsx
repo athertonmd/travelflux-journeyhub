@@ -65,10 +65,9 @@ const SettingsContent = () => {
         
         <CardContent>
           <Tabs defaultValue="products" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-6 mb-6">
+            <TabsList className="grid grid-cols-5 mb-6">
               <TabsTrigger value="products">Products</TabsTrigger>
               <TabsTrigger value="gds">GDS</TabsTrigger>
-              <TabsTrigger value="config">GDS Config</TabsTrigger>
               <TabsTrigger value="trips" disabled={!isMobileAppEnabled}>Mobile Settings</TabsTrigger>
               <TabsTrigger value="risk-alerts" disabled={!isRiskManagementEnabled}>Risk Alerts</TabsTrigger>
               <TabsTrigger value="branding">Branding</TabsTrigger>
@@ -85,14 +84,6 @@ const SettingsContent = () => {
             <TabsContent value="gds">
               <StepController 
                 currentStep="gds"
-                formData={formData}
-                updateFormData={updateFormData}
-              />
-            </TabsContent>
-            
-            <TabsContent value="config">
-              <StepController 
-                currentStep="config"
                 formData={formData}
                 updateFormData={updateFormData}
               />
