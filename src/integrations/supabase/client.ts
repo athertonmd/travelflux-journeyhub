@@ -14,6 +14,27 @@ export const supabase = createClient<Database>(
       autoRefreshToken: true,
       storageKey: 'tripscape-auth',
       detectSessionInUrl: false, // Disable automatic detection to prevent loops
+      flowType: 'implicit', // Use implicit flow for more reliable auth
+    },
+    global: {
+      fetch: (...args) => {
+        // Add timeout to all fetch requests
+        return new Promise((resolve, reject) => {
+          const timeoutId = setTimeout(() => {
+            reject(new Error('Request timeout'));
+          }, 10000);
+          
+          fetch(...args)
+            .then(response => {
+              clearTimeout(timeoutId);
+              resolve(response);
+            })
+            .catch(error => {
+              clearTimeout(timeoutId);
+              reject(error);
+            });
+        });
+      }
     }
   }
 );

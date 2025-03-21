@@ -23,13 +23,23 @@ export const useLogIn = () => {
       // Clear any existing session before login to avoid state conflicts
       await supabase.auth.signOut();
       
-      // Wait a moment to ensure the signout is processed
-      await new Promise(resolve => setTimeout(resolve, 50));
+      // Reduced timeout
+      await new Promise(resolve => setTimeout(resolve, 30));
       
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Use a timeout to prevent hanging during login
+      const loginPromise = supabase.auth.signInWithPassword({
         email,
         password
       });
+      
+      const timeoutPromise = new Promise<{data: null, error: any}>((_, reject) => {
+        setTimeout(() => reject({
+          data: null, 
+          error: { message: 'Login timed out. Please try again.' }
+        }), 5000);
+      });
+      
+      const { data, error } = await Promise.race([loginPromise, timeoutPromise]);
       
       if (error) {
         console.error('Login error:', error.message);
