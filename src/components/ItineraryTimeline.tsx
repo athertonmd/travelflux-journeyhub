@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Card, 
@@ -52,12 +53,7 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
   
   return (
     <Card className={cn("glass-card", className)}>
-      <CardHeader>
-        <CardTitle>Travel Itinerary</CardTitle>
-        <CardDescription>Your upcoming travel details</CardDescription>
-      </CardHeader>
-      
-      <CardContent className="px-2">
+      <CardContent className="px-2 pt-6">
         <div className="space-y-6">
           {sortedDates.map((date) => (
             <div key={date} className="pl-6">
