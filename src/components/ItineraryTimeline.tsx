@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { 
   Card, 
   CardContent, 
@@ -27,10 +27,6 @@ interface ItineraryTimelineProps {
 }
 
 const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className }) => {
-  const [searchResults, setSearchResults] = useState<ItineraryEvent[] | null>(null);
-  const [showNoResults, setShowNoResults] = useState(false);
-  const [hasSearched, setHasSearched] = useState(false);
-  
   const groupEventsByDate = (eventsToGroup: ItineraryEvent[]) => {
     return eventsToGroup.reduce((acc, event) => {
       if (!acc[event.date]) {
@@ -41,8 +37,7 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
     }, {} as Record<string, ItineraryEvent[]>);
   };
   
-  const eventsToDisplay = searchResults || events; // If searchResults is null, display all events
-  const eventsByDate = groupEventsByDate(eventsToDisplay);
+  const eventsByDate = groupEventsByDate(events);
   const sortedDates = Object.keys(eventsByDate).sort((a, b) => 
     new Date(a).getTime() - new Date(b).getTime()
   );
@@ -65,10 +60,10 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
       
       <CardContent className="px-2">
         <ItinerarySearchResults
-          showNoResults={showNoResults}
+          showNoResults={false}
           searchQuery=""
-          searchResults={searchResults}
-          hasSearched={hasSearched}
+          searchResults={null}
+          hasSearched={false}
           eventsByDate={eventsByDate}
           sortedDates={sortedDates}
           formatDate={formatDate}
