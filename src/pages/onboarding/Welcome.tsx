@@ -1,19 +1,16 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, CardFooter } from '@/components/ui/card';
-import StepIndicator, { Step } from '@/components/onboarding/StepIndicator';
-import StepController from '@/components/onboarding/StepController';
-import FooterButtons from '@/components/onboarding/FooterButtons';
 import { useOnboarding } from '@/hooks/useOnboarding';
-import LoadingSpinner from '@/components/auth/LoadingSpinner';
-import { Button } from '@/components/ui/button';
-import { RefreshCw, AlertTriangle } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
-import { supabase, clearAuthData } from '@/integrations/supabase/client';
+import OnboardingLayout from '@/components/onboarding/OnboardingLayout';
+import OnboardingLoading from '@/components/onboarding/OnboardingLoading';
+import LoadingErrorState from '@/components/onboarding/LoadingErrorState';
+import { useOnboardingSession } from '@/hooks/onboarding/useOnboardingSession';
 
-const steps: Step[] = [
+// Define steps for the onboarding process
+const steps = [
   { id: 'welcome', title: 'Welcome' },
   { id: 'products', title: 'Products' },
   { id: 'gds', title: 'GDS' },
@@ -27,9 +24,15 @@ const Welcome = () => {
   const navigate = useNavigate();
   const [initialAuthCheck, setInitialAuthCheck] = useState(false);
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
-  const [retryCount, setRetryCount] = useState(0);
-  const [error, setError] = useState<string | null>(null);
-  const { user, isLoading: authLoading, refreshSession } = useAuth();
+  
+  const { user, isLoading: authLoading } = useAuth();
+  const { 
+    retryCount, 
+    error, 
+    setError, 
+    handleRefreshSession, 
+    handleClearAndReload 
+  } = useOnboardingSession();
   
   const {
     user: onboardingUser,
@@ -72,111 +75,19 @@ const Welcome = () => {
         });
         setLoadingTimeoutReached(true);
       }
-    }, 6000); // Reduced from original 5000ms to make it more responsive
+    }, 6000); // Show error state after 6 seconds of loading
     
     return () => clearTimeout(timeout);
   }, [isLoading, authLoading, retryCount]);
 
-  // Refresh the session
-  const handleRefreshSession = async () => {
-    try {
-      setLoadingTimeoutReached(false);
-      setError(null);
-      setRetryCount(prev => prev + 1);
-      
-      console.log('Welcome: Manually refreshing session');
-      const refreshedUser = await refreshSession();
-      
-      if (refreshedUser) {
-        toast({
-          title: "Connection restored",
-          description: "Your session has been refreshed successfully."
-        });
-      } else {
-        setError("Session couldn't be refreshed. Please try logging in again.");
-        setLoadingTimeoutReached(true);
-      }
-    } catch (err) {
-      console.error('Welcome: Error refreshing session:', err);
-      setError("An error occurred while refreshing your session.");
+  // Handle session refresh with error handling
+  const handleSessionRefresh = async () => {
+    setLoadingTimeoutReached(false);
+    const result = await handleRefreshSession();
+    if (!result) {
       setLoadingTimeoutReached(true);
     }
   };
-
-  // Clear all storage data and reload
-  const handleClearAndReload = () => {
-    try {
-      console.log('Welcome: Clearing storage and reloading');
-      // Flag to prevent auth state change loops during manual clear
-      sessionStorage.setItem('manual-clear-in-progress', 'true');
-      
-      clearAuthData();
-      
-      // Redirect to login with cleared=true parameter
-      window.location.href = '/login?cleared=true';
-    } catch (err) {
-      console.error('Welcome: Error clearing storage:', err);
-      toast({
-        title: "Error",
-        description: "Failed to clear storage. Please try again.",
-        variant: "destructive"
-      });
-    }
-  };
-
-  // Show loading spinner during initial load
-  if ((isLoading || authLoading) && !loadingTimeoutReached) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center">
-        <LoadingSpinner />
-        <p className="mt-4 text-muted-foreground">Loading your setup wizard...</p>
-        <p className="mt-2 text-xs text-muted-foreground">
-          {retryCount > 0 ? `Retry attempt: ${retryCount}` : "This may take a moment..."}
-        </p>
-      </div>
-    );
-  }
-
-  // Show timeout error with retry option
-  if (loadingTimeoutReached || error) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4">
-        <div className="mb-4 text-amber-500">
-          <AlertTriangle size={40} />
-        </div>
-        <p className="mb-2 text-lg font-semibold">Loading is taking longer than expected...</p>
-        {error && <p className="mb-4 text-red-500">{error}</p>}
-        
-        <div className="flex flex-col gap-3 w-full max-w-xs">
-          <Button 
-            onClick={handleRefreshSession} 
-            variant="default"
-            className="flex items-center gap-2 w-full"
-          >
-            <RefreshCw className="h-4 w-4" />
-            Refresh Session
-          </Button>
-          
-          <Button 
-            onClick={handleClearAndReload}
-            variant="destructive"
-            className="w-full"
-          >
-            Clear Storage & Restart
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
-  // Redirect if not authenticated
-  if (!user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Redirecting to login...</p>
-      </div>
-    );
-  }
 
   // Handle completion of onboarding
   const onComplete = async () => {
@@ -195,40 +106,44 @@ const Welcome = () => {
     }
   };
 
+  // Show loading spinner during initial load
+  if ((isLoading || authLoading) && !loadingTimeoutReached) {
+    return <OnboardingLoading retryCount={retryCount} />;
+  }
+
+  // Show timeout error with retry option
+  if (loadingTimeoutReached || error) {
+    return (
+      <LoadingErrorState 
+        error={error}
+        retryCount={retryCount}
+        onRefreshSession={handleSessionRefresh}
+        onClearAndReload={handleClearAndReload}
+      />
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Redirecting to login...</p>
+      </div>
+    );
+  }
+
   // Main onboarding interface
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <header className="border-b border-border">
-        <div className="container mx-auto py-4 px-4">
-          <h1 className="text-2xl font-semibold">Tripscape Setup</h1>
-        </div>
-      </header>
-      
-      <main className="flex-grow py-8">
-        <div className="container mx-auto px-4">
-          <StepIndicator steps={steps} currentStep={currentStep} />
-
-          <Card className="max-w-4xl mx-auto">
-            <StepController 
-              currentStep={currentStep}
-              formData={formData}
-              updateFormData={updateFormData}
-            />
-
-            <CardFooter>
-              <FooterButtons 
-                currentStep={currentStep}
-                isLoading={isLoading}
-                steps={steps}
-                handleBack={handleBack}
-                handleNext={handleNext}
-                handleComplete={onComplete}
-              />
-            </CardFooter>
-          </Card>
-        </div>
-      </main>
-    </div>
+    <OnboardingLayout
+      steps={steps}
+      currentStep={currentStep}
+      formData={formData}
+      isLoading={isLoading}
+      updateFormData={updateFormData}
+      handleBack={handleBack}
+      handleNext={handleNext}
+      handleComplete={onComplete}
+    />
   );
 };
 
