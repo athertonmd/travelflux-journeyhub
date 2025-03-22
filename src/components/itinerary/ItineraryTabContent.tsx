@@ -2,7 +2,6 @@
 import React from 'react';
 import { Itinerary } from '@/types/itinerary.types';
 import ItineraryTable from './ItineraryTable';
-import ItineraryDetail from './ItineraryDetail';
 import EmptyItineraryState from './EmptyItineraryState';
 
 interface ItineraryTabContentProps {
@@ -27,10 +26,6 @@ const ItineraryTabContent: React.FC<ItineraryTabContentProps> = ({
             onSelectItinerary={handleItinerarySelect}
             selectedItineraryId={selectedItinerary?.id}
           />
-          
-          {selectedItinerary && (
-            <ItineraryDetail itinerary={selectedItinerary} />
-          )}
         </div>
       ) : (
         <EmptyItineraryState searchQuery={searchQuery} />

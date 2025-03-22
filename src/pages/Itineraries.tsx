@@ -5,7 +5,6 @@ import Footer from '@/components/Footer';
 import ItinerarySearchBar from '@/components/itinerary/ItinerarySearchBar';
 import ItineraryHeader from '@/components/itinerary/ItineraryHeader';
 import ItineraryTabContent from '@/components/itinerary/ItineraryTabContent';
-import ItineraryTimeline from '@/components/ItineraryTimeline';
 import { useItineraries } from '@/hooks/useItineraries';
 import {
   Tabs,
@@ -59,13 +58,6 @@ const Itineraries = () => {
                 handleItinerarySelect={handleItinerarySelect}
                 searchQuery={searchQuery}
               />
-              
-              {selectedItinerary && selectedItinerary.events && (
-                <div className="mt-6">
-                  <h2 className="text-xl font-semibold mb-4">Timeline</h2>
-                  <ItineraryTimeline events={selectedItinerary.events} />
-                </div>
-              )}
             </TabsContent>
             
             {/* Content for other tabs - already handled by filtering */}
@@ -79,21 +71,12 @@ const Itineraries = () => {
                     </p>
                   </div>
                 ) : (
-                  <>
-                    <ItineraryTabContent 
-                      filteredItineraries={filteredItineraries}
-                      selectedItinerary={selectedItinerary}
-                      handleItinerarySelect={handleItinerarySelect}
-                      searchQuery={searchQuery}
-                    />
-                    
-                    {selectedItinerary && selectedItinerary.events && (
-                      <div className="mt-6">
-                        <h2 className="text-xl font-semibold mb-4">Timeline</h2>
-                        <ItineraryTimeline events={selectedItinerary.events} />
-                      </div>
-                    )}
-                  </>
+                  <ItineraryTabContent 
+                    filteredItineraries={filteredItineraries}
+                    selectedItinerary={selectedItinerary}
+                    handleItinerarySelect={handleItinerarySelect}
+                    searchQuery={searchQuery}
+                  />
                 )}
               </TabsContent>
             ))}
