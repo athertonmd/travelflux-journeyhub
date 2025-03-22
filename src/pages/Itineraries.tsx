@@ -1,9 +1,11 @@
+
 import React, { useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import ItinerarySearchBar from '@/components/itinerary/ItinerarySearchBar';
 import ItineraryHeader from '@/components/itinerary/ItineraryHeader';
 import ItineraryTabContent from '@/components/itinerary/ItineraryTabContent';
+import ItineraryTimeline from '@/components/ItineraryTimeline';
 import { useItineraries } from '@/hooks/useItineraries';
 import {
   Tabs,
@@ -57,43 +59,44 @@ const Itineraries = () => {
                 handleItinerarySelect={handleItinerarySelect}
                 searchQuery={searchQuery}
               />
-            </TabsContent>
-            
-            <TabsContent value="active" className="mt-4">
-              {/* Content for active tab - already handled by filtering */}
-              {filteredItineraries.length === 0 && (
-                <div className="glass-card p-8 rounded-lg text-center">
-                  <h3 className="text-lg font-medium text-gray-900">No active itineraries</h3>
-                  <p className="text-gray-500">
-                    You don't have any active itineraries at the moment
-                  </p>
+              
+              {selectedItinerary && selectedItinerary.events && (
+                <div className="mt-6">
+                  <h2 className="text-xl font-semibold mb-4">Timeline</h2>
+                  <ItineraryTimeline events={selectedItinerary.events} />
                 </div>
               )}
             </TabsContent>
             
-            <TabsContent value="upcoming" className="mt-4">
-              {/* Content for upcoming tab - already handled by filtering */}
-              {filteredItineraries.length === 0 && (
-                <div className="glass-card p-8 rounded-lg text-center">
-                  <h3 className="text-lg font-medium text-gray-900">No upcoming itineraries</h3>
-                  <p className="text-gray-500">
-                    You don't have any upcoming itineraries
-                  </p>
-                </div>
-              )}
-            </TabsContent>
-            
-            <TabsContent value="completed" className="mt-4">
-              {/* Content for completed tab - already handled by filtering */}
-              {filteredItineraries.length === 0 && (
-                <div className="glass-card p-8 rounded-lg text-center">
-                  <h3 className="text-lg font-medium text-gray-900">No completed itineraries</h3>
-                  <p className="text-gray-500">
-                    You don't have any completed itineraries
-                  </p>
-                </div>
-              )}
-            </TabsContent>
+            {/* Content for other tabs - already handled by filtering */}
+            {['active', 'upcoming', 'completed'].map((tab) => (
+              <TabsContent key={tab} value={tab} className="mt-4">
+                {filteredItineraries.length === 0 ? (
+                  <div className="glass-card p-8 rounded-lg text-center">
+                    <h3 className="text-lg font-medium text-gray-900">No {tab} itineraries</h3>
+                    <p className="text-gray-500">
+                      You don't have any {tab} itineraries at the moment
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <ItineraryTabContent 
+                      filteredItineraries={filteredItineraries}
+                      selectedItinerary={selectedItinerary}
+                      handleItinerarySelect={handleItinerarySelect}
+                      searchQuery={searchQuery}
+                    />
+                    
+                    {selectedItinerary && selectedItinerary.events && (
+                      <div className="mt-6">
+                        <h2 className="text-xl font-semibold mb-4">Timeline</h2>
+                        <ItineraryTimeline events={selectedItinerary.events} />
+                      </div>
+                    )}
+                  </>
+                )}
+              </TabsContent>
+            ))}
           </Tabs>
         </div>
       </main>
