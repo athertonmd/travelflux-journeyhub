@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   Card, 
@@ -64,7 +63,7 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
   
   return (
     <Card className={cn("glass-card", className)}>
-      <CardContent className="p-6">
+      <CardContent>
         {sortedDates.map((date, dateIndex) => (
           <div key={date} className="mb-8 last:mb-0">
             <div className="flex items-center mb-4">
@@ -96,7 +95,7 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
                       </div>
                       
                       {event.completed !== undefined && (
-                        <Badge variant={event.completed ? "success" : "outline"} className="ml-2">
+                        <Badge variant={event.completed ? "default" : "outline"} className="ml-2">
                           {event.completed ? "Completed" : "Pending"}
                         </Badge>
                       )}
