@@ -82,7 +82,7 @@ const CustomerFilters: React.FC<CustomerFiltersProps> = ({
               <SelectValue placeholder="All clients" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All clients</SelectItem>
+              <SelectItem value="all">All clients</SelectItem>
               {uniqueClients.map(client => (
                 <SelectItem key={client} value={client}>{client}</SelectItem>
               ))}
@@ -110,7 +110,7 @@ const CustomerFilters: React.FC<CustomerFiltersProps> = ({
               <SelectValue placeholder="All users" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All</SelectItem>
+              <SelectItem value="all">All</SelectItem>
               <SelectItem value="yes">Yes</SelectItem>
               <SelectItem value="no">No</SelectItem>
             </SelectContent>
