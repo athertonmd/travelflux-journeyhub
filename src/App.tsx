@@ -58,6 +58,7 @@ function App() {
           } />
           <Route path="/credits" element={<Credits />} />
           <Route path="/users" element={<Users />} />
+          <Route path="/customers" element={<Users />} /> {/* Add this route to match navbar links */}
           <Route path="/trip-log" element={<TripLog />} />
           <Route path="/itineraries" element={<Itineraries />} />
           <Route path="/contact" element={<Contact />} />
