@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { format } from 'date-fns';
 import { 
   User, 
@@ -8,7 +8,8 @@ import {
   Phone,
   Calendar, 
   Smartphone, 
-  FileText
+  FileText,
+  Eye
 } from 'lucide-react';
 import { 
   Table, 
@@ -20,8 +21,10 @@ import {
   TableRow 
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Traveler } from '@/types/customer.types';
 import CustomerPagination from './CustomerPagination';
+import CustomerDetailModal from './CustomerDetailModal';
 
 interface CustomerTableProps {
   currentTravelers: Traveler[];
@@ -36,8 +39,20 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
   totalPages,
   setCurrentPage,
 }) => {
+  const [selectedTraveler, setSelectedTraveler] = useState<Traveler | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), 'MMM d, yyyy');
+  };
+
+  const handleRowClick = (traveler: Traveler) => {
+    setSelectedTraveler(traveler);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
   };
 
   return (
@@ -88,24 +103,28 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                 Record Locator
               </div>
             </TableHead>
+            <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {currentTravelers.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+              <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                 No customers found matching your search.
               </TableCell>
             </TableRow>
           ) : (
             currentTravelers.map((traveler) => (
-              <TableRow key={traveler.id} className="cursor-pointer hover:bg-muted/50">
-                <TableCell className="font-medium text-left">{traveler.name}</TableCell>
-                <TableCell className="text-left">{traveler.email}</TableCell>
-                <TableCell className="text-left">{traveler.clientName}</TableCell>
-                <TableCell className="text-left">{traveler.phoneNumber}</TableCell>
-                <TableCell className="text-left">{formatDate(traveler.enrolledDate)}</TableCell>
-                <TableCell className="text-left">
+              <TableRow 
+                key={traveler.id} 
+                className="cursor-pointer hover:bg-muted/50"
+              >
+                <TableCell className="font-medium text-left" onClick={() => handleRowClick(traveler)}>{traveler.name}</TableCell>
+                <TableCell className="text-left" onClick={() => handleRowClick(traveler)}>{traveler.email}</TableCell>
+                <TableCell className="text-left" onClick={() => handleRowClick(traveler)}>{traveler.clientName}</TableCell>
+                <TableCell className="text-left" onClick={() => handleRowClick(traveler)}>{traveler.phoneNumber}</TableCell>
+                <TableCell className="text-left" onClick={() => handleRowClick(traveler)}>{formatDate(traveler.enrolledDate)}</TableCell>
+                <TableCell className="text-left" onClick={() => handleRowClick(traveler)}>
                   <Badge 
                     variant={traveler.isMobileUser ? "default" : "outline"}
                     className={traveler.isMobileUser ? "bg-green-100 text-green-800 hover:bg-green-200" : ""}
@@ -113,7 +132,13 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                     {traveler.isMobileUser ? 'Yes' : 'No'}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-left">{traveler.recordLocator}</TableCell>
+                <TableCell className="text-left" onClick={() => handleRowClick(traveler)}>{traveler.recordLocator}</TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="icon" onClick={() => handleRowClick(traveler)}>
+                    <Eye className="h-4 w-4" />
+                    <span className="sr-only">View details</span>
+                  </Button>
+                </TableCell>
               </TableRow>
             ))
           )}
@@ -124,6 +149,12 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
         currentPage={currentPage}
         totalPages={totalPages}
         setCurrentPage={setCurrentPage}
+      />
+
+      <CustomerDetailModal 
+        traveler={selectedTraveler}
+        isOpen={isModalOpen}
+        onClose={closeModal}
       />
     </>
   );
