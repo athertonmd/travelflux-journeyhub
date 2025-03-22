@@ -46,10 +46,6 @@ const Users: React.FC = () => {
             setSearchQuery(value);
             setCurrentPage(1);
           }}
-          activeFilters={activeFilters}
-          handleFilterChange={handleFilterChange}
-          clearFilters={clearFilters}
-          uniqueClients={uniqueClients}
         />
       </Card>
       
@@ -59,6 +55,10 @@ const Users: React.FC = () => {
           currentPage={currentPage}
           totalPages={totalPages}
           setCurrentPage={setCurrentPage}
+          activeFilters={activeFilters}
+          handleFilterChange={handleFilterChange}
+          clearFilters={clearFilters}
+          uniqueClients={uniqueClients}
         />
       </Card>
     </div>

@@ -9,7 +9,9 @@ import {
   Calendar, 
   Smartphone, 
   FileText,
-  Eye
+  Eye,
+  ChevronDown,
+  FilterX
 } from 'lucide-react';
 import { 
   Table, 
@@ -22,7 +24,20 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Traveler } from '@/types/customer.types';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Traveler, TravelerFilters } from '@/types/customer.types';
 import CustomerPagination from './CustomerPagination';
 import CustomerDetailModal from './CustomerDetailModal';
 
@@ -31,6 +46,10 @@ interface CustomerTableProps {
   currentPage: number;
   totalPages: number;
   setCurrentPage: (page: number) => void;
+  activeFilters: TravelerFilters;
+  handleFilterChange: (filter: string, value: string) => void;
+  clearFilters: () => void;
+  uniqueClients: string[];
 }
 
 const CustomerTable: React.FC<CustomerTableProps> = ({
@@ -38,6 +57,10 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
   currentPage,
   totalPages,
   setCurrentPage,
+  activeFilters,
+  handleFilterChange,
+  clearFilters,
+  uniqueClients,
 }) => {
   const [selectedTraveler, setSelectedTraveler] = useState<Traveler | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -62,27 +85,115 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
         <TableHeader>
           <TableRow>
             <TableHead className="text-left">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                Traveler Name
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Traveler Name
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" align="end">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Filter by Name</h4>
+                      <Input
+                        placeholder="Filter name..."
+                        value={activeFilters.name}
+                        onChange={(e) => handleFilterChange('name', e.target.value)}
+                        className="h-8"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </TableHead>
             <TableHead className="text-left">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                Email Address
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email Address
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" align="end">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Filter by Email</h4>
+                      <Input
+                        placeholder="Filter email..."
+                        value={activeFilters.email}
+                        onChange={(e) => handleFilterChange('email', e.target.value)}
+                        className="h-8"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </TableHead>
             <TableHead className="text-left">
-              <div className="flex items-center gap-2">
-                <Building className="h-4 w-4" />
-                Client
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Building className="h-4 w-4" />
+                  Client
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" align="end">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Filter by Client</h4>
+                      <Select 
+                        value={activeFilters.clientName}
+                        onValueChange={(value) => handleFilterChange('clientName', value)}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="All clients" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All clients</SelectItem>
+                          {uniqueClients.map(client => (
+                            <SelectItem key={client} value={client}>{client}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </TableHead>
             <TableHead className="text-left">
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                Telephone Number
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Phone className="h-4 w-4" />
+                  Telephone Number
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" align="end">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Filter by Phone</h4>
+                      <Input
+                        placeholder="Filter phone..."
+                        value={activeFilters.phoneNumber}
+                        onChange={(e) => handleFilterChange('phoneNumber', e.target.value)}
+                        className="h-8"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </TableHead>
             <TableHead className="text-left">
@@ -92,18 +203,75 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
               </div>
             </TableHead>
             <TableHead className="text-left">
-              <div className="flex items-center gap-2">
-                <Smartphone className="h-4 w-4" />
-                Mobile User
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Smartphone className="h-4 w-4" />
+                  Mobile User
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" align="end">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Filter by Mobile User</h4>
+                      <Select
+                        value={activeFilters.isMobileUser}
+                        onValueChange={(value) => handleFilterChange('isMobileUser', value)}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="All users" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All</SelectItem>
+                          <SelectItem value="yes">Yes</SelectItem>
+                          <SelectItem value="no">No</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </TableHead>
             <TableHead className="text-left">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Record Locator
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4" />
+                  Record Locator
+                </div>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-7 w-7">
+                      <ChevronDown className="h-3 w-3" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-3" align="end">
+                    <div className="space-y-2">
+                      <h4 className="font-medium">Filter by Record Locator</h4>
+                      <Input
+                        placeholder="Filter PNR..."
+                        value={activeFilters.recordLocator}
+                        onChange={(e) => handleFilterChange('recordLocator', e.target.value)}
+                        className="h-8"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </TableHead>
-            <TableHead className="w-[50px]"></TableHead>
+            <TableHead className="w-[50px]">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={clearFilters}
+                className="h-7 w-7"
+                title="Clear all filters"
+              >
+                <FilterX className="h-4 w-4" />
+              </Button>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
