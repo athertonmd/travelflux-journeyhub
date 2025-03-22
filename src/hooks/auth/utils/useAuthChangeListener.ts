@@ -78,57 +78,57 @@ export const useAuthChangeListener = () => {
         // Handle different auth events with timeouts to prevent hanging
         try {
           if (event === 'SIGNED_OUT') {
+            // Handle sign out synchronously - no async operation needed
             handleSignOut({ setUser, setIsLoading, setSessionChecked });
             return;
           }
           
-          if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
-            // Add a timeout to prevent hanging
-            const timeoutPromise = new Promise((_, reject) => {
-              setTimeout(() => reject(new Error('Auth update timeout')), 5000);
-            });
-            
+          // For all other events that may involve async operations, 
+          // defer the processing to the next event loop to prevent deadlocks
+          setTimeout(async () => {
             try {
-              await Promise.race([
-                handleSignInOrUpdate({ 
+              if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+                await handleSignInOrUpdate({ 
                   session, 
                   setUser, 
                   setIsLoading, 
                   setSessionChecked, 
                   updateUserState 
-                }),
-                timeoutPromise
-              ]);
+                });
+                return;
+              }
+              
+              if (event === 'TOKEN_REFRESHED') {
+                await handleTokenRefresh({ 
+                  session, 
+                  setUser, 
+                  setIsLoading, 
+                  setSessionChecked, 
+                  updateUserState 
+                });
+                return;
+              }
+              
+              // Fallback for INITIAL_SESSION or other events
+              await handleOtherEvents({
+                event,
+                session,
+                setUser,
+                setIsLoading,
+                setSessionChecked,
+                updateUserState
+              });
             } catch (error) {
-              console.error('Auth update timed out:', error);
-              setSessionChecked(true);
-              setIsLoading(false);
+              console.error('Error handling deferred auth event:', event, error);
+              // Ensure we don't get stuck in loading state
+              if (isMounted.current) {
+                setIsLoading(false);
+                setSessionChecked(true);
+              }
             }
-            return;
-          }
-          
-          if (event === 'TOKEN_REFRESHED') {
-            await handleTokenRefresh({ 
-              session, 
-              setUser, 
-              setIsLoading, 
-              setSessionChecked, 
-              updateUserState 
-            });
-            return;
-          }
-          
-          // Fallback for INITIAL_SESSION or other events
-          await handleOtherEvents({
-            event,
-            session,
-            setUser,
-            setIsLoading,
-            setSessionChecked,
-            updateUserState
-          });
+          }, 0);
         } catch (error) {
-          console.error('Error handling auth event:', event, error);
+          console.error('Error in auth event handler:', event, error);
           // Ensure we don't get stuck in loading state
           setIsLoading(false);
           setSessionChecked(true);
