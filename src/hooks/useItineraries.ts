@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Itinerary } from '@/types/itinerary.types';
+import { Itinerary, ItineraryEvent } from '@/types/itinerary.types';
 
 // Sample data - in a real app, this would come from an API
 const sampleItineraries: Itinerary[] = [
@@ -203,6 +203,18 @@ export const useItineraries = () => {
   const [selectedItinerary, setSelectedItinerary] = useState<Itinerary | null>(null);
   const [filteredItineraries, setFilteredItineraries] = useState<Itinerary[]>(sampleItineraries);
   const [activeTab, setActiveTab] = useState('all');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  // Extract all events from all itineraries for the timeline view
+  const getAllEvents = (): ItineraryEvent[] => {
+    if (selectedItinerary) {
+      return selectedItinerary.events;
+    }
+    return itineraries.flatMap(itinerary => itinerary.events);
+  };
+  
+  const events = getAllEvents();
   
   useEffect(() => {
     let filtered = itineraries;
@@ -256,6 +268,9 @@ export const useItineraries = () => {
     activeTab,
     filteredItineraries,
     selectedItinerary,
+    events,
+    isLoading,
+    error,
     handleSearch,
     handleSearchChange,
     handleTabChange,

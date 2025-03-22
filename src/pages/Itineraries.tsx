@@ -14,7 +14,11 @@ import { useItineraries } from '@/hooks/useItineraries';
 const Itineraries = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, refreshSession, sessionChecked } = useAuth();
-  const { events, isLoading: itinerariesLoading, error: itinerariesError } = useItineraries();
+  const { 
+    events, 
+    isLoading: itinerariesLoading, 
+    error: itinerariesError 
+  } = useItineraries();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeSinceMount, setTimeSinceMount] = useState(0);
@@ -46,7 +50,7 @@ const Itineraries = () => {
     }
     
     if (itinerariesError) {
-      setError(itinerariesError.message || 'Failed to load itineraries');
+      setError(itinerariesError?.message || 'Failed to load itineraries');
     }
   }, [authLoading, user, itinerariesLoading, itinerariesError]);
 
