@@ -1,8 +1,9 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
+import { clearAuthData } from '@/integrations/supabase/client';
 
 export const useDashboardState = () => {
   const { user, isLoading: isAuthLoading, refreshSession, sessionChecked } = useAuth();
@@ -40,11 +41,16 @@ export const useDashboardState = () => {
     if (!isMounted) return;
     
     const forceRedirectTimeout = window.setTimeout(() => {
-      if (isMounted && isAuthLoading && timeSinceMount > 10) {
+      if (isMounted && isAuthLoading && timeSinceMount > 8) {
         console.log('Dashboard: Force redirect to login after timeout');
-        navigate('/login?error=timeout');
+        // Set a flag before redirecting
+        sessionStorage.setItem('manual-clear-in-progress', 'true');
+        // Clear auth data to prevent loops
+        clearAuthData();
+        // Navigate to login with a timeout indicator
+        navigate('/login?error=timeout&t=' + Date.now());
       }
-    }, 12000);
+    }, 10000); // Reduced from 12s to 10s
     
     return () => {
       window.clearTimeout(forceRedirectTimeout);
@@ -119,7 +125,7 @@ export const useDashboardState = () => {
   }, [isAuthLoading, isMounted, sessionChecked, sessionCheckAttempts]);
 
   // Handle manual refresh 
-  const handleRefreshConnection = async () => {
+  const handleRefreshConnection = useCallback(async () => {
     if (!isMounted) return;
     
     setIsRecovering(true);
@@ -143,7 +149,10 @@ export const useDashboardState = () => {
       // If refresh fails, take user to login page
       console.log('Dashboard: Session refresh failed, redirecting to login');
       sessionStorage.setItem('manual-clear-in-progress', 'true');
-      navigate('/login?error=refresh_failed');
+      // Perform a full clear to ensure no stale data
+      clearAuthData();
+      // Add timestamp to prevent caching
+      navigate('/login?error=refresh_failed&t=' + Date.now());
     } catch (error) {
       console.error('Dashboard: Refresh error:', error);
       if (isMounted) {
@@ -155,20 +164,21 @@ export const useDashboardState = () => {
         setIsRecovering(false);
       }
     }
-  };
+  }, [isMounted, refreshSession, navigate]);
 
   // Clear all storage data and reload
-  const handleClearAndReload = () => {
+  const handleClearAndReload = useCallback(() => {
     try {
       console.log('Dashboard: Clearing storage and reloading');
       // Flag to prevent auth state change loops during manual clear
       sessionStorage.setItem('manual-clear-in-progress', 'true');
       
-      localStorage.clear();
-      sessionStorage.clear();
+      // Use the enhanced clear function
+      clearAuthData();
       
       // Redirect to login with cleared=true parameter to indicate storage was cleared
-      window.location.href = '/login?cleared=true';
+      // Add timestamp to prevent caching issues
+      window.location.href = '/login?cleared=true&t=' + Date.now();
     } catch (error) {
       console.error('Dashboard: Clear storage error:', error);
       toast({
@@ -177,7 +187,7 @@ export const useDashboardState = () => {
         variant: "destructive",
       });
     }
-  };
+  }, []);
 
   return {
     user,

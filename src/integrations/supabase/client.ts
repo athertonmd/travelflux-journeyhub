@@ -13,6 +13,7 @@ export const supabase = createClient<Database>(
       persistSession: true,
       autoRefreshToken: true,
       storageKey: 'tripscape-auth',
+      storage: localStorage,
       detectSessionInUrl: false, // Disable automatic detection to prevent loops
       flowType: 'implicit', // Use implicit flow for more reliable auth
     },
@@ -26,7 +27,7 @@ export const supabase = createClient<Database>(
         return new Promise<Response>((resolve, reject) => {
           const timeoutId = setTimeout(() => {
             reject(new Error('Request timeout'));
-          }, 10000);
+          }, 15000); // Increased timeout from 10s to 15s for better reliability
           
           fetch(input, init)
             .then(response => {
@@ -58,8 +59,9 @@ export const isTokenExpired = async (): Promise<boolean> => {
       const expiresAt = data.session.expires_at * 1000;
       const now = Date.now();
       
-      // Return true if current time is past expiry
-      return now >= expiresAt;
+      // Return true if current time is past expiry or within 5 minutes of expiring
+      // This gives us a buffer to refresh before it actually expires
+      return now >= (expiresAt - 5 * 60 * 1000);
     }
     
     return false;
@@ -69,13 +71,15 @@ export const isTokenExpired = async (): Promise<boolean> => {
   }
 };
 
-// Simple helper to clear auth data
+// Enhanced helper to clear auth data
 export const clearAuthData = () => {
   try {
-    // Clear session flag
+    console.log('Clearing all auth data for a fresh login');
+    
+    // Clear session flag first
     sessionStorage.removeItem('manual-clear-in-progress');
     
-    // Sign out from Supabase first
+    // Sign out from Supabase first (don't await to avoid hanging)
     supabase.auth.signOut().catch(err => {
       console.error('Error signing out from Supabase:', err);
     });
@@ -83,14 +87,29 @@ export const clearAuthData = () => {
     // Then clear all local storage items related to auth
     const storageKeys = [
       'tripscape-auth',
-      'sb-' + SUPABASE_URL.replace(/^(https?:\/\/)/, '').replace(/\./g, '-') + '-auth-token'
+      'sb-' + SUPABASE_URL.replace(/^(https?:\/\/)/, '').replace(/\./g, '-') + '-auth-token',
+      // Add any other potential storage keys used by Supabase
+      localStorage.getItem('supabase.auth.token')
     ];
     
     storageKeys.forEach(key => {
-      try {
-        localStorage.removeItem(key);
-      } catch (e) {
-        console.error(`Error removing ${key} from localStorage:`, e);
+      if (key) {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.error(`Error removing ${key} from localStorage:`, e);
+        }
+      }
+    });
+    
+    // Clear all Supabase-related items with a wildcard approach
+    Object.keys(localStorage).forEach(key => {
+      if (key.includes('supabase') || key.includes('sb-')) {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.error(`Error removing ${key} from localStorage:`, e);
+        }
       }
     });
     
