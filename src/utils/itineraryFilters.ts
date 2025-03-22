@@ -5,9 +5,14 @@ import { Itinerary } from '@/types/itinerary.types';
  * Filter itineraries based on status
  */
 export const filterByStatus = (itineraries: Itinerary[], status: string): Itinerary[] => {
+  if (!itineraries || itineraries.length === 0) {
+    return [];
+  }
+  
   if (status === 'all') {
     return itineraries;
   }
+  
   return itineraries.filter(itinerary => itinerary.status === status);
 };
 
@@ -15,6 +20,10 @@ export const filterByStatus = (itineraries: Itinerary[], status: string): Itiner
  * Filter itineraries based on search query
  */
 export const filterBySearchQuery = (itineraries: Itinerary[], query: string): Itinerary[] => {
+  if (!itineraries || itineraries.length === 0) {
+    return [];
+  }
+  
   if (!query) {
     return itineraries;
   }

@@ -7,7 +7,7 @@ import { extractEvents } from '@/utils/itineraryEvents';
 
 export const useItineraries = () => {
   // State
-  const [itineraries] = useState<Itinerary[]>(sampleItineraries);
+  const [itineraries, setItineraries] = useState<Itinerary[]>(sampleItineraries);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedItinerary, setSelectedItinerary] = useState<Itinerary | null>(null);
   const [filteredItineraries, setFilteredItineraries] = useState<Itinerary[]>(sampleItineraries);
@@ -20,21 +20,30 @@ export const useItineraries = () => {
   
   // Filter itineraries based on status and search query
   useEffect(() => {
-    let filtered = itineraries;
-    
-    // Apply status filter
-    filtered = filterByStatus(filtered, activeTab);
-    
-    // Apply search filter
-    filtered = filterBySearchQuery(filtered, searchQuery);
-    
-    setFilteredItineraries(filtered);
-    
-    // Set first itinerary as selected if available
-    if (filtered.length > 0 && (!selectedItinerary || !filtered.some(i => i.id === selectedItinerary.id))) {
-      setSelectedItinerary(filtered[0]);
+    try {
+      let filtered = itineraries;
+      
+      if (!filtered || filtered.length === 0) {
+        setFilteredItineraries([]);
+        return;
+      }
+      
+      // Apply status filter
+      filtered = filterByStatus(filtered, activeTab);
+      
+      // Apply search filter
+      filtered = filterBySearchQuery(filtered, searchQuery);
+      
+      setFilteredItineraries(filtered);
+      
+      // Set first itinerary as selected if available
+      if (filtered.length > 0 && (!selectedItinerary || !filtered.some(i => i.id === selectedItinerary.id))) {
+        setSelectedItinerary(filtered[0]);
+      }
+    } catch (err) {
+      console.error("Error filtering itineraries:", err);
+      setError(err instanceof Error ? err : new Error(String(err)));
     }
-    
   }, [searchQuery, activeTab, itineraries, selectedItinerary]);
   
   // Event handlers

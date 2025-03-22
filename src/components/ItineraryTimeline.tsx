@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   Card, 
@@ -26,8 +27,12 @@ interface ItineraryTimelineProps {
   className?: string;
 }
 
-const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className }) => {
+const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events = [], className }) => {
   const groupEventsByDate = (eventsToGroup: ItineraryEvent[]) => {
+    if (!eventsToGroup || eventsToGroup.length === 0) {
+      return {};
+    }
+    
     return eventsToGroup.reduce((acc, event) => {
       if (!acc[event.date]) {
         acc[event.date] = [];
@@ -51,7 +56,7 @@ const ItineraryTimeline: React.FC<ItineraryTimelineProps> = ({ events, className
     }).format(date);
   };
   
-  if (events.length === 0) {
+  if (!events || events.length === 0) {
     return (
       <Card className={cn("glass-card", className)}>
         <CardContent className="p-6 text-center">
