@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardCard from '@/components/DashboardCard';
-import { Map, Users, CreditCard, Wallet } from 'lucide-react';
+import { Map, Users, CreditCard } from 'lucide-react';
 import { useCredits } from '@/hooks/useCredits';
 
 const DashboardMetrics: React.FC = () => {
@@ -22,7 +22,7 @@ const DashboardMetrics: React.FC = () => {
   };
   
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <DashboardCard 
         title="Total Trips" 
         value={12} 
@@ -44,20 +44,12 @@ const DashboardMetrics: React.FC = () => {
       />
       
       <DashboardCard 
-        title="Remaining Credits" 
-        value={creditInfo ? creditInfo.remainingCredits : '--'} 
+        title="Credits" 
+        value={creditInfo ? `${creditInfo.remainingCredits}/${creditInfo.totalCredits}` : '--'} 
+        description={creditInfo?.isFreeTier ? "Free Tier Credits" : "Paid Credits"}
         isPositive={creditInfo?.remainingCredits > 10}
         changeValue={1}
         icon={<CreditCard className="h-8 w-8 text-primary" />}
-        className="cursor-pointer hover:border-primary transition-colors"
-        onClick={handleCreditsTileClick}
-      />
-      
-      <DashboardCard 
-        title="Credit Balance" 
-        value={creditInfo ? `${creditInfo.totalCredits}` : '--'} 
-        description={creditInfo?.isFreeTier ? "Free Tier" : "Paid Credits"}
-        icon={<Wallet className="h-8 w-8 text-primary" />}
         className="cursor-pointer hover:border-primary transition-colors"
         onClick={handleCreditsTileClick}
       />

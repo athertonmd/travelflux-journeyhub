@@ -9,10 +9,12 @@ import { ChevronLeft, RefreshCw } from 'lucide-react';
 import ItineraryTimeline from '@/components/ItineraryTimeline';
 import DashboardLoadingState from '@/components/dashboard/DashboardLoadingState';
 import DashboardErrorState from '@/components/dashboard/DashboardErrorState';
+import { useItineraries } from '@/hooks/useItineraries';
 
 const Itineraries = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, refreshSession, sessionChecked } = useAuth();
+  const { events, isLoading: itinerariesLoading, error: itinerariesError } = useItineraries();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeSinceMount, setTimeSinceMount] = useState(0);
@@ -39,10 +41,14 @@ const Itineraries = () => {
 
   // Check authentication state
   useEffect(() => {
-    if (!authLoading && user) {
+    if (!authLoading && user && !itinerariesLoading) {
       setIsLoading(false);
     }
-  }, [authLoading, user]);
+    
+    if (itinerariesError) {
+      setError(itinerariesError.message || 'Failed to load itineraries');
+    }
+  }, [authLoading, user, itinerariesLoading, itinerariesError]);
 
   // Handle manual refresh 
   const handleRefreshConnection = async () => {
@@ -66,7 +72,7 @@ const Itineraries = () => {
   };
 
   // If still loading after auth check, show loading state
-  if (isLoading || authLoading) {
+  if (isLoading || authLoading || itinerariesLoading) {
     return (
       <DashboardLoadingState
         timeSinceMount={timeSinceMount}
@@ -117,7 +123,7 @@ const Itineraries = () => {
       </div>
       
       <Card className="p-6">
-        <ItineraryTimeline />
+        <ItineraryTimeline events={events || []} />
       </Card>
     </DashboardLayout>
   );
