@@ -44,9 +44,8 @@ export const useLogIn = () => {
         email,
         password,
         options: {
-          // For Netlify, explicitly set the redirect URL to ensure proper redirects
-          // Fixed: redirectTo moved inside the options object properly
-          redirectTo: isNetlify ? getSiteUrl() : undefined
+          // For Netlify deployments, properly set redirectTo in a way compatible with Supabase types
+          ...(isNetlify ? { redirectTo: getSiteUrl() } : {})
         }
       });
       
