@@ -22,9 +22,17 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
   const [localIsLoading, setLocalIsLoading] = useState(false);
   const [loginTimeout, setLoginTimeout] = useState<NodeJS.Timeout | null>(null);
   
+  // Detect if we're in a production environment
+  const isProduction = window.location.hostname !== 'localhost' && 
+                       window.location.hostname !== '127.0.0.1';
+  
+  // Set different timeout values based on environment
+  const uiTimeoutDuration = isProduction ? 20000 : 10000;
+  
   // Clear any stale auth data when form is initially mounted
   useEffect(() => {
     console.log('Login form mounted, performing complete cleanup of auth data');
+    console.log('Environment:', isProduction ? 'Production' : 'Development');
     
     // Perform enhanced cleanup immediately on mount
     clearAuthData();
@@ -80,6 +88,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
     
     try {
       console.log('Submitting login form - performing fresh auth cleanup first');
+      console.log('Environment:', isProduction ? 'Production' : 'Development');
       setLocalIsLoading(true);
       
       // Clear auth data again just before login attempt for a clean state
@@ -91,10 +100,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
         setLocalIsLoading(false);
         toast({
           title: "Login is taking too long",
-          description: "The process seems to be stuck. Please try again or use the Reset Session button.",
+          description: isProduction ? 
+            "The process seems to be stuck. This may be due to Supabase configuration issues. Please check your Supabase project's authentication settings." :
+            "The process seems to be stuck. Please try again or use the Reset Session button.",
           variant: "destructive"
         });
-      }, 10000); // 10 second UI timeout
+      }, uiTimeoutDuration);
       
       setLoginTimeout(timeout);
       
@@ -174,6 +185,15 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
             isLoading={localIsLoading}
             onReset={handleClearStorage}
           />
+          
+          {isProduction && (
+            <div className="text-xs text-gray-500 mt-2">
+              <p>
+                If you're experiencing login issues on this deployed site, please ensure 
+                that your Supabase project has the correct URL Configuration settings.
+              </p>
+            </div>
+          )}
         </form>
       </CardContent>
       <CardFooter className="flex flex-col">

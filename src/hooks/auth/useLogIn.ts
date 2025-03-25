@@ -23,8 +23,17 @@ export const useLogIn = () => {
       // Clear any existing session before login to avoid state conflicts
       await supabase.auth.signOut();
       
-      // Reduced timeout
-      await new Promise(resolve => setTimeout(resolve, 30));
+      // Short delay to ensure signout is complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('Attempting to sign in with password');
+      
+      // Detect if we're in a production environment
+      const isProduction = window.location.hostname !== 'localhost' && 
+                          window.location.hostname !== '127.0.0.1';
+      
+      // Set different timeout values based on environment
+      const timeoutDuration = isProduction ? 15000 : 5000;
       
       // Use a timeout to prevent hanging during login
       const loginPromise = supabase.auth.signInWithPassword({
@@ -36,7 +45,7 @@ export const useLogIn = () => {
         setTimeout(() => reject({
           data: null, 
           error: { message: 'Login timed out. Please try again.' }
-        }), 5000);
+        }), timeoutDuration);
       });
       
       const { data, error } = await Promise.race([loginPromise, timeoutPromise]);
@@ -48,6 +57,8 @@ export const useLogIn = () => {
         let errorMessage = error.message;
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = 'Incorrect email or password. Please try again.';
+        } else if (error.message.includes('timeout')) {
+          errorMessage = 'Login is taking too long. This might be due to network issues or incorrect Supabase configuration.';
         }
         
         toast({
