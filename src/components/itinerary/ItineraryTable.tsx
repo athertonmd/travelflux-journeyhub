@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from 'date-fns';
 import { Itinerary } from '@/types/itinerary.types';
 
@@ -23,19 +22,6 @@ const ItineraryTable: React.FC<ItineraryTableProps> = ({
   onSelectItinerary,
   selectedItineraryId
 }) => {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'bg-green-100 text-green-800 hover:bg-green-200';
-      case 'upcoming':
-        return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
-      case 'completed':
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-      default:
-        return 'bg-gray-100 text-gray-800 hover:bg-gray-200';
-    }
-  };
-
   const formatDateRange = (startDate: string, endDate: string) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -61,7 +47,6 @@ const ItineraryTable: React.FC<ItineraryTableProps> = ({
             <TableHead className="text-left">Traveler</TableHead>
             <TableHead className="text-left">Travel Dates</TableHead>
             <TableHead className="text-left">Date Received</TableHead>
-            <TableHead className="text-left">Status</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -82,11 +67,6 @@ const ItineraryTable: React.FC<ItineraryTableProps> = ({
               <TableCell className="text-left">
                 <div>{new Date(itinerary.dateReceived).toLocaleDateString()}</div>
                 <div className="text-xs text-muted-foreground">{getTimeAgo(itinerary.dateReceived)}</div>
-              </TableCell>
-              <TableCell className="text-left">
-                <Badge className={`${getStatusColor(itinerary.status)}`}>
-                  {itinerary.status.charAt(0).toUpperCase() + itinerary.status.slice(1)}
-                </Badge>
               </TableCell>
             </TableRow>
           ))}
