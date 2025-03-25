@@ -1,9 +1,8 @@
 
 import { useState, useEffect, ChangeEvent } from 'react';
-import { Itinerary, ItineraryEvent } from '@/types/itinerary.types';
+import { Itinerary } from '@/types/itinerary.types';
 import { sampleItineraries } from '@/data/sampleItineraries';
 import { filterByStatus, filterBySearchQuery } from '@/utils/itineraryFilters';
-import { extractEvents } from '@/utils/itineraryEvents';
 
 export const useItineraries = () => {
   // State
@@ -14,9 +13,6 @@ export const useItineraries = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
-  
-  // Get all events for timeline view
-  const events = extractEvents(itineraries, selectedItinerary);
   
   // Filter itineraries based on status and search query
   useEffect(() => {
@@ -68,7 +64,6 @@ export const useItineraries = () => {
     activeTab,
     filteredItineraries,
     selectedItinerary,
-    events,
     isLoading,
     error,
     handleSearch,

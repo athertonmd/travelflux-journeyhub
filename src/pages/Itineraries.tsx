@@ -1,58 +1,36 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronLeft, RefreshCw } from 'lucide-react';
-import ItineraryTimeline from '@/components/ItineraryTimeline';
 import DashboardLoadingState from '@/components/dashboard/DashboardLoadingState';
 import DashboardErrorState from '@/components/dashboard/DashboardErrorState';
 import { useItineraries } from '@/hooks/useItineraries';
+import ItinerarySearchBar from '@/components/itinerary/ItinerarySearchBar';
+import ItineraryTable from '@/components/itinerary/ItineraryTable';
+import { Button } from '@/components/ui/button';
+import EmptyItineraryState from '@/components/itinerary/EmptyItineraryState';
 
 const Itineraries = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading, refreshSession, sessionChecked } = useAuth();
   const { 
-    events, 
-    isLoading: itinerariesLoading, 
-    error: itinerariesError 
+    searchQuery,
+    filteredItineraries,
+    handleSearch,
+    handleSearchChange,
+    handleItinerarySelect,
+    selectedItinerary,
+    isLoading: itinerariesLoading,
+    error: itinerariesError
   } = useItineraries();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  
+  const [isRecovering, setIsRecovering] = useState(false);
   const [timeSinceMount, setTimeSinceMount] = useState(0);
   const [sessionCheckAttempts, setSessionCheckAttempts] = useState(0);
-  const [isRecovering, setIsRecovering] = useState(false);
-
-  useEffect(() => {
-    // Track time since component mount
-    const mountTime = Date.now();
-    const timer = setInterval(() => {
-      setTimeSinceMount(Math.floor((Date.now() - mountTime) / 1000));
-    }, 1000);
-
-    // Set a timeout to stop loading after a reasonable time
-    const loadingTimeout = setTimeout(() => {
-      setIsLoading(false);
-    }, 5000);
-
-    return () => {
-      clearInterval(timer);
-      clearTimeout(loadingTimeout);
-    };
-  }, []);
-
-  // Check authentication state
-  useEffect(() => {
-    if (!authLoading && user && !itinerariesLoading) {
-      setIsLoading(false);
-    }
-    
-    if (itinerariesError) {
-      setError(itinerariesError?.message || 'Failed to load itineraries');
-    }
-  }, [authLoading, user, itinerariesLoading, itinerariesError]);
+  const [error, setError] = useState<string | null>(null);
 
   // Handle manual refresh 
   const handleRefreshConnection = async () => {
@@ -76,7 +54,7 @@ const Itineraries = () => {
   };
 
   // If still loading after auth check, show loading state
-  if (isLoading || authLoading || itinerariesLoading) {
+  if (authLoading || itinerariesLoading) {
     return (
       <DashboardLoadingState
         timeSinceMount={timeSinceMount}
@@ -87,7 +65,7 @@ const Itineraries = () => {
   }
 
   // If there's an error or loading timeout reached, show error state
-  if (error || !sessionChecked || !user) {
+  if (itinerariesError || !sessionChecked || !user) {
     return (
       <DashboardErrorState
         isRecovering={isRecovering}
@@ -127,7 +105,22 @@ const Itineraries = () => {
       </div>
       
       <Card className="p-6">
-        <ItineraryTimeline events={events || []} />
+        <ItinerarySearchBar 
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          onSearch={handleSearch}
+          searchPlaceholder="Search by traveler name, email, or record locator..."
+        />
+        
+        {filteredItineraries.length > 0 ? (
+          <ItineraryTable 
+            itineraries={filteredItineraries}
+            onSelectItinerary={handleItinerarySelect}
+            selectedItineraryId={selectedItinerary?.id}
+          />
+        ) : (
+          <EmptyItineraryState searchQuery={searchQuery} />
+        )}
       </Card>
     </DashboardLayout>
   );

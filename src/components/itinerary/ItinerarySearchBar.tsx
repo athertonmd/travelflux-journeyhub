@@ -3,12 +3,6 @@ import React from 'react';
 import { Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 
 interface ItinerarySearchBarProps {
   searchQuery: string;
@@ -30,7 +24,7 @@ const ItinerarySearchBar: React.FC<ItinerarySearchBarProps> = ({
   };
 
   return (
-    <div className="flex items-center space-x-2 mb-4">
+    <div className="flex items-center space-x-2 mb-6">
       <div className="relative flex-grow">
         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
         <Input
@@ -42,19 +36,6 @@ const ItinerarySearchBar: React.FC<ItinerarySearchBarProps> = ({
           onKeyDown={handleKeyDown}
         />
       </div>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="outline" className="whitespace-nowrap">
-            Filter By
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem>Record Locator</DropdownMenuItem>
-          <DropdownMenuItem>Traveler Name</DropdownMenuItem>
-          <DropdownMenuItem>Traveler Email</DropdownMenuItem>
-          <DropdownMenuItem>Destination</DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
       <Button onClick={onSearch} className="whitespace-nowrap">
         Search
       </Button>
