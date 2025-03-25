@@ -45,6 +45,7 @@ export const useLogIn = () => {
         password,
         options: {
           // For Netlify, explicitly set the redirect URL to ensure proper redirects
+          // Fixed: redirectTo moved inside the options object properly
           redirectTo: isNetlify ? getSiteUrl() : undefined
         }
       });
