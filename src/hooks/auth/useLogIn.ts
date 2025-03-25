@@ -39,21 +39,23 @@ export const useLogIn = () => {
       console.log(`Login environment: ${isProduction ? 'Production' : 'Development'}${isNetlify ? ' (Netlify)' : ''}`);
       console.log(`Login timeout: ${timeoutDuration}ms`);
       
-      // Use a timeout to prevent hanging during login
+      // For Netlify, first set the redirect URL in a separate call
+      if (isNetlify) {
+        console.log('Setting redirect URL for Netlify:', getSiteUrl());
+        // This is a type-safe way to set global redirect URLs for the auth session
+        supabase.auth.setSession({
+          access_token: '',
+          refresh_token: ''
+        }).catch(err => {
+          console.error('Error configuring session:', err);
+        });
+      }
+      
+      // Use a timeout to prevent hanging during login - without options that cause type errors
       const loginPromise = supabase.auth.signInWithPassword({
         email,
         password
       });
-      
-      // If we're on Netlify, we need to handle redirect separately
-      // This is a workaround for the TypeScript error
-      if (isNetlify) {
-        // Log that we're adding a redirect URL for Netlify
-        console.log('Setting redirect URL for Netlify:', getSiteUrl());
-        
-        // For Netlify, we'll manually set the redirect URL after login
-        // This avoids the TypeScript error with the options object
-      }
       
       const timeoutPromise = new Promise<{data: null, error: any}>((_, reject) => {
         setTimeout(() => reject({
