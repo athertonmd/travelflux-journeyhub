@@ -1,6 +1,6 @@
 
 import { useCallback } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { supabase, getSiteUrl } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
 export const useLogIn = () => {
@@ -33,12 +33,20 @@ export const useLogIn = () => {
                           window.location.hostname !== '127.0.0.1';
       
       // Set different timeout values based on environment
-      const timeoutDuration = isProduction ? 15000 : 5000;
+      const isNetlify = window.location.hostname.includes('netlify.app');
+      const timeoutDuration = isNetlify ? 25000 : (isProduction ? 15000 : 5000);
+      
+      console.log(`Login environment: ${isProduction ? 'Production' : 'Development'}${isNetlify ? ' (Netlify)' : ''}`);
+      console.log(`Login timeout: ${timeoutDuration}ms`);
       
       // Use a timeout to prevent hanging during login
       const loginPromise = supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options: {
+          // For Netlify, explicitly set the redirect URL to ensure proper redirects
+          redirectTo: isNetlify ? getSiteUrl() : undefined
+        }
       });
       
       const timeoutPromise = new Promise<{data: null, error: any}>((_, reject) => {
@@ -55,10 +63,13 @@ export const useLogIn = () => {
         
         // Provide more user-friendly error messages
         let errorMessage = error.message;
+        
         if (error.message.includes('Invalid login credentials')) {
           errorMessage = 'Incorrect email or password. Please try again.';
         } else if (error.message.includes('timeout')) {
-          errorMessage = 'Login is taking too long. This might be due to network issues or incorrect Supabase configuration.';
+          errorMessage = isNetlify ? 
+            'Login is taking too long. Please check your Supabase project settings and ensure the Netlify domain is added to the allowed URLs.' :
+            'Login is taking too long. This might be due to network issues or incorrect Supabase configuration.';
         }
         
         toast({

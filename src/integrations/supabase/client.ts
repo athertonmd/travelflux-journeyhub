@@ -5,10 +5,20 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://yiunhkcbqdbhxjrdwgaq.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlpdW5oa2NicWRiaHhqcmR3Z2FxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE2OTA1NjAsImV4cCI6MjA1NzI2NjU2MH0.PBvJvi-zF6dy8kIous7X_qw5LAAOv4ie8S4BMuStR10";
 
-// Detect if we're in a production environment
-const isProduction = window.location.hostname !== 'localhost' && 
-                     window.location.hostname !== '127.0.0.1';
+// Detect environment - includes netlify domains now
+const isProduction = () => {
+  const host = window.location.hostname;
+  return host !== 'localhost' && 
+         host !== '127.0.0.1' && 
+         !host.includes('lovableproject.com');
+};
 
+// Detect Netlify specifically
+const isNetlify = () => {
+  return window.location.hostname.includes('netlify.app');
+};
+
+// Create Supabase client with environment-specific settings
 export const supabase = createClient<Database>(
   SUPABASE_URL, 
   SUPABASE_PUBLISHABLE_KEY,
@@ -19,19 +29,20 @@ export const supabase = createClient<Database>(
       storageKey: 'tripscape-auth',
       storage: localStorage,
       detectSessionInUrl: false, // Disable automatic detection to prevent loops
-      flowType: isProduction ? 'pkce' : 'implicit', // Use PKCE flow for production environments
+      flowType: isProduction() ? 'pkce' : 'implicit', // Always use PKCE for production environments
     },
     global: {
       headers: {
         'x-application-name': 'tripscape',
       },
-      // Fix the fetch typing
       fetch: (input: RequestInfo | URL, init?: RequestInit) => {
-        // Add timeout to all fetch requests
+        // Add timeout to all fetch requests - longer timeout for Netlify
         return new Promise<Response>((resolve, reject) => {
+          const timeoutDuration = isNetlify() ? 25000 : 15000;
+          
           const timeoutId = setTimeout(() => {
-            reject(new Error('Request timeout'));
-          }, 15000); // Increased timeout from 10s to 15s for better reliability
+            reject(new Error(`Request timeout after ${timeoutDuration}ms`));
+          }, timeoutDuration);
           
           fetch(input, init)
             .then(response => {
@@ -75,7 +86,7 @@ export const isTokenExpired = async (): Promise<boolean> => {
   }
 };
 
-// Enhanced helper to clear auth data
+// Enhanced helper to clear auth data with environment-specific handling
 export const clearAuthData = () => {
   try {
     console.log('Clearing all auth data for a fresh login');
@@ -83,7 +94,7 @@ export const clearAuthData = () => {
     // Clear session flag first
     sessionStorage.removeItem('manual-clear-in-progress');
     
-    // Sign out from Supabase first (don't await to avoid hanging)
+    // Sign out from Supabase first
     supabase.auth.signOut().catch(err => {
       console.error('Error signing out from Supabase:', err);
     });
@@ -92,7 +103,6 @@ export const clearAuthData = () => {
     const storageKeys = [
       'tripscape-auth',
       'sb-' + SUPABASE_URL.replace(/^(https?:\/\/)/, '').replace(/\./g, '-') + '-auth-token',
-      // Add any other potential storage keys used by Supabase
       localStorage.getItem('supabase.auth.token')
     ];
     
@@ -121,4 +131,11 @@ export const clearAuthData = () => {
   } catch (error) {
     console.error('Error clearing auth data:', error);
   }
+};
+
+// Get site URL for redirects - handle Netlify deployments
+export const getSiteUrl = () => {
+  const url = window.location.origin;
+  // Add trailing slash if not present
+  return url.endsWith('/') ? url : `${url}/`;
 };

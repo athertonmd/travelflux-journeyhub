@@ -22,17 +22,19 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
   const [localIsLoading, setLocalIsLoading] = useState(false);
   const [loginTimeout, setLoginTimeout] = useState<NodeJS.Timeout | null>(null);
   
-  // Detect if we're in a production environment
+  // Detect environment - includes netlify domains now
   const isProduction = window.location.hostname !== 'localhost' && 
                        window.location.hostname !== '127.0.0.1';
   
+  const isNetlify = window.location.hostname.includes('netlify.app');
+  
   // Set different timeout values based on environment
-  const uiTimeoutDuration = isProduction ? 20000 : 10000;
+  const uiTimeoutDuration = isNetlify ? 30000 : (isProduction ? 20000 : 10000);
   
   // Clear any stale auth data when form is initially mounted
   useEffect(() => {
     console.log('Login form mounted, performing complete cleanup of auth data');
-    console.log('Environment:', isProduction ? 'Production' : 'Development');
+    console.log('Environment:', isProduction ? 'Production' : 'Development', isNetlify ? '(Netlify)' : '');
     
     // Perform enhanced cleanup immediately on mount
     clearAuthData();
@@ -88,7 +90,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
     
     try {
       console.log('Submitting login form - performing fresh auth cleanup first');
-      console.log('Environment:', isProduction ? 'Production' : 'Development');
+      console.log('Environment:', isProduction ? 'Production' : 'Development', isNetlify ? '(Netlify)' : '');
       setLocalIsLoading(true);
       
       // Clear auth data again just before login attempt for a clean state
@@ -100,9 +102,12 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
         setLocalIsLoading(false);
         toast({
           title: "Login is taking too long",
-          description: isProduction ? 
-            "The process seems to be stuck. This may be due to Supabase configuration issues. Please check your Supabase project's authentication settings." :
-            "The process seems to be stuck. Please try again or use the Reset Session button.",
+          description: isNetlify ? 
+            "The process seems to be stuck. This is likely due to Supabase configuration issues. Please ensure your Netlify domain is added to the allowed URLs in your Supabase project settings." :
+            (isProduction ? 
+              "The process seems to be stuck. This may be due to Supabase configuration issues. Please check your Supabase project's authentication settings." :
+              "The process seems to be stuck. Please try again or use the Reset Session button."
+            ),
           variant: "destructive"
         });
       }, uiTimeoutDuration);
@@ -186,11 +191,13 @@ const LoginForm: React.FC<LoginFormProps> = ({ isLoading, onLogin }) => {
             onReset={handleClearStorage}
           />
           
-          {isProduction && (
+          {(isProduction || isNetlify) && (
             <div className="text-xs text-gray-500 mt-2">
               <p>
-                If you're experiencing login issues on this deployed site, please ensure 
-                that your Supabase project has the correct URL Configuration settings.
+                {isNetlify ? 
+                  "If you're experiencing login issues on Netlify, please ensure your Supabase project has this Netlify domain added to the allowed URLs in Authentication settings." :
+                  "If you're experiencing login issues on this deployed site, please ensure that your Supabase project has the correct URL Configuration settings."
+                }
               </p>
             </div>
           )}
