@@ -98,12 +98,13 @@ const Welcome = () => {
   };
 
   // Handle completion of onboarding
-  const onComplete = async () => {
+  const onComplete = async (): Promise<boolean> => {
     try {
       const success = await handleComplete();
       if (success) {
         navigate('/dashboard');
       }
+      return success; // Return the success boolean value
     } catch (err) {
       console.error('Welcome: Error completing setup:', err);
       setError(err instanceof Error ? err.message : 'Unknown error during completion');
@@ -112,6 +113,7 @@ const Welcome = () => {
         description: "There was a problem completing your setup. Please try again.",
         variant: "destructive"
       });
+      return false; // Return false in case of an error
     }
   };
 
