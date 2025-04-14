@@ -16,9 +16,27 @@ export const useUpdateUserState = () => {
     try {
       console.log('Updating user state for:', supabaseUser.email);
       
-      // Create a more resilient fetch with automatic retry and better error handling
+      // Create a more resilient fetch with better error handling and caching
       const fetchUserConfiguration = async (retry = 0): Promise<any> => {
         try {
+          // Check if we have a cached result - add caching for better performance
+          const cachedConfig = sessionStorage.getItem(`user_config_${supabaseUser.id}`);
+          if (cachedConfig) {
+            try {
+              const parsedConfig = JSON.parse(cachedConfig);
+              const cacheTime = parsedConfig._cacheTime || 0;
+              // Use cache if it's less than 5 minutes old
+              if (Date.now() - cacheTime < 5 * 60 * 1000) {
+                console.log('Using cached user configuration');
+                return parsedConfig;
+              }
+            } catch (e) {
+              console.error('Error parsing cached config:', e);
+              // Continue to fetch if cache parsing fails
+            }
+          }
+          
+          console.log('Fetching user configuration from database');
           const { data, error } = await supabase
             .from('agency_configurations')
             .select('setup_completed')
@@ -37,6 +55,16 @@ export const useUpdateUserState = () => {
             throw error;
           }
           
+          // Cache the result for future use
+          if (data) {
+            try {
+              const cacheData = { ...data, _cacheTime: Date.now() };
+              sessionStorage.setItem(`user_config_${supabaseUser.id}`, JSON.stringify(cacheData));
+            } catch (e) {
+              console.error('Error caching user configuration:', e);
+            }
+          }
+          
           return data;
         } catch (innerError) {
           console.error(`Inner error in fetchUserConfiguration (attempt ${retry}):`, innerError);
@@ -49,7 +77,7 @@ export const useUpdateUserState = () => {
       const timeoutPromise = new Promise<{ setup_completed: boolean }>((_, reject) => {
         setTimeout(() => {
           reject(new Error('User configuration fetch timed out'));
-        }, 6000); // Increased from 5s to 6s for more reliability
+        }, 8000); // Increased from 6s to 8s for more reliability
       });
       
       // Race between the actual operation and the timeout

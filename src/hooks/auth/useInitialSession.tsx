@@ -51,11 +51,11 @@ export const useInitialSession = ({
             // Add a timeout for the user state update
             const userUpdatePromise = updateUserState(session.user, setUser);
             
-            // Create a timeout promise
+            // Create a timeout promise with increased duration from 3s to 5s
             const timeoutPromise = new Promise<null>((_, reject) => {
               timeoutRef.current = setTimeout(() => {
                 reject(new Error('User state update timed out during auth change'));
-              }, 3000);
+              }, 5000); // Increased timeout for slower connections
             });
             
             // Race between the update and the timeout
@@ -108,7 +108,7 @@ export const useInitialSession = ({
         const timeoutPromise = new Promise((_, reject) => {
           timeoutRef.current = setTimeout(() => {
             reject(new Error('Session check timed out'));
-          }, 5000); // Increased from 3s to 5s for slower connections
+          }, 8000); // Increased from 5s to 8s for slower connections
         });
         
         const sessionPromise = supabase.auth.getSession();
@@ -145,11 +145,11 @@ export const useInitialSession = ({
         if (data.session?.user) {
           console.log('Existing session found, updating user state');
           
-          // Add timeout protection for the user state update
+          // Add timeout protection for the user state update with increased duration
           try {
             const userUpdatePromise = updateUserState(data.session.user, setUser);
             const userUpdateTimeout = new Promise((_, reject) => {
-              setTimeout(() => reject(new Error('User state update during session check timed out')), 4000);
+              setTimeout(() => reject(new Error('User state update during session check timed out')), 6000);
             });
             
             await Promise.race([userUpdatePromise, userUpdateTimeout]);
