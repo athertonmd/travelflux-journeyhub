@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Edit2, Trash2, Globe, FileEdit, AlertCircle } from 'lucide-react';
 import { AgencyGuidePage } from '@/types/onboarding.types';
+import { ImageUpload } from './ImageUpload';
 
 interface GuidePageProps {
   page: AgencyGuidePage;
@@ -57,6 +57,15 @@ export const GuidePage: React.FC<GuidePageProps> = ({
             <Input
               value={page.title}
               onChange={(e) => onUpdate({ title: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Image</Label>
+            <ImageUpload
+              currentImagePath={page.imagePath}
+              onImageUpload={(imagePath) => onUpdate({ imagePath })}
+              onImageRemove={() => onUpdate({ imagePath: undefined })}
             />
           </div>
           

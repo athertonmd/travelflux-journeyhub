@@ -1,4 +1,3 @@
-
 export interface ContactMethod {
   type: 'telephone' | 'email' | 'sms' | 'web';
   value: string;
@@ -33,6 +32,7 @@ export interface AgencyGuidePage {
   content: string;
   status: 'live' | 'draft' | 'deleted';
   lastUpdated?: string;
+  imagePath?: string;
 }
 
 export interface AgencyGuideCategory {
