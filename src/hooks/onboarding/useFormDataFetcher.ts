@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { OnboardingFormData } from '@/types/onboarding.types';
 import { initialFormData } from './initialFormData';
@@ -26,7 +25,6 @@ export const useFormDataFetcher = (userId: string | undefined) => {
         if (!isMounted) return;
         
         if (result.error) {
-          // If we've had multiple failures, try a few more times before giving up
           if (fetchAttempts < 2) {
             console.log(`FormDataFetcher: Retry attempt ${fetchAttempts + 1}`);
             setFetchAttempts(prev => prev + 1);

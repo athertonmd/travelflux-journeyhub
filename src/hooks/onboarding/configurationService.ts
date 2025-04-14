@@ -48,6 +48,11 @@ export const fetchUserConfiguration = async (userId: string): Promise<FetchConfi
       await processFormBranding(data, newFormData);
       processContactInfo(data, newFormData);
       
+      // Map agency guide data
+      if (data.agency_guide) {
+        newFormData.agencyGuide = data.agency_guide;
+      }
+      
       return { formData: newFormData, error: null };
     } catch (mapError) {
       console.error('ConfigService: Error mapping data:', mapError);

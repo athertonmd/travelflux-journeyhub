@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '@/hooks/useOnboarding';
@@ -9,7 +8,6 @@ import OnboardingLoading from '@/components/onboarding/OnboardingLoading';
 import LoadingErrorState from '@/components/onboarding/LoadingErrorState';
 import { useOnboardingSession } from '@/hooks/onboarding/useOnboardingSession';
 
-// Define steps for the onboarding process - updated to match settings management
 const steps = [
   { id: 'welcome', title: 'Welcome' },
   { id: 'products', title: 'Products' },
@@ -47,7 +45,6 @@ const Welcome = () => {
     handleComplete
   } = useOnboarding();
 
-  // Check authentication and redirect if needed
   useEffect(() => {
     if (!authLoading && !initialAuthCheck) {
       setInitialAuthCheck(true);
@@ -67,14 +64,12 @@ const Welcome = () => {
     }
   }, [user, authLoading, navigate, initialAuthCheck]);
 
-  // Set error from onboarding hook error
   useEffect(() => {
     if (onboardingError) {
       setError(onboardingError);
     }
   }, [onboardingError, setError]);
 
-  // Handle loading timeout - reduced from 6s to 5s
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (isLoading || authLoading) {
@@ -88,7 +83,6 @@ const Welcome = () => {
     return () => clearTimeout(timeout);
   }, [isLoading, authLoading, retryCount]);
 
-  // Handle session refresh with error handling
   const handleSessionRefresh = async () => {
     setLoadingTimeoutReached(false);
     const result = await handleRefreshSession();
@@ -97,7 +91,6 @@ const Welcome = () => {
     }
   };
 
-  // Handle completion of onboarding - ensuring boolean return
   const onComplete = async (): Promise<boolean> => {
     try {
       console.log('Welcome: Completing setup');
@@ -129,12 +122,10 @@ const Welcome = () => {
     }
   };
 
-  // Show loading spinner during initial load
   if ((isLoading || authLoading) && !loadingTimeoutReached) {
     return <OnboardingLoading retryCount={retryCount} />;
   }
 
-  // Show timeout error with retry option
   if (loadingTimeoutReached || error) {
     return (
       <LoadingErrorState 
@@ -146,7 +137,6 @@ const Welcome = () => {
     );
   }
 
-  // Redirect if not authenticated
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -155,7 +145,6 @@ const Welcome = () => {
     );
   }
 
-  // Main onboarding interface
   return (
     <OnboardingLayout
       steps={steps}

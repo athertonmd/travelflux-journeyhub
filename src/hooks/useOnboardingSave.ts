@@ -19,7 +19,6 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         const fileExt = file.name.split('.').pop();
         const filePath = `${userId}/${Date.now()}.${fileExt}`;
         
-        // Upload the file to Supabase Storage
         const { error: uploadError } = await supabase.storage
           .from('agency_logos')
           .upload(filePath, file, {
@@ -31,12 +30,10 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
           throw new Error(`Error uploading logo: ${uploadError.message}`);
         }
         
-        // Update the logo URL
         logoUrl = filePath;
       }
       
       // Convert the form data to the expected database structure
-      // Explicitly convert complex objects to JSON compatible format
       const configData = {
         products: formData.products as unknown as Json,
         gds_provider: formData.gdsProvider,
@@ -50,7 +47,8 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         contact_info: formData.contactInfo as unknown as Json,
         alert_countries: formData.alertCountries,
         trip_briefs_enabled: formData.tripBriefsEnabled,
-        alert_email: formData.alertEmail
+        alert_email: formData.alertEmail,
+        agency_guide: formData.agencyGuide as unknown as Json
       } as any;
       
       const { error } = await supabase
@@ -74,7 +72,7 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
     }
   };
 
-  const completeSetup = async (formData: OnboardingFormData) => {
+  const completeSetup = async (formData: OnboardingFormData): Promise<boolean> => {
     setIsLoading(true);
     
     try {
