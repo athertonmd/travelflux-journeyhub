@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useOnboarding } from '@/hooks/useOnboarding';
@@ -97,14 +96,15 @@ const Welcome = () => {
     }
   };
 
-  // Handle completion of onboarding
+  // Handle completion of onboarding - fixed to return boolean
   const onComplete = async (): Promise<boolean> => {
     try {
       const success = await handleComplete();
       if (success) {
         navigate('/dashboard');
+        return true; // Explicitly return true on success
       }
-      return success; // Return the success boolean value
+      return success; // Return the result from handleComplete
     } catch (err) {
       console.error('Welcome: Error completing setup:', err);
       setError(err instanceof Error ? err.message : 'Unknown error during completion');
@@ -113,7 +113,7 @@ const Welcome = () => {
         description: "There was a problem completing your setup. Please try again.",
         variant: "destructive"
       });
-      return false; // Return false in case of an error
+      return false; // Explicitly return false on error
     }
   };
 
