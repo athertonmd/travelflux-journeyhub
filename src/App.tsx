@@ -1,5 +1,5 @@
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Index from './pages/Index';
 import Login from './pages/auth/Login';
@@ -28,25 +28,58 @@ import LoginInitialLoading from './components/auth/LoginInitialLoading';
 const AuthRoute = ({ element }: { element: React.ReactNode }) => {
   const { user, isLoading, sessionChecked } = useAuth();
   
+  // Add debugging logs to trace the authentication state
+  useEffect(() => {
+    console.log('AuthRoute: Authentication state', { 
+      hasUser: !!user,
+      isLoading,
+      sessionChecked,
+      userDetails: user ? {
+        id: user.id,
+        email: user.email,
+        setupCompleted: user.setupCompleted
+      } : 'No user'
+    });
+  }, [user, isLoading, sessionChecked]);
+  
   // If auth is still loading, show loading component
   if (isLoading || !sessionChecked) {
+    console.log('AuthRoute: Still loading auth data, showing loading state');
     return <LoginInitialLoading />;
   }
   
   // If no user found, redirect to login
   if (!user) {
+    console.log('AuthRoute: No user found, redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
   // If user hasn't completed setup, redirect to welcome
   if (user && !user.setupCompleted) {
+    console.log('AuthRoute: User found but setup not completed, redirecting to welcome');
     return <Navigate to="/welcome" replace />;
   }
   
+  console.log('AuthRoute: User authenticated and setup completed, rendering requested page');
   return <>{element}</>;
 };
 
 function App() {
+  // Add a global verification of auth provider availability
+  useEffect(() => {
+    try {
+      // Just testing if the hook works at the App level
+      const authCheck = useAuth();
+      console.log('App: Auth provider successfully loaded', {
+        userExists: !!authCheck.user,
+        isLoading: authCheck.isLoading,
+        sessionChecked: authCheck.sessionChecked
+      });
+    } catch (error) {
+      console.error('App: Error accessing Auth provider', error);
+    }
+  }, []);
+
   return (
     <ErrorBoundary>
       <Router>
@@ -71,7 +104,7 @@ function App() {
             <Route path="/features/document-delivery" element={<DocumentDelivery />} />
             <Route path="/features/mobile" element={<Mobile />} />
             <Route path="/dashboard" element={<AuthRoute element={<Dashboard />} />} />
-            <Route path="/welcome" element={<AuthRoute element={<Welcome />} />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/settings" element={<AuthRoute element={<Settings />} />} />
             <Route path="/credits" element={<AuthRoute element={<Credits />} />} />
             <Route path="/users" element={<AuthRoute element={<Users />} />} />
