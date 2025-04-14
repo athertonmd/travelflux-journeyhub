@@ -1,3 +1,4 @@
+
 export interface ContactMethod {
   type: 'telephone' | 'email' | 'sms' | 'web';
   value: string;

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import ProductSelection from '@/components/onboarding/ProductSelection';
 import GdsSelection from '@/components/onboarding/GdsSelection';
@@ -10,7 +11,7 @@ import WelcomeStep from '@/components/onboarding/WelcomeStep';
 import CompleteStep from '@/components/onboarding/CompleteStep';
 import { CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { OnboardingFormData } from '@/hooks/useOnboardingForm';
-import { AgencyGuideManager } from './AgencyGuideManager';
+import { AgencyGuideManager } from '@/components/onboarding/AgencyGuideManager';
 
 interface StepControllerProps {
   currentStep: string;

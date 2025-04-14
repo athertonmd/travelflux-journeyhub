@@ -1,4 +1,6 @@
+
 import { OnboardingFormData } from '@/types/onboarding.types';
+import { v4 as uuidv4 } from 'uuid';
 
 export const initialFormData: OnboardingFormData = {
   userName: '',
@@ -7,10 +9,10 @@ export const initialFormData: OnboardingFormData = {
     address: '',
     website: '',
     contactEmail: '',
-    contactPhone: '',
+    contactPhone: ''
   },
   products: {
-    mobile: true,
+    mobile: false,
     documentDelivery: false,
     riskManagement: false
   },
@@ -20,49 +22,42 @@ export const initialFormData: OnboardingFormData = {
     autoRenew: false,
     autoRenewThreshold: 0
   },
-  gdsProvider: '',
+  gdsProvider: 'sabre',
   pnrIntegration: {
-    method: 'api', // 'api', 'email', 'manual'
+    method: 'api'
   },
   gdsConfig: {
-    // Common fields
-    apiKey: '',
-    endpoint: '',
-    pcc: '',
-    email: '',
-    // Sabre fields
     pccList: '',
     queueNumber: '',
     sabreQueueAssignment: '',
     fnbtsEntry: '',
-    // Email integration fields
-    emailForward: '',
-    emailTemplate: '',
-    // Credentials
-    username: '',
-    password: '',
-    // Travelport fields
     tmcPccList: '',
     tripscapeGwsQueue: '',
     manticPointPcc: '',
-    manticPointQueue: '',
+    manticPointQueue: ''
   },
   selectedTripTiles: [],
-  alertCountries: [],
-  tripBriefsEnabled: false,
-  alertEmail: '',
   branding: {
-    primaryColor: '#1EAEDB',
-    secondaryColor: '#0FA0CE',
-    logo: null,
-    logoUrl: undefined,
-    termsAndConditionsUrl: '',
-    brandingGuidelinesUrl: '',
+    primaryColor: '#3b82f6',
+    secondaryColor: '#10b981',
+    logo: null
   },
   contactInfo: {
     blurb: '',
-    contacts: []
+    contacts: [
+      {
+        id: uuidv4(),
+        title: 'Customer Support',
+        methods: [
+          { type: 'telephone', value: '' }
+        ],
+        details: ''
+      }
+    ]
   },
+  alertCountries: [],
+  tripBriefsEnabled: false,
+  alertEmail: '',
   agencyGuide: {
     categories: []
   }
