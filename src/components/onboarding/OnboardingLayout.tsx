@@ -14,7 +14,7 @@ interface OnboardingLayoutProps {
   updateFormData: (key: keyof OnboardingFormData, value: any) => void;
   handleBack: (steps: Step[]) => void;
   handleNext: (steps: Step[]) => Promise<void>;
-  handleComplete: () => Promise<void>;
+  handleComplete: () => Promise<boolean>;
 }
 
 const OnboardingLayout: React.FC<OnboardingLayoutProps> = ({

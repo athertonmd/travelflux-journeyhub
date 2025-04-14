@@ -1,16 +1,16 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronRight, ChevronLeft, Loader2 } from 'lucide-react';
-import { Step } from '@/components/onboarding/StepIndicator';
+import { Step } from './StepIndicator';
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 
 interface FooterButtonsProps {
   currentStep: string;
   isLoading: boolean;
   steps: Step[];
   handleBack: (steps: Step[]) => void;
-  handleNext: (steps: Step[]) => void;
-  handleComplete: () => void;
+  handleNext: (steps: Step[]) => Promise<void>;
+  handleComplete: () => Promise<boolean>;
 }
 
 const FooterButtons: React.FC<FooterButtonsProps> = ({
@@ -21,39 +21,52 @@ const FooterButtons: React.FC<FooterButtonsProps> = ({
   handleNext,
   handleComplete
 }) => {
-  const LoadingSpinner = () => (
-    <span className="flex items-center justify-center">
-      <Loader2 className="animate-spin mr-2 h-4 w-4" />
-      {currentStep !== 'complete' ? 'Saving...' : 'Completing...'}
-    </span>
-  );
-
+  const currentIndex = steps.findIndex(step => step.id === currentStep);
+  const isFirstStep = currentIndex === 0;
+  const isLastStep = currentIndex === steps.length - 1;
+  
   return (
-    <div className="flex justify-between pt-6">
-      {currentStep !== 'welcome' ? (
-        <Button variant="outline" onClick={() => handleBack(steps)} disabled={isLoading}>
-          <ChevronLeft className="mr-2 h-4 w-4" />
-          Back
-        </Button>
-      ) : (
-        <div></div>
-      )}
+    <div className="w-full flex justify-between">
+      <Button
+        variant="outline"
+        onClick={() => handleBack(steps)}
+        disabled={isFirstStep || isLoading}
+      >
+        <ArrowLeft className="mr-2 h-4 w-4" />
+        Back
+      </Button>
       
-      {currentStep !== 'complete' ? (
-        <Button onClick={() => handleNext(steps)} disabled={isLoading}>
-          {isLoading ? <LoadingSpinner /> : (
+      {isLastStep ? (
+        <Button 
+          onClick={handleComplete} 
+          disabled={isLoading}
+        >
+          {isLoading ? (
             <>
-              Next
-              <ChevronRight className="ml-2 h-4 w-4" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Completing...
+            </>
+          ) : (
+            <>
+              <Check className="mr-2 h-4 w-4" />
+              Complete Setup
             </>
           )}
         </Button>
       ) : (
-        <Button onClick={handleComplete} disabled={isLoading}>
-          {isLoading ? <LoadingSpinner /> : (
+        <Button 
+          onClick={() => handleNext(steps)} 
+          disabled={isLoading}
+        >
+          {isLoading ? (
             <>
-              Go to Dashboard
-              <ChevronRight className="ml-2 h-4 w-4" />
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving...
+            </>
+          ) : (
+            <>
+              Next
+              <ArrowRight className="ml-2 h-4 w-4" />
             </>
           )}
         </Button>
