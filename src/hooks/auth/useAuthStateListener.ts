@@ -60,7 +60,7 @@ export const useAuthStateListener = ({
       authStateChangeCount
     });
     
-    // Set up token checker
+    // Set up token checker - use a reduced check frequency
     tokenCheckIntervalRef.current = setupTokenChecker({
       isMounted,
       checkSessionExpiry,

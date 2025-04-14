@@ -27,16 +27,16 @@ export const useSessionCheck = () => {
       // Set a hard timeout to prevent hanging in the initial session check
       initialCheckTimeoutRef.current = setTimeout(() => {
         if (isMounted.current) {
-          console.log('Initial session check timed out after 3 seconds, forcing completion');
+          console.log('Initial session check timed out after 5 seconds, forcing completion');
           setUser(null);
           setIsLoading(false);
           setSessionChecked(true);
         }
-      }, 3000); // Increased back to 3s for more reliability
+      }, 5000); // Increased to 5s for more reliability
       
       // Use Promise.race to add a timeout
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Session check timeout')), 2500); // Increased to 2.5s
+        setTimeout(() => reject(new Error('Session check timeout')), 4000);
       });
       
       // Wrap supabase call in a try/catch to catch any unexpected errors
@@ -82,26 +82,41 @@ export const useSessionCheck = () => {
       if (data.session?.user) {
         console.log('Session exists, updating user state');
         
-        // Defer user state update to next event loop
-        setTimeout(async () => {
-          try {
-            if (!isMounted.current) return;
-            
-            const userData = await updateUserState(data.session.user);
-            if (isMounted.current) {
-              setUser(userData);
-              setIsLoading(false);
-              setSessionChecked(true);
-            }
-          } catch (error) {
-            console.error('Deferred user state update error:', error);
-            if (isMounted.current) {
-              setUser(null);
-              setIsLoading(false);
-              setSessionChecked(true);
-            }
+        try {
+          // Use a more direct approach to update user state with a timeout
+          const userUpdatePromise = updateUserState(data.session.user);
+          const timeoutPromise = new Promise<null>((_, reject) => {
+            setTimeout(() => reject(new Error('User state update timed out')), 4000);
+          });
+          
+          const userData = await Promise.race([userUpdatePromise, timeoutPromise]);
+          
+          if (isMounted.current) {
+            setUser(userData);
+            setIsLoading(false);
+            setSessionChecked(true);
           }
-        }, 0);
+        } catch (error) {
+          console.error('User state update error:', error);
+          
+          if (isMounted.current) {
+            // Create a fallback user object to prevent app from hanging
+            if (data.session.user) {
+              const fallbackUser = {
+                id: data.session.user.id,
+                email: data.session.user.email || '',
+                name: data.session.user.user_metadata?.name || data.session.user.email?.split('@')[0] || '',
+                setupCompleted: false
+              };
+              setUser(fallbackUser);
+            } else {
+              setUser(null);
+            }
+            
+            setIsLoading(false);
+            setSessionChecked(true);
+          }
+        }
       } else {
         console.log('No session found');
         setUser(null);

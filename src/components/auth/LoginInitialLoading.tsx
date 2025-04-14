@@ -5,14 +5,25 @@ import { Button } from '@/components/ui/button';
 
 const LoginInitialLoading: React.FC = () => {
   const [showRetry, setShowRetry] = useState(false);
+  const [loadingTime, setLoadingTime] = useState(0);
   
-  // Show retry button after a delay
+  // Show retry button after a delay and track loading time
   useEffect(() => {
-    const timer = setTimeout(() => {
+    const startTime = Date.now();
+    
+    const showRetryTimer = setTimeout(() => {
       setShowRetry(true);
     }, 5000); // 5 seconds timeout
     
-    return () => clearTimeout(timer);
+    // Update loading time every second
+    const loadingTimer = setInterval(() => {
+      setLoadingTime(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    
+    return () => {
+      clearTimeout(showRetryTimer);
+      clearInterval(loadingTimer);
+    };
   }, []);
   
   const handleRetry = () => {
@@ -23,6 +34,7 @@ const LoginInitialLoading: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center">
       <LoadingSpinner size={16} />
       <p className="mt-4 text-muted-foreground">Checking login status...</p>
+      <p className="mt-2 text-xs text-muted-foreground">Time elapsed: {loadingTime}s</p>
       
       {showRetry && (
         <div className="mt-6 flex flex-col items-center">
