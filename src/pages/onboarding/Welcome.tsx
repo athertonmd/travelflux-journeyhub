@@ -25,7 +25,7 @@ const Welcome = () => {
   const [initialAuthCheck, setInitialAuthCheck] = useState(false);
   const [loadingTimeoutReached, setLoadingTimeoutReached] = useState(false);
   
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshSession } = useAuth();
   const { 
     retryCount, 
     error, 
@@ -74,16 +74,16 @@ const Welcome = () => {
     }
   }, [onboardingError, setError]);
 
-  // Handle loading timeout
+  // Handle loading timeout - reduced from 6s to 5s
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (isLoading || authLoading) {
-        console.log('Welcome: Loading timeout reached after 6 seconds', { 
+        console.log('Welcome: Loading timeout reached after 5 seconds', { 
           isLoading, authLoading, retryCount 
         });
         setLoadingTimeoutReached(true);
       }
-    }, 6000); // Show error state after 6 seconds of loading
+    }, 5000);
     
     return () => clearTimeout(timeout);
   }, [isLoading, authLoading, retryCount]);

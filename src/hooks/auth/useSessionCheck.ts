@@ -27,16 +27,16 @@ export const useSessionCheck = () => {
       // Set a hard timeout to prevent hanging in the initial session check
       initialCheckTimeoutRef.current = setTimeout(() => {
         if (isMounted.current) {
-          console.log('Initial session check timed out after 5 seconds, forcing completion');
+          console.log('Initial session check timed out after 4 seconds, forcing completion');
           setUser(null);
           setIsLoading(false);
           setSessionChecked(true);
         }
-      }, 5000); // Increased to 5s for more reliability
+      }, 4000); // Reduced from 5s to 4s for faster feedback
       
       // Use Promise.race to add a timeout
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Session check timeout')), 4000);
+        setTimeout(() => reject(new Error('Session check timeout')), 3500);
       });
       
       // Wrap supabase call in a try/catch to catch any unexpected errors
@@ -86,7 +86,7 @@ export const useSessionCheck = () => {
           // Use a more direct approach to update user state with a timeout
           const userUpdatePromise = updateUserState(data.session.user);
           const timeoutPromise = new Promise<null>((_, reject) => {
-            setTimeout(() => reject(new Error('User state update timed out')), 4000);
+            setTimeout(() => reject(new Error('User state update timed out')), 3000);
           });
           
           const userData = await Promise.race([userUpdatePromise, timeoutPromise]);

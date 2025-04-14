@@ -1,59 +1,58 @@
 
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { toast } from '@/hooks/use-toast';
 import { clearAuthData } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
 
 export const useOnboardingSession = () => {
+  const { refreshSession } = useAuth();
   const [retryCount, setRetryCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const { refreshSession } = useAuth();
 
-  // Refresh the session
-  const handleRefreshSession = useCallback(async () => {
+  // Handle session refresh with better error handling
+  const handleRefreshSession = useCallback(async (): Promise<boolean> => {
+    setRetryCount(prev => prev + 1);
+    setError(null);
+    
     try {
-      setError(null);
-      setRetryCount(prev => prev + 1);
+      console.log('Onboarding: Refreshing session');
+      const user = await refreshSession();
       
-      console.log('Welcome: Manually refreshing session');
-      const refreshedUser = await refreshSession();
-      
-      if (refreshedUser) {
-        toast({
-          title: "Connection restored",
-          description: "Your session has been refreshed successfully."
-        });
+      if (user) {
+        console.log('Onboarding: Session refreshed successfully');
         return true;
-      } else {
-        setError("Session couldn't be refreshed. Please try logging in again.");
-        return false;
       }
+      
+      console.log('Onboarding: Session refresh failed');
+      setError('Unable to refresh your session. Please try clearing storage.');
+      return false;
     } catch (err) {
-      console.error('Welcome: Error refreshing session:', err);
-      setError("An error occurred while refreshing your session.");
+      console.error('Onboarding: Error refreshing session:', err);
+      setError(err instanceof Error ? err.message : 'Unknown error during session refresh');
       return false;
     }
   }, [refreshSession]);
 
-  // Clear all storage data and reload
+  // Handle clearing storage and reloading
   const handleClearAndReload = useCallback(() => {
-    try {
-      console.log('Welcome: Clearing storage and reloading');
-      // Flag to prevent auth state change loops during manual clear
-      sessionStorage.setItem('manual-clear-in-progress', 'true');
-      
-      clearAuthData();
-      
-      // Redirect to login with cleared=true parameter
+    console.log('Onboarding: Clearing auth data and reloading');
+    
+    // Show toast to inform user
+    toast({
+      title: "Storage cleared",
+      description: "Auth data has been reset. The page will now reload.",
+    });
+    
+    // Set a flag to prevent loops during reload
+    sessionStorage.setItem('manual-clear-in-progress', 'true');
+    
+    // Clear auth data and reload
+    clearAuthData();
+    
+    // Add a short delay before reload
+    setTimeout(() => {
       window.location.href = '/login?cleared=true';
-    } catch (err) {
-      console.error('Welcome: Error clearing storage:', err);
-      toast({
-        title: "Error",
-        description: "Failed to clear storage. Please try again.",
-        variant: "destructive"
-      });
-    }
+    }, 500);
   }, []);
 
   return {

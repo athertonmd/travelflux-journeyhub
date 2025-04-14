@@ -2,10 +2,12 @@
 import React, { useEffect, useState } from 'react';
 import LoadingSpinner from '@/components/auth/LoadingSpinner';
 import { Button } from '@/components/ui/button';
+import { clearAuthData } from '@/integrations/supabase/client';
 
 const LoginInitialLoading: React.FC = () => {
   const [showRetry, setShowRetry] = useState(false);
   const [loadingTime, setLoadingTime] = useState(0);
+  const [showClearData, setShowClearData] = useState(false);
   
   // Show retry button after a delay and track loading time
   useEffect(() => {
@@ -15,6 +17,10 @@ const LoginInitialLoading: React.FC = () => {
       setShowRetry(true);
     }, 5000); // 5 seconds timeout
     
+    const showClearDataTimer = setTimeout(() => {
+      setShowClearData(true);
+    }, 10000); // 10 seconds timeout
+    
     // Update loading time every second
     const loadingTimer = setInterval(() => {
       setLoadingTime(Math.floor((Date.now() - startTime) / 1000));
@@ -22,12 +28,26 @@ const LoginInitialLoading: React.FC = () => {
     
     return () => {
       clearTimeout(showRetryTimer);
+      clearTimeout(showClearDataTimer);
       clearInterval(loadingTimer);
     };
   }, []);
   
   const handleRetry = () => {
     window.location.reload();
+  };
+  
+  const handleClearData = () => {
+    // Set the flag to prevent loops during reload
+    sessionStorage.setItem('manual-clear-in-progress', 'true');
+    
+    // Clear auth data and reload
+    clearAuthData();
+    
+    // Add a short delay before reload
+    setTimeout(() => {
+      window.location.href = '/login?cleared=true';
+    }, 500);
   };
   
   return (
@@ -43,9 +63,23 @@ const LoginInitialLoading: React.FC = () => {
             variant="outline" 
             size="sm"
             onClick={handleRetry}
+            className="mb-2"
           >
             Retry
           </Button>
+          
+          {showClearData && (
+            <>
+              <p className="text-xs text-amber-600 mb-2 mt-4">Still having issues?</p>
+              <Button 
+                variant="destructive" 
+                size="sm"
+                onClick={handleClearData}
+              >
+                Clear Stored Data
+              </Button>
+            </>
+          )}
         </div>
       )}
     </div>
