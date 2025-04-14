@@ -3,10 +3,9 @@ import React from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 import { AgencyGuideCategory, AgencyGuidePage } from '@/types/onboarding.types';
-import { GuidePage } from './GuidePage';
-import { v4 as uuidv4 } from 'uuid';
+import { PageList } from './PageList';
 
 interface GuideCategoryProps {
   category: AgencyGuideCategory;
@@ -68,27 +67,15 @@ export const GuideCategory: React.FC<GuideCategoryProps> = ({
         </div>
 
         {isExpanded && (
-          <div className="space-y-4 pl-4 mt-4">
-            {category.pages.map((page) => (
-              <GuidePage
-                key={page.id}
-                page={page}
-                isEditing={editingPageId === page.id}
-                onEdit={() => onEditPage(page.id)}
-                onDelete={() => onDeletePage(page.id)}
-                onUpdate={(updates) => onUpdatePage(page.id, updates)}
-              />
-            ))}
-            
-            <Button
-              onClick={onAddPage}
-              variant="outline"
-              size="sm"
-              className="w-full"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Page
-            </Button>
+          <div className="pl-4 mt-4">
+            <PageList
+              pages={category.pages}
+              editingPageId={editingPageId}
+              onAddPage={onAddPage}
+              onEditPage={onEditPage}
+              onUpdatePage={onUpdatePage}
+              onDeletePage={onDeletePage}
+            />
           </div>
         )}
       </div>
