@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { OnboardingFormData } from '@/types/onboarding.types';
+import { OnboardingFormData, AgencyGuide } from '@/types/onboarding.types';
 import { initialFormData } from './initialFormData';
 import { mapDatabaseToFormData, processFormBranding, processContactInfo } from './dataMappers';
 
@@ -50,7 +50,16 @@ export const fetchUserConfiguration = async (userId: string): Promise<FetchConfi
       
       // Map agency guide data
       if (data.agency_guide) {
-        newFormData.agencyGuide = data.agency_guide;
+        // Ensure proper type casting and structure
+        const guideData = data.agency_guide as any;
+        
+        if (guideData.categories) {
+          newFormData.agencyGuide = {
+            categories: Array.isArray(guideData.categories) ? guideData.categories : []
+          };
+        } else {
+          newFormData.agencyGuide = { categories: [] };
+        }
       }
       
       return { formData: newFormData, error: null };

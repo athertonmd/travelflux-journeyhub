@@ -51,12 +51,19 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         agency_guide: formData.agencyGuide as unknown as Json
       } as any;
       
+      console.log('Saving agency guide data:', formData.agencyGuide);
+      
       const { error } = await supabase
         .from('agency_configurations')
         .update(configData)
         .eq('user_id', userId as any);
       
       if (error) throw error;
+      
+      toast({
+        title: "Changes Saved",
+        description: "Your configuration has been updated successfully.",
+      });
       
       return true;
     } catch (error) {
