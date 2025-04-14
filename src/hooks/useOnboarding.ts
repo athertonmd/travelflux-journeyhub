@@ -106,6 +106,7 @@ export const useOnboarding = () => {
   // Combine loading states
   const combinedIsLoading = isLoading || authLoading || formIsLoading;
 
+  // Explicitly make handleComplete return a Promise<boolean>
   const handleComplete = useCallback(async (): Promise<boolean> => {
     try {
       setIsLoading(true);

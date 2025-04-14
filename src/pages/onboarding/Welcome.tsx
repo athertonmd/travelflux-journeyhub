@@ -97,7 +97,7 @@ const Welcome = () => {
     }
   };
 
-  // Handle completion of onboarding
+  // Handle completion of onboarding - fixed to explicitly return boolean
   const onComplete = async (): Promise<boolean> => {
     try {
       console.log('Welcome: Completing setup');
