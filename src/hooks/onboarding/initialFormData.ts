@@ -1,4 +1,3 @@
-
 import { OnboardingFormData } from '@/types/onboarding.types';
 
 export const initialFormData: OnboardingFormData = {
@@ -63,5 +62,8 @@ export const initialFormData: OnboardingFormData = {
   contactInfo: {
     blurb: '',
     contacts: []
+  },
+  agencyGuide: {
+    categories: []
   }
 };

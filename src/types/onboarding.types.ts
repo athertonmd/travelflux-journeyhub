@@ -1,4 +1,3 @@
-
 export interface ContactMethod {
   type: 'telephone' | 'email' | 'sms' | 'web';
   value: string;
@@ -25,6 +24,25 @@ export interface Subscription {
   credits: number;
   autoRenew: boolean;
   autoRenewThreshold: number;
+}
+
+export interface AgencyGuidePage {
+  id: string;
+  title: string;
+  content: string;
+  status: 'live' | 'draft' | 'deleted';
+  lastUpdated?: string;
+}
+
+export interface AgencyGuideCategory {
+  id: string;
+  title: string;
+  position: number;
+  pages: AgencyGuidePage[];
+}
+
+export interface AgencyGuide {
+  categories: AgencyGuideCategory[];
 }
 
 export interface OnboardingFormData {
@@ -79,4 +97,5 @@ export interface OnboardingFormData {
   alertCountries: string[];
   tripBriefsEnabled?: boolean;
   alertEmail?: string;
+  agencyGuide: AgencyGuide;
 }

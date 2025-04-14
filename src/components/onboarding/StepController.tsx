@@ -1,4 +1,3 @@
-
 import React from 'react';
 import ProductSelection from '@/components/onboarding/ProductSelection';
 import GdsSelection from '@/components/onboarding/GdsSelection';
@@ -11,6 +10,7 @@ import WelcomeStep from '@/components/onboarding/WelcomeStep';
 import CompleteStep from '@/components/onboarding/CompleteStep';
 import { CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { OnboardingFormData } from '@/hooks/useOnboardingForm';
+import { AgencyGuideManager } from './AgencyGuideManager';
 
 interface StepControllerProps {
   currentStep: string;
@@ -64,41 +64,53 @@ const StepController: React.FC<StepControllerProps> = ({
         </>;
     case 'trips':
       return <>
-          <CardHeader>
-            <CardTitle className="text-2xl">Mobile Settings</CardTitle>
-            <CardDescription>
-              Configure the mobile experience for your travelers.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-8">
-              <div>
-                <h3 className="text-lg font-medium mb-4">Trip Tiles</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Select up to 4 trip tiles that will appear on your travelers' mobile app home screen.
-                </p>
-                <TripTileSelection selected={formData.selectedTripTiles} onUpdate={tiles => updateFormData('selectedTripTiles', tiles)} />
-              </div>
-              
-              <div className="pt-6 border-t border-border">
-                <h3 className="text-lg font-medium mb-4">Contact Information</h3>
-                <p className="text-sm text-gray-600 mb-4">
-                  Configure the contact information that will be displayed to your travelers in the mobile app.
-                </p>
-                <ContactInfoForm 
-                  blurb={formData.contactInfo.blurb} 
-                  contacts={formData.contactInfo.contacts}
-                  onUpdate={(key, value) => {
-                    updateFormData('contactInfo', {
-                      ...formData.contactInfo,
-                      [key]: value
-                    });
-                  }}
-                />
-              </div>
+        <CardHeader>
+          <CardTitle className="text-2xl">Mobile Settings</CardTitle>
+          <CardDescription>
+            Configure the mobile experience for your travelers.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-8">
+            <div>
+              <h3 className="text-lg font-medium mb-4">Trip Tiles</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Select up to 4 trip tiles that will appear on your travelers' mobile app home screen.
+              </p>
+              <TripTileSelection selected={formData.selectedTripTiles} onUpdate={tiles => updateFormData('selectedTripTiles', tiles)} />
             </div>
-          </CardContent>
-        </>;
+            
+            <div className="pt-6 border-t border-border">
+              <h3 className="text-lg font-medium mb-4">Contact Information</h3>
+              <p className="text-sm text-gray-600 mb-4">
+                Configure the contact information that will be displayed to your travelers in the mobile app.
+              </p>
+              <ContactInfoForm 
+                blurb={formData.contactInfo.blurb} 
+                contacts={formData.contactInfo.contacts}
+                onUpdate={(key, value) => {
+                  updateFormData('contactInfo', {
+                    ...formData.contactInfo,
+                    [key]: value
+                  });
+                }}
+              />
+            </div>
+
+            <div className="pt-6 border-t border-border">
+              <AgencyGuideManager
+                categories={formData.agencyGuide.categories}
+                onUpdate={(categories) => {
+                  updateFormData('agencyGuide', {
+                    ...formData.agencyGuide,
+                    categories
+                  });
+                }}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </>;
     case 'risk-alerts':
       return <>
         <CardHeader>
