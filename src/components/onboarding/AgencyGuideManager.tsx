@@ -28,6 +28,25 @@ export const AgencyGuideManager: React.FC<AgencyGuideManagerProps> = ({
     onUpdate([...categories, newCategory]);
   };
 
+  const moveCategory = (index: number, direction: 'up' | 'down') => {
+    const newCategories = [...categories];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    
+    // Swap positions
+    [newCategories[index], newCategories[newIndex]] = [
+      newCategories[newIndex],
+      newCategories[index]
+    ];
+    
+    // Update position values to match new order
+    const updatedCategories = newCategories.map((cat, idx) => ({
+      ...cat,
+      position: idx + 1
+    }));
+    
+    onUpdate(updatedCategories);
+  };
+
   const updateCategory = (categoryId: string, updates: Partial<AgencyGuideCategory>) => {
     onUpdate(
       categories.map(cat => 
@@ -37,7 +56,13 @@ export const AgencyGuideManager: React.FC<AgencyGuideManagerProps> = ({
   };
 
   const deleteCategory = (categoryId: string) => {
-    onUpdate(categories.filter(cat => cat.id !== categoryId));
+    const updatedCategories = categories
+      .filter(cat => cat.id !== categoryId)
+      .map((cat, idx) => ({
+        ...cat,
+        position: idx + 1
+      }));
+    onUpdate(updatedCategories);
   };
 
   const addPage = (categoryId: string) => {
@@ -82,6 +107,9 @@ export const AgencyGuideManager: React.FC<AgencyGuideManagerProps> = ({
     );
   };
 
+  // Sort categories by position before rendering
+  const sortedCategories = [...categories].sort((a, b) => a.position - b.position);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -93,12 +121,14 @@ export const AgencyGuideManager: React.FC<AgencyGuideManagerProps> = ({
       </div>
 
       <div className="space-y-4">
-        {categories.map((category) => (
+        {sortedCategories.map((category, index) => (
           <GuideCategory
             key={category.id}
             category={category}
             isExpanded={expandedCategory === category.id}
             editingPageId={editingPage}
+            isFirst={index === 0}
+            isLast={index === categories.length - 1}
             onExpandToggle={() => setExpandedCategory(
               expandedCategory === category.id ? null : category.id
             )}
@@ -110,6 +140,8 @@ export const AgencyGuideManager: React.FC<AgencyGuideManagerProps> = ({
             )}
             onUpdatePage={(pageId, updates) => updatePage(category.id, pageId, updates)}
             onDeletePage={(pageId) => deletePage(category.id, pageId)}
+            onMoveUp={() => moveCategory(index, 'up')}
+            onMoveDown={() => moveCategory(index, 'down')}
           />
         ))}
       </div>

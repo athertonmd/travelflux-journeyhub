@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, ChevronUp, Plus, Trash2, Edit2 } from 'lucide-react';
+import { ChevronDown, ChevronUp, Plus, Trash2, ArrowUp, ArrowDown } from 'lucide-react';
 import { AgencyGuideCategory } from '@/types/onboarding.types';
 import { PageList } from './PageList';
 import { Input } from '@/components/ui/input';
@@ -9,6 +10,8 @@ interface GuideCategoryProps {
   category: AgencyGuideCategory;
   isExpanded: boolean;
   editingPageId: string | null;
+  isFirst: boolean;
+  isLast: boolean;
   onExpandToggle: () => void;
   onUpdate: (updates: Partial<AgencyGuideCategory>) => void;
   onDelete: () => void;
@@ -16,12 +19,16 @@ interface GuideCategoryProps {
   onEditPage: (pageId: string) => void;
   onUpdatePage: (pageId: string, updates: Partial<any>) => void;
   onDeletePage: (pageId: string) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
 }
 
 export const GuideCategory: React.FC<GuideCategoryProps> = ({
   category,
   isExpanded,
   editingPageId,
+  isFirst,
+  isLast,
   onExpandToggle,
   onUpdate,
   onDelete,
@@ -29,6 +36,8 @@ export const GuideCategory: React.FC<GuideCategoryProps> = ({
   onEditPage,
   onUpdatePage,
   onDeletePage,
+  onMoveUp,
+  onMoveDown,
 }) => {
   return (
     <div className="border rounded-lg p-4">
@@ -41,6 +50,24 @@ export const GuideCategory: React.FC<GuideCategoryProps> = ({
           />
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMoveUp}
+            disabled={isFirst}
+            title="Move category up"
+          >
+            <ArrowUp className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onMoveDown}
+            disabled={isLast}
+            title="Move category down"
+          >
+            <ArrowDown className="h-4 w-4" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
