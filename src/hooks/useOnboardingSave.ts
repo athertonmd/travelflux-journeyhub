@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { OnboardingFormData } from './useOnboardingForm';
@@ -33,6 +32,15 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         logoUrl = filePath;
       }
       
+      // Ensure categories are properly ordered before saving
+      const orderedGuide = {
+        ...formData.agencyGuide,
+        categories: formData.agencyGuide.categories.map((cat, index) => ({
+          ...cat,
+          position: index + 1
+        }))
+      };
+      
       // Convert the form data to the expected database structure
       const configData = {
         products: formData.products as unknown as Json,
@@ -48,10 +56,10 @@ export const useOnboardingSave = (userId: string | undefined, setIsLoading: (loa
         alert_countries: formData.alertCountries,
         trip_briefs_enabled: formData.tripBriefsEnabled,
         alert_email: formData.alertEmail,
-        agency_guide: formData.agencyGuide as unknown as Json
+        agency_guide: orderedGuide as unknown as Json
       } as any;
       
-      console.log('Saving agency guide data:', formData.agencyGuide);
+      console.log('Saving agency guide data with ordered categories:', orderedGuide);
       
       const { error } = await supabase
         .from('agency_configurations')
