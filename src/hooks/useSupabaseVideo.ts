@@ -13,8 +13,8 @@ export const useSupabaseVideo = () => {
         setIsLoading(true);
         console.log('Setting up video URL...');
         
-        // Use the direct URL instead of fetching from Supabase
-        const directVideoUrl = 'https://www.manticpoint.com/hubfs/Tripscape%20on%20Teams.mp4';
+        // Use the new direct URL
+        const directVideoUrl = 'https://www.manticpoint.com/hubfs/AI-Generated%20Media/Video/Tripscape%20Overview.mp4';
         
         // Check if the URL is accessible
         setIsPending(true);
